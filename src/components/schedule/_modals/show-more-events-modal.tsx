@@ -32,8 +32,8 @@ export default function ShowMoreEventsModal() {
       ) : (
         <div className="flex flex-col items-center justify-center py-6 text-center">
           <CalendarIcon className="h-12 w-12 text-primary mb-2" />
-          <p className="text-lg font-medium text-primary">No events found</p>
-          <p className="text-sm text-muted-foreground">There are no events scheduled for this day.</p>
+          <p className="text-lg font-medium text-primary">No exam found</p>
+          <p className="text-sm text-muted-foreground">There are no exams scheduled for this day.</p>
         </div>
       )}
     </div>

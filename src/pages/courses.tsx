@@ -56,7 +56,6 @@ export type Course= {
   description:string,
   credits:string,
   instructor:string,
-//   department:Department,
   semester:any,
   start_date: Date,
   end_date:Date,
@@ -133,15 +132,21 @@ export const columns: ColumnDef<Course>[] = [
     header: () => <div className="text-right">Credits</div>,
    cell: ({ row }) => <div className="lowercase">{row.getValue("credits")}</div>,
   },
-//     {
-//     accessorKey: "department",
-//     header: () => <div className="text-right">Department</div>,
-//    cell: ({ row }) => <div className="lowercase">{row.getValue("department")}</div>,
-//   },
+    {
+    accessorKey: "department",
+    header: () => <div className="text-right">Department</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("department")}</div>,
+  },
    {
-    accessorKey: "enrollment_limit",
-    header: () => <div className="text-right">Enrollment Limit</div>,
-   cell: ({ row }) => <div className="lowercase">{row.getValue("enrollment_limit")}</div>,
+    accessorKey: "semester",
+    header: () => <div className="text-right">Semester</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("semester")}</div>,
+  },
+
+   {
+    accessorKey: "enrollments",
+    header: () => <div className="text-right">Enrollments</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("enrollments")}</div>,
   },
   {
     id: "actions",
@@ -187,8 +192,11 @@ export function CoursesPage() {
   const getCourses=async()=>{
     try {
         const resp= await axios.get("/api/courses/")
-        console.log(resp.data.data)
-        setData(resp.data.data)
+        
+        setData(resp.data.data.map((data: any)=>{
+          return {...data, department: data.department.name, enrollments:data.students_enrolled, semester:data.semester.name}
+
+        }))
         
     } catch (error) {
         console.log(error)

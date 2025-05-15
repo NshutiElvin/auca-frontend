@@ -113,7 +113,7 @@ export default function EventStyled({
       )}
     >
       {/* Delete button - shown by default for non-minimized, or on hover for minimized */}
-      <Button
+      {/* <Button
         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           e.stopPropagation();
           handlers.handleDeleteEvent(event?.id);
@@ -127,37 +127,37 @@ export default function EventStyled({
         )}
       >
         <TrashIcon size={14} className="text-destructive-foreground" />
-      </Button>
+      </Button> */}
 
       {event.CustomEventComponent ? (
         <div
-          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-            e.stopPropagation();
-            handleEditEvent({
-              id: event?.id,
-              title: event?.title,
-              startDate: event?.startDate,
-              endDate: event?.endDate,
-              description: event?.description,
-              variant: event?.variant,
-            });
-          }}
+          // onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+          //   e.stopPropagation();
+          //   handleEditEvent({
+          //     id: event?.id,
+          //     title: event?.title,
+          //     startDate: event?.startDate,
+          //     endDate: event?.endDate,
+          //     description: event?.description,
+          //     variant: event?.variant,
+          //   });
+          // }}
         >
           <event.CustomEventComponent {...event} />
         </div>
       ) : (
         <div
-          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-            e.stopPropagation();
-            handleEditEvent({
-              id: event?.id,
-              title: event?.title,
-              startDate: event?.startDate,
-              endDate: event?.endDate,
-              description: event?.description,
-              variant: event?.variant,
-            });
-          }}
+          // onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+          //   e.stopPropagation();
+          //   handleEditEvent({
+          //     id: event?.id,
+          //     title: event?.title,
+          //     startDate: event?.startDate,
+          //     endDate: event?.endDate,
+          //     description: event?.description,
+          //     variant: event?.variant,
+          //   });
+          // }}
           className={cn(
             "w-full p-2 rounded",
             getBackgroundColor(event?.variant),

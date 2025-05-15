@@ -13,12 +13,13 @@ import LoginPage from './pages/login';
 import AdminPage from './pages/admin';
 import { CoursesPage } from './pages/courses';
 import { DepartmentsPage } from './pages/departments';
-import { EnrollmentsPage } from './pages/enrollments';
 import { ExamsPage } from './pages/exams';
 import { SchedulesPage } from './pages/schedules';
 import { SemestersPage } from './pages/semesters';
 import { AdminsPage } from './pages/admins';
 import { StudentsPage } from './pages/students';
+import { AllocationsPage } from './pages/allocations';
+import { OccupanciesPage } from './pages/occupancies';
 
 const App = () => {
   return (
@@ -54,8 +55,8 @@ const App = () => {
                                          element={<DepartmentsPage/>}
                                   />
                                    <Route
-                                      path="enrollments"
-                                         element={<EnrollmentsPage/>}
+                                      path="allocations"
+                                         element={<AllocationsPage/>}
                                   />
                                    <Route
                                       path="exams"
@@ -64,6 +65,10 @@ const App = () => {
                                     <Route
                                       path="schedules"
                                          element={<SchedulesPage/>}
+                                  />
+                                    <Route
+                                      path="occupancies"
+                                         element={<OccupanciesPage/>}
                                   />
 
 

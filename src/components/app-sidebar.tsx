@@ -28,14 +28,14 @@ const data = {
           title: "Courses",
           url: "courses",
         },
+        // {
+        //   title: "Departments",
+        //   url: "departments",
+        //   isActive: true,
+        // },
         {
-          title: "Departments",
-          url: "departments",
-          isActive: true,
-        },
-        {
-          title: "Enrollments",
-          url: "enrollments",
+          title: "Allocations",
+          url: "allocations",
         },
         {
           title: "Exams",
@@ -45,10 +45,14 @@ const data = {
           title: "Schedules",
           url: "schedules",
         },
-        {
-          title: "Semesters",
-          url: "#",
+         {
+          title: "Occupancies",
+          url: "occupancies",
         },
+        // {
+        //   title: "Semesters",
+        //   url: "#",
+        // },
         
       ],
     },

@@ -22,14 +22,14 @@ export function SchedulesPage() {
   const [exams, setExams]= useState<Event[]>([])
   const getExams= async()=>{
     try {
-      const resp= await  axios.get("/api/exams/")
+      const resp= await  axios.get("/api/exams/exams")
       
       const respTyped = resp as { data: ExamsResponse };
-      const datas: Event[] = respTyped.data.data.map((ex: ExamApiResponse) => {
+      const datas: Event[] = respTyped.data.data.map((ex: any) => {
         const startDate = new Date(`${ex.date}T${ex.start_time}`);
         const endDate = new Date(`${ex.date}T${ex.end_time}`);
         let examEvent: Event = {
-          title: String(ex.course),
+          title: ex.course.title,
           description: ex.status,
           id: String(ex.id),
           startDate: startDate,

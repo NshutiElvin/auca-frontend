@@ -30,20 +30,12 @@ import { CalendarIcon, Loader, Loader2 } from "lucide-react";
 import useUserAxios from "../../../hooks/useUserAxios";
 import useToast from "../../../hooks/useToast";
 import  { isAxiosError } from "axios"
-
-const COURSE_OPTIONS: Option[] = [
-  { label: "nextjs", value: "nextjs" },
-  { label: "React", value: "react" },
-  { label: "Remix", value: "remix" },
-  { label: "Vite", value: "vite" },
-  { label: "Nuxt", value: "nuxt" },
-  { label: "Vue", value: "vue" },
-  { label: "Svelte", value: "svelte" },
-  { label: "Angular", value: "angular" },
-  { label: "Ember", value: "ember", disable: true },
-  { label: "Gatsby", value: "gatsby", disable: true },
-  { label: "Astro", value: "astro" },
-];
+import { Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue, } from "../../ui/select";
+ 
 
 interface Course {
   id: string;
@@ -100,6 +92,7 @@ export default function CreateNewTimeTableModal() {
     resolver: zodResolver(examScheduleSchema),
     defaultValues: {
       start_date: "",
+      semester:1,
       course_ids: [],
     },
   });
@@ -129,10 +122,11 @@ export default function CreateNewTimeTableModal() {
         const payload = {
           start_date: formData.start_date,
           course_ids: formData.course_ids,
+          semester:formData.semester
         };
       
         const res = await axios.post(
-          "/api/exams/generate-exam-schedule/",
+          "/api/exams/exams/generate-exam-schedule/",
           payload
         );
 
@@ -204,8 +198,37 @@ export default function CreateNewTimeTableModal() {
           {errors.start_date.message as string}
         </p>
       )}
+  <div className="grid gap-2">
+  <Label htmlFor="semester">Semester</Label>
+  <Select 
+    onValueChange={(value) => setValue("semester", Number(value))}
+    value={String(watch("semester"))}
+  >
+    <SelectTrigger className="w-[180px]">
+      <SelectValue placeholder="Semester" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem  value={String(0)}>
+          All Semester
+        </SelectItem>
+      {[1, 2, 3, 4, 5, 6, 7].map((sem) => (
+        <SelectItem key={sem} value={String(sem)}>
+          Semester {sem}
+        </SelectItem>
 
-      <div className="grid gap-2">
+      ))}
+
+    </SelectContent>
+  </Select>
+  {errors.semester && (
+    <p className="text-sm text-red-500">
+      {errors.semester.message as string}
+    </p>
+  )}
+</div>
+
+
+      {/* <div className="grid gap-2">
         <Label htmlFor="course_ids">Courses</Label>
         <div className="relative z-1000">
           <MultipleSelector
@@ -232,7 +255,7 @@ export default function CreateNewTimeTableModal() {
             {errors.course_ids.message as string}
           </p>
         )}
-      </div>
+      </div> */}
 
       <Button type="submit" disabled={isPending}>
         {isPending ? <Loader className= "animate-spin"/>: "Create Schedule"}

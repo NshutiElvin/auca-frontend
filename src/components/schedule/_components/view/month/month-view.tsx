@@ -283,7 +283,12 @@ export default function MonthView({
               >
                 <Card
                   className="shadow-md cursor-pointer overflow-hidden relative flex p-4 border h-full"
-                  onClick={() => handleAddEvent(dayObj.day)}
+                  onClick={(e) => {
+                    // handleAddEvent(dayObj.day)
+                    e.stopPropagation();
+                          handleShowMoreEvents(dayEvents);
+                  }}
+                  
                 >
                   <div
                     className={clsx(
@@ -338,13 +343,13 @@ export default function MonthView({
                   </div>
 
                   {/* Hover Text */}
-                  {dayEvents.length === 0 && (
+                  {/* {dayEvents.length === 0 && (
                     <div className="absolute inset-0 bg-primary/20 bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <span className="text-black tracking-tighter text-lg font-semibold">
                         Add Event
                       </span>
                     </div>
-                  )}
+                  )} */}
                 </Card>
               </motion.div>
             );

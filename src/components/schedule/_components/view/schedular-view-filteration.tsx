@@ -1,8 +1,8 @@
-import  { useEffect, useState } from "react";
+import  { useEffect, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "../../..//ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs";
-import { Calendar as CalendarIcon, CalendarDaysIcon } from "lucide-react";
+import { Calendar as CalendarIcon, CalendarDaysIcon, TrashIcon, Loader } from "lucide-react";
 import { BsCalendarMonth, BsCalendarWeek } from "react-icons/bs";
 
 import AddEventModal from "../../_modals/add-event-modal";
@@ -14,6 +14,9 @@ import { ClassNames, CustomComponents, Views } from "../../../../../types/index"
 import { cn } from "../../../../lib/utils";
 import CustomModal from "../../../ui/custom-modal";
 import CreateNewTimeTableModal from "../../_modals/createNewTimeTableModal";
+import useUserAxios from "../../../../hooks/useUserAxios";
+import useToast from "../../../../hooks/useToast";
+import { isAxiosError } from "axios";
 
 // Animation settings for Framer Motion
 const animationConfig = {
@@ -40,9 +43,37 @@ export default function SchedulerViewFilteration({
   const { setOpen } = useModal();
   const [activeView, setActiveView] = useState<string>("day");
   const [clientSide, setClientSide] = useState(false);
+  const[isDeletingTimeTables, startTransition]= useTransition()
+  const axios= useUserAxios()
+  const{setToastMessage}= useToast()
 
-  console.log("activeView", activeView);
+  const deleteAllTimeTables= ()=>{
+    startTransition(async()=>{
+      try {
+        
+        axios.delete("/api/exams/exams/truncate-all/")
+           setToastMessage({
+          message: "Timetable deleted successfully" ,
+          variant: "success"
+        })
+      } catch (error) {
+           if(isAxiosError(error)){
+        const message= error.response?.data?.message
+        setToastMessage({
+          message: String(message) ,
+          variant: "danger"
+        })
+      }else{
+        setToastMessage({
+          message: "Something went wrong",
+          variant: "danger"
+        })
+      }
+        
+      }
 
+    })
+  }
   useEffect(() => {
     setClientSide(true);
   }, []);
@@ -182,7 +213,7 @@ export default function SchedulerViewFilteration({
                   {CustomComponents?.customButtons.CustomAddEventButton}
                 </div>
               ) : (
-                <Button
+              <div className="flex gap-1">  <Button
                   onClick={() => handleAddEvent()}
                   className={classNames?.buttons?.addEvent}
                   variant="default"
@@ -190,6 +221,16 @@ export default function SchedulerViewFilteration({
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   Create new timetable
                 </Button>
+                  <Button
+                  onClick={() => deleteAllTimeTables()}
+                  className={classNames?.buttons?.addEvent}
+                  disabled={isDeletingTimeTables}
+                  variant="danger"
+                >
+                  {isDeletingTimeTables? <Loader className="h-4 w-4 animate-spin"/>: <><TrashIcon className="mr-2 h-4 w-4" />
+                  Delete TimeTables</> }
+                </Button>
+                </div>
               )}
             </div>
 

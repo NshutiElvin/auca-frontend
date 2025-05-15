@@ -1,3 +1,4 @@
+import { number } from "framer-motion";
 import { Dispatch, SVGProps } from "react";
 import { z } from "zod";
 
@@ -109,6 +110,7 @@ export interface Exam {
 export const examScheduleSchema = z.object({
   start_date: z.string().nonempty("Exam  Shedule start date is required."),
   course_ids: z.array(z.number()),
+  semester:z.number()
  
 });
 

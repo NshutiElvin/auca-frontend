@@ -12,10 +12,22 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, PlusCircle } from "lucide-react"
 
 import { Button } from "../components/ui/button"
 import { Checkbox } from "../components/ui/checkbox"
+
+import { Label } from "../components/ui/label"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -34,48 +46,28 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table"
+import { Textarea } from "../components/textarea"
+import useUserAxios from "../hooks/useUserAxios"
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-]
+ 
+export type Exam= {
+  id:string,
+  course:string,
+  start_time:string,
+  end_time:string,
+  room:string,
+  status:string,
+  end_date:Date,
+  
+  
 
-export type Payment = {
-  id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
+
 }
 
-export const columns: ColumnDef<Payment>[] = [
+ 
+ 
+
+export const columns: ColumnDef<Exam>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -99,47 +91,45 @@ export const columns: ColumnDef<Payment>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "id",
+    header: "Id",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
+      <div className="capitalize">{row.getValue("id")}</div>
     ),
   },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+   {
+    accessorKey: "course",
+    header: "Course",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("course")}</div>
+    ),
+  },
+ 
+    {
+    accessorKey: "date",
+    header: () => <div className="text-right">Date</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("date")}</div>,
+  },
+    {
+    accessorKey: "status",
+    header: () => <div className="text-right">Status</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("status")}</div>,
+  },
+   {
+    accessorKey: "start_time",
+    header: () => <div className="text-right">Start Time</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("start_time")}</div>,
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-
-      return <div className="text-right font-medium">{formatted}</div>
-    },
+    accessorKey: "end_time",
+    header: () => <div className="text-right">End Time</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("end_time")}</div>,
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original
+      const exam = row.original
 
       return (
         <DropdownMenu>
@@ -152,13 +142,13 @@ export const columns: ColumnDef<Payment>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(exam.id)}
             >
-              Copy payment ID
+              Copy course ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem>View course</DropdownMenuItem>
+            
           </DropdownMenuContent>
         </DropdownMenu>
       )
@@ -167,6 +157,7 @@ export const columns: ColumnDef<Payment>[] = [
 ]
 
 export function ExamsPage() {
+  const axios= useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -174,6 +165,22 @@ export function ExamsPage() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+
+  const getCourses=async()=>{
+    try {
+        const resp= await axios.get("/api/exams/exams")
+        
+        setData(resp.data.data.map((data: any)=>{
+          return {...data, course: data.course.title,}
+
+        }))
+        
+    } catch (error) {
+        console.log(error)
+        
+    }
+  }
+const [data, setData]= React.useState<Exam[]>( [])
 
   const table = useReactTable({
     data,
@@ -194,17 +201,26 @@ export function ExamsPage() {
     },
   })
 
+React.useEffect(()=>{
+    getCourses()
+},[])
+
   return (
+
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          placeholder="Filter courses..."
+          value={(table.getColumn("course")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
+            table.getColumn("course")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
+        <div className="flex-1"></div>
+       <div>
+       
+         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -231,6 +247,7 @@ export function ExamsPage() {
               })}
           </DropdownMenuContent>
         </DropdownMenu>
+       </div>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -306,6 +323,9 @@ export function ExamsPage() {
           </Button>
         </div>
       </div>
-    </div>
+
+
+     
+       </div>
   )
 }
