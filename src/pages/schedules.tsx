@@ -1,8 +1,9 @@
 import SchedulerWrapper from "../components/schedule/_components/view/schedular-view-filteration";
 import { SchedulerProvider } from "../../providers/schedular-provider";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import useUserAxios from "../hooks/useUserAxios";
 import type { Event } from "../../types"; 
+import { Loader } from "lucide-react";
    interface ExamApiResponse {
         id: number;
         course: string;
@@ -20,7 +21,10 @@ export function SchedulesPage() {
   const axios= useUserAxios()
 
   const [exams, setExams]= useState<Event[]>([])
-  const getExams= async()=>{
+  const[isGettingExams,startTransition]= useTransition()
+ 
+  const getExams= ()=>{
+    startTransition(async()=>{
     try {
       const resp= await  axios.get("/api/exams/exams")
       
@@ -43,6 +47,7 @@ export function SchedulesPage() {
       console.log(error)
       
     }
+  })
   }
 
   useEffect(()=>{
@@ -50,7 +55,7 @@ export function SchedulesPage() {
   },[])
 
   return (
-    <div className="w-full">
+  isGettingExams?<div className="flex justify-center"><Loader className="animate-spin"/></div>:  <div className="w-full">
         <SchedulerProvider weekStartsOn="monday"  initialState={exams}>
       <SchedulerWrapper 
         stopDayEventSummary={true}

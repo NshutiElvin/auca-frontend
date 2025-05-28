@@ -46,8 +46,8 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table"
-import { Textarea } from "../components/textarea"
 import useUserAxios from "../hooks/useUserAxios"
+import TableSkeleton from "../components/TableSkeleton"
 
  
 export type Exam= {
@@ -165,8 +165,10 @@ export function ExamsPage() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const[isGettingExams, startTransition]= React.useTransition()
 
-  const getCourses=async()=>{
+  const getCourses=()=>{
+    startTransition(async()=>{
     try {
         const resp= await axios.get("/api/exams/exams")
         
@@ -179,6 +181,8 @@ export function ExamsPage() {
         console.log(error)
         
     }
+  })
+
   }
 const [data, setData]= React.useState<Exam[]>( [])
 
@@ -207,7 +211,7 @@ React.useEffect(()=>{
 
   return (
 
-    <div className="w-full">
+   isGettingExams?<TableSkeleton/>: <div className="w-full">
       <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <Input
           placeholder="Filter courses..."

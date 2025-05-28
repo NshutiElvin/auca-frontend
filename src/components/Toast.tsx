@@ -79,16 +79,14 @@ const Toast = ({ onClose, show, delay, autohide, bg, children }: ToastProps) => 
 };
 
 function MyToast() {
-  const toastContext = useToast();
-  const toastMessage = toastContext?.toastMessage;
+  const {toastMessage}= useToast();
+  
   const [show, setShow] = useState(false);
   const [currentMessage, setCurrentMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (toastMessage?.message !== currentMessage) {
-      setShow(true);
+    setShow(true);
       setCurrentMessage(toastMessage?.message || null);
-    }
   }, [toastMessage, currentMessage]);
 
   return (
@@ -97,11 +95,11 @@ function MyToast() {
         <Toast
           onClose={() => setShow(false)}
           show={show}
-          delay={3000}
+          delay={5000}
           autohide
-          bg={toastMessage.variant} // 🎯 use variant from context
+          bg={toastMessage.variant}  
         >
-          <div>{toastMessage.message}</div> {/* 🎯 use message from context */}
+          <div>{toastMessage.message}</div> 
         </Toast>
       </ToastContainer>
     )

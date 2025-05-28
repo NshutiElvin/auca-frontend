@@ -16,12 +16,83 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "../components/ui/sidebar"
-import { DropdownMenuSeparator, DropdownMenuTrigger } from "../components/ui/dropdown-menu"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from "@radix-ui/react-dropdown-menu"
-import { ChevronDown, LogOut, Settings, User } from "lucide-react"
+import { ChevronDown, LogOut, Settings, User, User2Icon } from "lucide-react"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu"
+import { Button } from "../components/ui/button"
+import { jwtDecode } from "jwt-decode"
+import useAuth from "../hooks/useAuth"
+import { useEffect, useState } from "react"
+import useToast from "../hooks/useToast"
+
+import { useNavigate } from "react-router-dom"
+
+ export interface DecodedToken{
+  
+email: string
+exp:number
+iat: number
+jti:  string
+role: string
+token_type: string
+user_id: number
+ }
+
+ function maskEmail(email: string ): string {
+  if(email.length<=0)
+    return ""
+  const [user, domain] = email.split("@");
+  const maskedUser =
+    user.length <= 2
+      ? "*".repeat(user.length)
+      : user[0] + "*".repeat(user.length - 2) + user[user.length - 1];
+
+  const [domainName, domainExt] = domain.split(".");
+  const maskedDomain =
+    domainName[0] + "*".repeat(domainName.length - 1) + "." + domainExt;
+
+  return `${maskedUser}@${maskedDomain}`;
+}
 
 export default function MainPage() {
   const {parentUrl, url} = useSidebar();
+  const {auth }= useAuth()
+  const [decodedToken, setDecodedToken] = useState<DecodedToken | null>(null)
+  const navigate= useNavigate()
+  const {setToastMessage}= useToast()
+  
+
+
+  useEffect(()=>{
+
+    try {
+      const decoded= jwtDecode<DecodedToken>(auth)
+      setDecodedToken(decoded)
+    } catch (error) {
+      setToastMessage({
+        message:"Error of validating access token. Please login again.",
+        variant:"danger"
+      })
+      navigate("/login")
+      
+      
+      
+    }
+  },[auth])
+  
  
   return (
     <>
@@ -49,7 +120,7 @@ export default function MainPage() {
       
       <div className="flex-1"></div>
       
-      <DropdownMenu >
+      {/* <DropdownMenu >
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-gray-100 focus:outline-none">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
@@ -82,7 +153,33 @@ export default function MainPage() {
             <Link to={"/logout"}>Log out</Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu> */}
+
+      <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+       <Button variant="outline" className="p-4">
+       <User2Icon/> {decodedToken?.role.toLocaleUpperCase()}
+       </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56">
+        <DropdownMenuSeparator className="md:hidden" />
+         
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>
+            <User className="mr-2 size-4" />
+            <span>My Profile ({maskEmail(decodedToken?.email.toLocaleLowerCase() || "")})</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Settings className="mr-2 size-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>
+            <LogOut className="mr-2 size-4" />
+            <Link to={"/logout"}>Log out</Link>
+          </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
     </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
           {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3">

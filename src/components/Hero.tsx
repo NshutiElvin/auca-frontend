@@ -4,10 +4,12 @@ import { HeroCards } from "./HeroCards";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import backgroundImage1 from '../assets/background.png';  
 import { ShieldUser } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const Hero = () => {
   return (
     <section
+    id="hero"
       className="container grid lg:grid-cols-2 place-items-center py-5 md:py-16 gap-10 relative overflow-hidden px-10"
       style={{
         backgroundImage: `url(${backgroundImage1}), linear-gradient(to right, rgba(0,0,0,0.3), rgba(0,0,0,0.3))`,
@@ -41,17 +43,16 @@ export const Hero = () => {
         <div className="space-y-4 md:space-y-0 md:space-x-4">
           <Button className="w-full md:w-1/3">Get Started</Button>
 
-          <a
+          <Link
             rel="noreferrer noopener"
-            href="https://github.com/leoMirandaa/shadcn-landing-page.git"
-            target="_blank"
+            to="/login"
             className={`w-full md:w-1/3 ${buttonVariants({
               variant: "outline",
             })}`}
           >
             Admin Login
             <ShieldUser  className="ml-2 w-5 h-5" />
-          </a>
+          </Link>
         </div>
       </div>
 

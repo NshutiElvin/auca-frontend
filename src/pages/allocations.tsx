@@ -12,22 +12,14 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { Skeleton } from "..//components/ui/skeleton"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../components/ui/dialog"
+ 
 import { ArrowUpDown, ChevronDown, MoreHorizontal, PlusCircle } from "lucide-react"
 
 import { Button } from "../components/ui/button"
 import { Checkbox } from "../components/ui/checkbox"
 
-import { Label } from "../components/ui/label"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -46,8 +38,8 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table"
-import { Textarea } from "../components/textarea"
 import useUserAxios from "../hooks/useUserAxios"
+import TableSkeleton from "../components/TableSkeleton"
 
  
 export type StudentExam= {
@@ -59,15 +51,9 @@ export type StudentExam= {
   status:string,
   email:string,
   date:string
-  
-  
-
-
 }
 
  
- 
-
 export const columns: ColumnDef<StudentExam>[] = [
   {
     id: "select",
@@ -162,8 +148,10 @@ export const columns: ColumnDef<StudentExam>[] = [
   },
 ]
 
+
+
 export function AllocationsPage() {
-  const axios= useUserAxios();
+  const axios = useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -171,28 +159,9 @@ export function AllocationsPage() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
-
-  const getCourses=async()=>{
- 
-    try {
-        const resp= await axios.get("/api/exams/student-exam/")
-        setData(resp.data.data.map((data: any)=>{
-          return {...data, reg_no: data.student.reg_no,
-            email:data.student.user,
-            department:data.student.department.name,
-            exam:data.exam?.course?.title,
-            date:data.exam?.date,
-            room:data.room.name
-          }
-
-        }))
-        
-    } catch (error) {
-        console.log(error)
-        
-    }
-  }
-const [data, setData]= React.useState<StudentExam[]>( [])
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [data, setData] = React.useState<StudentExam[]>([])
 
   const table = useReactTable({
     data,
@@ -213,131 +182,219 @@ const [data, setData]= React.useState<StudentExam[]>( [])
     },
   })
 
-React.useEffect(()=>{
-    getCourses()
-},[])
+  // Create a ref to track the mounted status outside of useEffect
+  const isMounted = React.useRef(true);
+  
+  // Update the ref when component unmounts
+  React.useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Function to fetch exams data with proper cleanup
+  const fetchExams = React.useCallback(() => {
+    const abortController = new AbortController();
+    
+    const getCourses = async () => {
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const resp = await axios.get("/api/exams/student-exam/", {
+          signal: abortController.signal
+        });
+        
+        
+        const formattedData = resp.data.data.map((data: any) => {
+          return {
+            ...data, 
+            reg_no: data.student.reg_no,
+            email: data.student.user,
+            department: data.student.department.name,
+            exam: data.exam?.course?.title,
+            date: data.exam?.date,
+            room: data.room.name
+          };
+        });
+        
+        setData(formattedData);
+        setIsLoading(false);
+      } catch (error) {
+        if (error) {
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            ("name" in error || "code" in error)
+          ) {
+            const err = error as { name?: string; code?: string; message?: string };
+            if (err.name === "CanceledError" || err.code === "ERR_CANCELED") {
+              console.log("Request was canceled.");
+            } else {
+              console.error("Request error:", error);
+              setError(err.message || "Failed to load data. Please try again.");
+            }
+          } else {
+            console.error("Unknown error:", error);
+            setError("An unexpected error occurred. Please try again.");
+          }
+          
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    getCourses();
+    
+    return abortController;
+  }, [axios]);
+
+  React.useEffect(() => {
+      return () => {
+        isMounted.current = false;
+      };
+    }, []);
+
+   React.useEffect(() => {
+     const controller = fetchExams();
+     
+     return () => {
+       controller.abort();
+     };
+   }, [fetchExams]);
 
   return (
-
-    <div className="w-full">
-      <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-        <Input
-          placeholder="Filter students..."
-          value={(table.getColumn("reg_no")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("reg_no")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-        <div className="flex-1"></div>
-       <div>
-       
-         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-       </div>
+    isLoading ? (
+      <TableSkeleton/>
+    ) : error ? (
+      <div className="flex flex-col items-center justify-center h-64 w-full">
+        <div className="text-red-500 mb-4">{error}</div>
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            fetchExams();
+          }}
+        >
+          Retry
+        </Button>
       </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+    ) : (
+      <div className="w-full">
+        <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <Input
+            placeholder="Filter students..."
+            value={(table.getColumn("reg_no")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("reg_no")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+          <div className="flex-1"></div>
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="ml-auto">
+                  Columns <ChevronDown />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    )
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    )
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="flex-1 text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
-
-
-     
-       </div>
-  )
+    )
+  );
 }

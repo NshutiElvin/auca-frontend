@@ -48,6 +48,7 @@ import {
 } from "../components/ui/table"
 import { Textarea } from "../components/textarea"
 import useUserAxios from "../hooks/useUserAxios"
+import TableSkeleton from "../components/TableSkeleton"
 
  
 export type RoomOccupancy = {
@@ -105,12 +106,14 @@ export function OccupanciesPage() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const[isGettingOccupancies, startTransition]= React.useTransition()
 
- const fetchOccupancies = async () => {
+
+ const fetchOccupancies = ()=>{
+  startTransition(async () => {
   try {
     const resp = await axios.get("/api/rooms/occupancies/")
     const flatData: RoomOccupancy[] = []
-    console.log(flatData)
     for (const room of resp.data.data) {
       for (const schedule of room.schedules) {
         for (const exam of schedule.exams) {
@@ -133,7 +136,8 @@ export function OccupanciesPage() {
   } catch (error) {
     console.error("Error fetching occupancies:", error)
   }
-}
+})
+ }
 
 
   const table = useReactTable({
@@ -160,7 +164,7 @@ export function OccupanciesPage() {
   }, [])
 
   return (
-    <div className="w-full">
+   isGettingOccupancies?<TableSkeleton/>: <div className="w-full">
       <div className="flex h-16 items-center gap-2 border-b px-4">
         <Input
           placeholder="Filter by room..."

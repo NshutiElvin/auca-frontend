@@ -1,4 +1,3 @@
-import React from 'react'
 import {BrowserRouter,Routes,Route} from "react-router-dom";
  
 import { ErrorContextProvider } from './contexts/ErrorContext';
@@ -20,13 +19,15 @@ import { AdminsPage } from './pages/admins';
 import { StudentsPage } from './pages/students';
 import { AllocationsPage } from './pages/allocations';
 import { OccupanciesPage } from './pages/occupancies';
+import { Toaster } from "./components/ui/toaster";
 
 const App = () => {
   return (
   <BrowserRouter>
     <ErrorContextProvider>
         <ToastProvider>
-              <MyToast />
+              {/* <MyToast /> */}
+              <Toaster/>
               <AuthProvider>
                  
                     <Routes>

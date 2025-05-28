@@ -48,6 +48,7 @@ import {
 } from "../components/ui/table"
 import { Textarea } from "../components/textarea"
 import useUserAxios from "../hooks/useUserAxios"
+import TableSkeleton from "../components/TableSkeleton"
 
  
 export type Course= {
@@ -188,22 +189,12 @@ export function CoursesPage() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+   const[isLoading, startTransition]= React.useTransition()
+   const [error, setError] = React.useState<string | null>(null);
+   const [data, setData] = React.useState<Course[]>([])
+  const isMounted = React.useRef(true);
 
-  const getCourses=async()=>{
-    try {
-        const resp= await axios.get("/api/courses/")
-        
-        setData(resp.data.data.map((data: any)=>{
-          return {...data, department: data.department.name, enrollments:data.students_enrolled, semester:data.semester.name}
 
-        }))
-        
-    } catch (error) {
-        console.log(error)
-        
-    }
-  }
-const [data, setData]= React.useState<Course[]>( [])
 
   const table = useReactTable({
     data,
@@ -224,13 +215,53 @@ const [data, setData]= React.useState<Course[]>( [])
     },
   })
 
-React.useEffect(()=>{
-    getCourses()
-},[])
+const fetchCourses =  () => {
+  
+  startTransition( async () => {
+    setError(null);
+    
+    try {
+      const resp = await axios.get("/api/courses/");
+      
+        setData(resp.data.data.map((data: any) => ({
+          ...data, 
+          department: data.department.name, 
+          enrollments: data.students_enrolled, 
+          semester: data.semester.name
+        })));
+      
+    } catch (error) {
+      console.log(error)
+    } 
+  })
+
+}
+ 
+
+  React.useEffect(() => {
+     fetchCourses();
+    
+     
+  }, []);
+ 
 
   return (
 
-     <Dialog>
+     isLoading? <TableSkeleton/>:error ? (
+           <div className="flex flex-col items-center justify-center h-64 w-full">
+             <div className="text-red-500 mb-4">{error}</div>
+             <Button 
+               variant="outline" 
+               onClick={() => {
+                console.log("retrying ...")
+                fetchCourses()
+                 
+                 }}
+             >
+               Retry
+             </Button>
+           </div>
+         ):<Dialog>
     <div className="w-full">
       <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <Input
