@@ -114,6 +114,14 @@ export const examScheduleSchema = z.object({
  
 });
 
+export const examRescheduleSchema = z.object({
+  exam_id: z.string().nonempty("Exam ID is required."),
+  new_date: z.string().nonempty("Exam  Shedule start date is required."),
+  slot: z.string(),
+ 
+});
+
+export type ExamResheduleFormData = z.infer<typeof examRescheduleSchema>;
 export type ExamSheduleFormData = z.infer<typeof examScheduleSchema>;
 
 export type Views = {

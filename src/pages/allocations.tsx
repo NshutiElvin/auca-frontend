@@ -156,55 +156,66 @@ export function AllocationsPage() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
+  const [globalFilter, setGlobalFilter] = React.useState<string>("");
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
-  const [isLoading, setIsLoading] = React.useState(true);
+     const[isLoading, startTransition]= React.useTransition()
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<StudentExam[]>([])
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  })
+const table = useReactTable({
+  data,
+  columns,
+  onSortingChange: setSorting,
+  onColumnFiltersChange: setColumnFilters,
+  onGlobalFilterChange: setGlobalFilter,  // Track global filter changes
+  getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  onColumnVisibilityChange: setColumnVisibility,
+  onRowSelectionChange: setRowSelection,
+  state: {
+    sorting,
+    columnFilters,
+    columnVisibility,
+    rowSelection,
+    globalFilter,  // Add global filter state here
+  },
+  globalFilterFn: (row, columnId, filterValue) => {
+    const search = filterValue.toLowerCase();
+    const valuesToCheck = [
+      row.original.reg_no,
+      row.original.email,
+      row.original.department,
+      row.original.exam,
+      row.original.room,
+      row.original.status,
+      row.original.date,
+    ];
+    return valuesToCheck.some(value =>
+      (value || "").toLowerCase().includes(search)
+    );
+  },
+});
 
-  // Create a ref to track the mounted status outside of useEffect
+
+
   const isMounted = React.useRef(true);
   
-  // Update the ref when component unmounts
   React.useEffect(() => {
     return () => {
       isMounted.current = false;
     };
   }, []);
 
-  // Function to fetch exams data with proper cleanup
-  const fetchExams = React.useCallback(() => {
-    const abortController = new AbortController();
-    
-    const getCourses = async () => {
+  const fetchExams =   () => {
       
-      setIsLoading(true);
-      setError(null);
       
-      try {
-        const resp = await axios.get("/api/exams/student-exam/", {
-          signal: abortController.signal
-        });
+      startTransition(async()=>{
+        try {
+        const resp = await axios.get("/api/exams/student-exam/",  );
         
         
         const formattedData = resp.data.data.map((data: any) => {
@@ -220,7 +231,6 @@ export function AllocationsPage() {
         });
         
         setData(formattedData);
-        setIsLoading(false);
       } catch (error) {
         if (error) {
           if (
@@ -240,29 +250,18 @@ export function AllocationsPage() {
             setError("An unexpected error occurred. Please try again.");
           }
           
-          setIsLoading(false);
         }
       }
+      })
     };
     
-    getCourses();
     
-    return abortController;
-  }, [axios]);
 
   React.useEffect(() => {
-      return () => {
-        isMounted.current = false;
-      };
+       fetchExams()
     }, []);
 
-   React.useEffect(() => {
-     const controller = fetchExams();
-     
-     return () => {
-       controller.abort();
-     };
-   }, [fetchExams]);
+   
 
   return (
     isLoading ? (
@@ -282,14 +281,14 @@ export function AllocationsPage() {
     ) : (
       <div className="w-full">
         <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <Input
-            placeholder="Filter students..."
-            value={(table.getColumn("reg_no")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("reg_no")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+      <Input
+  placeholder="Search..."
+  value={globalFilter}
+  onChange={(event) => setGlobalFilter(event.target.value)}
+  className="max-w-sm"
+/>
+
+
           <div className="flex-1"></div>
           <div>
             <DropdownMenu>

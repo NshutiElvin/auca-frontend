@@ -6,7 +6,6 @@ import { CalendarIcon } from "lucide-react";
 
 export default function ShowMoreEventsModal() {
   const { data } = useModal();
-  console.log(data);
   const dayEvents = data?.default?.dayEvents || [];
 
   const [events, setEvents] = useState<Event[]>(dayEvents);

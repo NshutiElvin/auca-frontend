@@ -11,6 +11,7 @@ import { useScheduler } from "../../../../../../providers/schedular-provider";
 import { motion } from "framer-motion";
 import { cn } from "../../../../../lib/utils";
 import CustomModal from "../../../../ui/custom-modal";
+import RescheduleExamModal from "../../../_modals/RescheduleExamModel";
 
 // Function to format date
 const formatDate = (date: Date) => {
@@ -82,12 +83,8 @@ export default function EventStyled({
   function handleEditEvent(event: Event) {
     // Open the modal with the content
     setOpen(
-      <CustomModal title="Edit Event">
-        <AddEventModal
-          CustomAddEventModal={
-            CustomEventModal?.CustomAddEventModal?.CustomForm
-          }
-        />
+      <CustomModal title={`Reschedule Exam: ${event.title}`} >
+       <RescheduleExamModal exam={event}/>
       </CustomModal>,
       async () => {
         return {
@@ -131,33 +128,33 @@ export default function EventStyled({
 
       {event.CustomEventComponent ? (
         <div
-          // onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-          //   e.stopPropagation();
-          //   handleEditEvent({
-          //     id: event?.id,
-          //     title: event?.title,
-          //     startDate: event?.startDate,
-          //     endDate: event?.endDate,
-          //     description: event?.description,
-          //     variant: event?.variant,
-          //   });
-          // }}
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+            e.stopPropagation();
+            handleEditEvent({
+              id: event?.id,
+              title: event?.title,
+              startDate: event?.startDate,
+              endDate: event?.endDate,
+              description: event?.description,
+              variant: event?.variant,
+            });
+          }}
         >
           <event.CustomEventComponent {...event} />
         </div>
       ) : (
         <div
-          // onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-          //   e.stopPropagation();
-          //   handleEditEvent({
-          //     id: event?.id,
-          //     title: event?.title,
-          //     startDate: event?.startDate,
-          //     endDate: event?.endDate,
-          //     description: event?.description,
-          //     variant: event?.variant,
-          //   });
-          // }}
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+            e.stopPropagation();
+            handleEditEvent({
+              id: event?.id,
+              title: event?.title,
+              startDate: event?.startDate,
+              endDate: event?.endDate,
+              description: event?.description,
+              variant: event?.variant,
+            });
+          }}
           className={cn(
             "w-full p-2 rounded",
             getBackgroundColor(event?.variant),

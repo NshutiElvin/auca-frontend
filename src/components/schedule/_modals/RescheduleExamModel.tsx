@@ -19,6 +19,8 @@ import {
   ExamSheduleFormData,
   examScheduleSchema,
   Variant,
+  ExamResheduleFormData,
+  examRescheduleSchema,
 } from "../../../../types/index";
 import { useScheduler } from "../../../../providers/schedular-provider";
 import { v4 as uuidv4 } from "uuid";
@@ -41,49 +43,20 @@ import useExamsSchedule from "../../../hooks/useExamShedule";
 import { ExamsResponse } from "../../../Layouts/ExamsSchedulesLayout";
 import { Event } from "../../../../types/index";
 
-interface Course {
-  id: string;
-  code: string;
-  title: string;
-}
+ 
 
-export default function CreateNewTimeTableModal() {
+export default function  RescheduleExamModal({exam}: { exam: Event }) {
   const { setToastMessage } = useToast();
   const axios = useUserAxios();
   const { setClose, data } = useModal();
-  const [courseOptions, setCourseOptions] = useState<Option[]>([]);
-  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const [startTime, setStartTime] = useState<Date | undefined>(undefined);
+  const [endTime, setEndTime] = useState<Date | undefined>(undefined);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { setExams } = useExamsSchedule();
 
-  const fetchCourses = async () => {
-    try {
-      const response = await axios.get("/api/courses/");
-      const { data } = response.data;
-
-      const formattedOptions: Option[] = (data as Course[]).map(
-        (course: Course) => ({
-          label: `${course.code} - ${course.title}`,
-          value: course.id,
-        })
-      );
-
-      setCourseOptions(formattedOptions);
-    } catch (error) {
-      if (isAxiosError(error)) {
-        setToastMessage({
-          message: "Error while trying to get courses",
-          variant: "danger",
-        });
-      } else {
-        setToastMessage({
-          message: "Something went wrong",
-          variant: "danger",
-        });
-      }
-    }
-  };
+ 
 
   const {
     register,
@@ -92,44 +65,44 @@ export default function CreateNewTimeTableModal() {
     formState: { errors },
     setValue,
     watch,
-  } = useForm<ExamSheduleFormData>({
-    resolver: zodResolver(examScheduleSchema),
+  } = useForm<ExamResheduleFormData>({
+    resolver: zodResolver(examRescheduleSchema),
     defaultValues: {
-      start_date: "",
-      semester: 1,
-      course_ids: [],
+      new_date: "",
+      exam_id: exam.id || "",
+      slot:"Morning"
     },
   });
 
   useEffect(() => {
-    if (date) {
-      setValue("start_date", date.toISOString());
-    }
-  }, [date, setValue]);
+     if (newDate) {
+    setValue("new_date", format(newDate, "yyyy-MM-dd"));  
+  }
+  }, [newDate, setValue]);
 
   useEffect(() => {
     if (data?.default) {
       const examData = data.default;
-      reset({
-        start_date: examData.start_date,
-        course_ids: examData.course_ids,
-      });
-      if (examData.start_date) {
-        setDate(new Date(examData.start_date));
+     reset({
+  new_date:  exam.startDate ? format(exam.startDate, "yyyy-MM-dd") : "",
+  exam_id: exam.id || "",
+});
+      if (exam.startDate) {
+        setNewDate(new Date(exam.startDate));
       }
     }
   }, [data, reset]);
-  const onSubmit: SubmitHandler<ExamSheduleFormData> = async (formData) => {
+  const onSubmit: SubmitHandler<ExamResheduleFormData> = async (formData) => {
     startTransition(async () => {
       try {
         const payload = {
-          start_date: formData.start_date,
-          course_ids: formData.course_ids,
-          semester: formData.semester,
+          new_date: formData.new_date,
+            exam_id: formData.exam_id,
+            slot: formData.slot
         };
 
         const resp = await axios.post(
-          "/api/exams/exams/generate-exam-schedule/",
+          "/api/exams/exams/reschedule-exam/",
           payload
         );
 
@@ -177,9 +150,7 @@ export default function CreateNewTimeTableModal() {
     });
   };
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
+ 
 
   return (
     <form
@@ -193,83 +164,55 @@ export default function CreateNewTimeTableModal() {
             variant={"outline"}
             className={cn(
               "w-[240px] justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !newDate && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP") : <span>Pick a date</span>}
+            {newDate? newDate.toDateString():<span>Pick a new  date for this exam</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
-            selected={date}
-            onSelect={setDate}
+            selected={newDate}
+            onSelect={setNewDate}
             initialFocus
           />
         </PopoverContent>
       </Popover>
-      {errors.start_date && (
+      {errors.new_date && (
         <p className="text-sm text-red-500">
-          {errors.start_date.message as string}
+          {errors.new_date.message as string}
         </p>
       )}
       <div className="grid gap-2">
-        <Label htmlFor="semester">Semester</Label>
+        <Label htmlFor="semester">Slot</Label>
         <Select
-          onValueChange={(value) => setValue("semester", Number(value))}
-          value={String(watch("semester"))}
+          onValueChange={(value) => setValue("slot",value)}
+          value={String(watch("slot"))}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Semester" />
+            <SelectValue placeholder="Slot" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={String(0)}>All Semester</SelectItem>
-            {[1, 2, 3, 4, 5, 6, 7].map((sem) => (
-              <SelectItem key={sem} value={String(sem)}>
-                Semester {sem}
+            {["Morning","Afternoon", "Evening"].map((slot) => (
+              <SelectItem key={slot} value={slot}>
+                {slot}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        {errors.semester && (
+        {errors.slot && (
           <p className="text-sm text-red-500">
-            {errors.semester.message as string}
+            {errors.slot.message as string}
           </p>
         )}
       </div>
 
-      {/* <div className="grid gap-2">
-        <Label htmlFor="course_ids">Courses</Label>
-        <div className="relative z-1000">
-          <MultipleSelector
-            options={courseOptions}
-            placeholder="Select courses..."
-            value={courseOptions.filter((option) =>
-              watch("course_ids").includes(Number(option.value))
-            )}
-            onChange={(options) =>
-              setValue(
-                "course_ids",
-                options.map((option) => Number(option.value))
-              )
-            }
-            emptyIndicator={
-              <p className="text-center text-sm text-muted-foreground">
-                No courses found.
-              </p>
-            }
-          />
-        </div>
-        {errors.course_ids && (
-          <p className="text-sm text-red-500">
-            {errors.course_ids.message as string}
-          </p>
-        )}
-      </div> */}
+      
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? <Loader className="animate-spin" /> : "Create Schedule"}
+        {isPending ? <Loader className="animate-spin" /> : "Reschedule Exam"}
       </Button>
 
       {message && (

@@ -192,7 +192,6 @@ export function CoursesPage() {
    const[isLoading, startTransition]= React.useTransition()
    const [error, setError] = React.useState<string | null>(null);
    const [data, setData] = React.useState<Course[]>([])
-  const isMounted = React.useRef(true);
 
 
 

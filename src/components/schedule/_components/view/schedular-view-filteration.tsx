@@ -17,6 +17,7 @@ import CreateNewTimeTableModal from "../../_modals/createNewTimeTableModal";
 import useUserAxios from "../../../../hooks/useUserAxios";
 import useToast from "../../../../hooks/useToast";
 import { isAxiosError } from "axios";
+import useExamsSchedule from "../../../../hooks/useExamShedule";
 
 // Animation settings for Framer Motion
 const animationConfig = {
@@ -46,6 +47,7 @@ export default function SchedulerViewFilteration({
   const[isDeletingTimeTables, startTransition]= useTransition()
   const axios= useUserAxios()
   const{setToastMessage}= useToast()
+  const {setExams}= useExamsSchedule()
 
   const deleteAllTimeTables= ()=>{
     startTransition(async()=>{
@@ -56,6 +58,7 @@ export default function SchedulerViewFilteration({
           message: "Timetable deleted successfully" ,
           variant: "success"
         })
+      setExams([])
       } catch (error) {
            if(isAxiosError(error)){
         const message= error.response?.data?.message
