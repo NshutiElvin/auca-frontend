@@ -1,11 +1,9 @@
-import  { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "../../..//ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs";
 import { Calendar as CalendarIcon, CalendarDaysIcon, TrashIcon, Loader } from "lucide-react";
 import { BsCalendarMonth, BsCalendarWeek } from "react-icons/bs";
-
-import AddEventModal from "../../_modals/add-event-modal";
 import DailyView from "./day/daily-view";
 import MonthView from "./month/month-view";
 import WeeklyView from "./week/week-view";
@@ -18,6 +16,8 @@ import useUserAxios from "../../../../hooks/useUserAxios";
 import useToast from "../../../../hooks/useToast";
 import { isAxiosError } from "axios";
 import useExamsSchedule from "../../../../hooks/useExamShedule";
+import { useSearchParams } from 'react-router-dom';
+import { useDebouncedCallback } from 'use-debounce';
 
 // Animation settings for Framer Motion
 const animationConfig = {
@@ -42,41 +42,46 @@ export default function SchedulerViewFilteration({
   classNames?: ClassNames;
 }) {
   const { setOpen } = useModal();
-  const [activeView, setActiveView] = useState<string>("day");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeView, setActiveView] = useState<string>("month");
   const [clientSide, setClientSide] = useState(false);
-  const[isDeletingTimeTables, startTransition]= useTransition()
-  const axios= useUserAxios()
-  const{setToastMessage}= useToast()
-  const {setExams}= useExamsSchedule()
+  const [isDeletingTimeTables, startTransition] = useTransition();
+  const axios = useUserAxios();
+  const { setToastMessage } = useToast();
+  const { setExams } = useExamsSchedule();
 
-  const deleteAllTimeTables= ()=>{
-    startTransition(async()=>{
+  const debouncedUpdateUrl = useDebouncedCallback((view: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('view', view);
+    setSearchParams(newParams, { replace: true });
+  }, 300);
+
+  const deleteAllTimeTables = () => {
+    startTransition(async () => {
       try {
-        
-        axios.delete("/api/exams/exams/truncate-all/")
-           setToastMessage({
-          message: "Timetable deleted successfully" ,
+        await axios.delete("/api/exams/exams/truncate-all/");
+        setToastMessage({
+          message: "Timetable deleted successfully",
           variant: "success"
-        })
-      setExams([])
+        });
+        setExams([]);
       } catch (error) {
-           if(isAxiosError(error)){
-        const message= error.response?.data?.message
-        setToastMessage({
-          message: String(message) ,
-          variant: "danger"
-        })
-      }else{
-        setToastMessage({
-          message: "Something went wrong",
-          variant: "danger"
-        })
+        if (isAxiosError(error)) {
+          const message = error.response?.data?.message;
+          setToastMessage({
+            message: String(message),
+            variant: "danger"
+          });
+        } else {
+          setToastMessage({
+            message: "Something went wrong",
+            variant: "danger"
+          });
+        }
       }
-        
-      }
+    });
+  };
 
-    })
-  }
   useEffect(() => {
     setClientSide(true);
   }, []);
@@ -102,7 +107,6 @@ export default function SchedulerViewFilteration({
   }, [clientSide]);
 
   function handleAddEvent(selectedDay?: number) {
-    // Create the modal content with proper data
     const startDate = new Date(
       new Date().getFullYear(),
       new Date().getMonth(),
@@ -123,41 +127,33 @@ export default function SchedulerViewFilteration({
       999
     );
 
-    // Create a wrapper component to handle data passing
-    const ModalWrapper = () => {
-      const title =
-        CustomComponents?.CustomEventModal?.CustomAddEventModal?.title ||
-        "Add Event";
-
-      return (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">{title}</h2>
-        </div>
-      );
-    };
-
-    // Open the modal with the content
     setOpen(
       <CustomModal title="Create New Exam Schedule">
-        {/* <AddEventModal
-          CustomAddEventModal={
-            CustomComponents?.CustomEventModal?.CustomAddEventModal?.CustomForm
-          }
-        />{" "} */}
-
-        <CreateNewTimeTableModal/>
+        <CreateNewTimeTableModal />
       </CustomModal>
     );
   }
 
   const viewsSelector = isMobile ? views?.mobileViews : views?.views;
 
-  // Set initial active view
   useEffect(() => {
-    if (viewsSelector?.length) {
-      setActiveView(viewsSelector[0]);
+    if (!viewsSelector?.length) return;
+
+    const urlView = searchParams.get('view');
+    
+    if (urlView && viewsSelector.includes(urlView)) {
+      setActiveView(urlView);
+    } else {
+      const defaultView = isMobile?"day": "month" ; // Default view if no valid view is found
+      setActiveView(defaultView);
+      debouncedUpdateUrl(defaultView);
     }
-  }, []);
+  }, [viewsSelector, searchParams]);
+
+  const handleViewChange = (newView: string) => {
+    setActiveView(newView);
+    debouncedUpdateUrl(newView);
+  };
 
   return (
     <div className="flex w-full flex-col">
@@ -165,7 +161,7 @@ export default function SchedulerViewFilteration({
         <div className="dayly-weekly-monthly-selection relative w-full">
           <Tabs
             value={activeView}
-            onValueChange={setActiveView}
+            onValueChange={handleViewChange}
             className={cn("w-full", classNames?.tabs)}
           >
             <div className="flex justify-between items-center mb-4">
@@ -216,23 +212,30 @@ export default function SchedulerViewFilteration({
                   {CustomComponents?.customButtons.CustomAddEventButton}
                 </div>
               ) : (
-              <div className="flex gap-1">  <Button
-                  onClick={() => handleAddEvent()}
-                  className={classNames?.buttons?.addEvent}
-                  variant="default"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  Create new timetable
-                </Button>
+                <div className="flex gap-1">
                   <Button
-                  onClick={() => deleteAllTimeTables()}
-                  className={classNames?.buttons?.addEvent}
-                  disabled={isDeletingTimeTables}
-                  variant="danger"
-                >
-                  {isDeletingTimeTables? <Loader className="h-4 w-4 animate-spin"/>: <><TrashIcon className="mr-2 h-4 w-4" />
-                  Delete TimeTables</> }
-                </Button>
+                    onClick={() => handleAddEvent()}
+                    className={classNames?.buttons?.addEvent}
+                    variant="default"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Create new timetable
+                  </Button>
+                  <Button
+                    onClick={() => deleteAllTimeTables()}
+                    className={classNames?.buttons?.addEvent}
+                    disabled={isDeletingTimeTables}
+                    variant="danger"
+                  >
+                    {isDeletingTimeTables ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <TrashIcon className="mr-2 h-4 w-4" />
+                        Delete TimeTables
+                      </>
+                    )}
+                  </Button>
                 </div>
               )}
             </div>
