@@ -44,16 +44,16 @@ const data = {
       url: "#",
       items: [
         {
-          title: "All Courses",
+          title: "Courses",
           url: "courses",
         },
       
         {
-          title: "Students Allocations",
+          title: "Allocations",
           url: "allocations",
         },
         {
-          title: "Scheduled Exams",
+          title: "Exams",
           url: "exams",
         },
         {

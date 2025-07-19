@@ -49,13 +49,11 @@ import {
 import useUserAxios from "../hooks/useUserAxios"
 import TableSkeleton from "../components/TableSkeleton"
 import useToast from "../hooks/useToast"
-import { group } from "console"
 
  
 export type Exam= {
   id:string,
   course:string,
-  group:string;
   start_time:string,
   end_time:string,
   room:string,
@@ -105,13 +103,6 @@ export const columns: ColumnDef<Exam>[] = [
     header: "Course",
     cell: ({ row }) => (
       <div className="capitalize">{row.getValue("course")}</div>
-    ),
-  },
-   {
-    accessorKey: "group",
-    header: "Group",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("group")}</div>
     ),
   },
  
@@ -183,7 +174,7 @@ const{setToastMessage}= useToast()
         const resp= await axios.get("/api/exams/exams")
         
         setData(resp.data.data.map((data: any)=>{
-          return {...data, course: `${data.group.course.title} `,group: `${data.group.group_name}`
+          return {...data, course: `${data.group.course.title} - ${data.group.group_name}`,
         }
 
         }))

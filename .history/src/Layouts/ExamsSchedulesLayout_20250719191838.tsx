@@ -44,7 +44,7 @@ const ExamsScheduleLayout: React.FC = () => {
           const startDate = new Date(`${ex.date}T${ex.start_time}`);
           const endDate = new Date(`${ex.date}T${ex.end_time}`);
           let examEvent: Event = {
-            title: `${ex.group.course.title} - Group ${ex.group.group_name}`,
+            title: `${ex.group.course.title} - ${ex.group.group_name}`,
             description: ex.status,
             id: String(ex.id),
             startDate: startDate,

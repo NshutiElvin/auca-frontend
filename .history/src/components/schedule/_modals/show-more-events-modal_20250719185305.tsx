@@ -17,7 +17,7 @@ export default function ShowMoreEventsModal() {
 
   return (
     <div className="flex flex-col gap-2">
-      <ScrollArea className="h-[70vh] rounded-md border p-4">
+      <ScrollArea className="h-[60vh] rounded-md border p-4">
         {events.length > 0 ? (
         events.map((event: Event) => (
           <EventStyled

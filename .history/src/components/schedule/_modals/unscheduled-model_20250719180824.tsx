@@ -1,7 +1,5 @@
  import React from 'react';
 import useExamsSchedule from '../../../hooks/useExamShedule';
-import { ScrollArea } from '../../scroll-area';
-
 
 function UnscheduledModel() {
   const { setExams, unScheduled } = useExamsSchedule();
@@ -31,20 +29,20 @@ function UnscheduledModel() {
             </div>
           </div>
 
-         <ScrollArea className="h-[50vh] rounded-md border p-4">
-           {/* Content */}
+          {/* Content */}
+          <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
             {unScheduled.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {unScheduled.map((exam, idx) => (
                   <div 
                     key={idx} 
-                    className="rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors"
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors"
                   >
                     <div className="space-y-3">
                       {exam.courses.map((course, courseIdx) => (
                         <div key={courseIdx} className="border-l-4 border-blue-500 pl-4">
                           <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold">
+                            <h4 className="font-semibold text-gray-900">
                               Course: {course.courseId}
                             </h4>
                             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
@@ -84,14 +82,14 @@ function UnscheduledModel() {
                 <p className="text-gray-600">Great! All exams have been scheduled successfully.</p>
               </div>
             )}
-         </ScrollArea>
+          </div>
 
           {/* Footer */}
           {unScheduled.length > 0 && (
-            <div className="px-6 py-4  border-t border-gray-200">
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-bold">
-                  {unScheduled.length}{ unScheduled.length ? 's' : ''} Exams groups pending
+                <p className="text-sm text-gray-600">
+                  {unScheduled.reduce((total, exam) => total + exam.courses.length, 0)} course{unScheduled.reduce((total, exam) => total + exam.courses.length, 0) !== 1 ? 's' : ''} pending
                 </p>
                
               </div>

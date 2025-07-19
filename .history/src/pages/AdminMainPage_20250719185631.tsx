@@ -44,20 +44,20 @@ const data = {
       url: "#",
       items: [
         {
-          title: "All Courses",
+          title: "Courses",
           url: "courses",
         },
       
         {
-          title: "Students Allocations",
+          title: "Allocations",
           url: "allocations",
         },
         {
-          title: "Scheduled Exams",
+          title: "Exams",
           url: "exams",
         },
         {
-          title: "Auto Timetable",
+          title: "Timetable",
           url: "schedules",
         },
          {
@@ -65,7 +65,7 @@ const data = {
           url: "manual",
         },
          {
-          title: "Room distrubutions",
+          title: "Occupancies",
           url: "occupancies",
         },
       

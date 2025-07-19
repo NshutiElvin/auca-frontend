@@ -3,7 +3,6 @@ import { useModal } from "../../../../providers/modal-context";
 import { Event } from "../../../../types";
 import React, { useEffect, useState } from "react";
 import { CalendarIcon } from "lucide-react";
-import { ScrollArea } from "../../scroll-area";
 
 export default function ShowMoreEventsModal() {
   const { data } = useModal();
@@ -17,8 +16,7 @@ export default function ShowMoreEventsModal() {
 
   return (
     <div className="flex flex-col gap-2">
-      <ScrollArea className="h-[70vh] rounded-md border p-4">
-        {events.length > 0 ? (
+      {events.length > 0 ? (
         events.map((event: Event) => (
           <EventStyled
             onDelete={(id) => {
@@ -37,8 +35,6 @@ export default function ShowMoreEventsModal() {
           <p className="text-sm text-muted-foreground">There are no exams scheduled for this day.</p>
         </div>
       )}
-
-      </ScrollArea>
     </div>
   );
 }

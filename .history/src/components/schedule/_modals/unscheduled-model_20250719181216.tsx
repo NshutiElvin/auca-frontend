@@ -1,7 +1,5 @@
  import React from 'react';
 import useExamsSchedule from '../../../hooks/useExamShedule';
-import { ScrollArea } from '../../scroll-area';
-
 
 function UnscheduledModel() {
   const { setExams, unScheduled } = useExamsSchedule();
@@ -31,8 +29,8 @@ function UnscheduledModel() {
             </div>
           </div>
 
-         <ScrollArea className="h-[50vh] rounded-md border p-4">
-           {/* Content */}
+          {/* Content */}
+          <div className=" overflow-y-auto max-h-[40vh]">
             {unScheduled.length > 0 ? (
               <div className="space-y-2">
                 {unScheduled.map((exam, idx) => (
@@ -84,14 +82,14 @@ function UnscheduledModel() {
                 <p className="text-gray-600">Great! All exams have been scheduled successfully.</p>
               </div>
             )}
-         </ScrollArea>
+          </div>
 
           {/* Footer */}
           {unScheduled.length > 0 && (
             <div className="px-6 py-4  border-t border-gray-200">
               <div className="flex justify-between items-center">
                 <p className="text-sm font-bold">
-                  {unScheduled.length}{ unScheduled.length ? 's' : ''} Exams groups pending
+                  {unScheduled.reduce((total, exam) => total + exam.courses.length, 0)} course{unScheduled.reduce((total, exam) => total + exam.courses.length, 0) !== 1 ? 's' : ''} pending
                 </p>
                
               </div>

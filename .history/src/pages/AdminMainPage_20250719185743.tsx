@@ -44,7 +44,7 @@ const data = {
       url: "#",
       items: [
         {
-          title: "All Courses",
+          title: "Courses",
           url: "courses",
         },
       

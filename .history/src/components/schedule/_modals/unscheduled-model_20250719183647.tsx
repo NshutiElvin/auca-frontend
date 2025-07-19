@@ -1,7 +1,6 @@
  import React from 'react';
 import useExamsSchedule from '../../../hooks/useExamShedule';
-import { ScrollArea } from '../../scroll-area';
-
+import { ScrollArea } from '@radix-ui/react-scroll-area';
 
 function UnscheduledModel() {
   const { setExams, unScheduled } = useExamsSchedule();
@@ -31,7 +30,7 @@ function UnscheduledModel() {
             </div>
           </div>
 
-         <ScrollArea className="h-[50vh] rounded-md border p-4">
+         <ScrollArea className="h-[400px] rounded-md border p-4">
            {/* Content */}
             {unScheduled.length > 0 ? (
               <div className="space-y-2">

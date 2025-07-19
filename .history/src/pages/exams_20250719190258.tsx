@@ -55,7 +55,6 @@ import { group } from "console"
 export type Exam= {
   id:string,
   course:string,
-  group:string;
   start_time:string,
   end_time:string,
   room:string,

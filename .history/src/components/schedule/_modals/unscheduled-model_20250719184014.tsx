@@ -31,7 +31,7 @@ function UnscheduledModel() {
             </div>
           </div>
 
-         <ScrollArea className="h-[50vh] rounded-md border p-4">
+         <ScrollArea className="h-[40vh] rounded-md border p-4">
            {/* Content */}
             {unScheduled.length > 0 ? (
               <div className="space-y-2">
