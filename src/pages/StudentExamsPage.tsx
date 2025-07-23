@@ -11,6 +11,13 @@ import useUserAxios from "../hooks/useUserAxios";
 import useToast from "../hooks/useToast";
 import { Exam } from "./studentExams";
 import TableSkeleton from "../components/TableSkeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog"
 function StudentExamsPage() {
   const { exams, setExams } = useExamsSchedule();
   const [activeView, setActiveView] = useState<string>("grid");
@@ -21,6 +28,7 @@ function StudentExamsPage() {
   const axios = useUserAxios();
   const [myExams, setMyExams] = useState<Exam[]>([]);
   const { setToastMessage } = useToast();
+  
   const getExams = () => {
     startTransition(async () => {
       try {
@@ -37,7 +45,7 @@ function StudentExamsPage() {
               course_title: data.exam.group.course.title,
               course_group: data.exam.group.group_name,
               date: data.exam.date,
-              room: data.room.name,
+              room: data?.room?.name,
               start_time: data.exam.start_time,
               end_time: data.exam.end_time,
                
@@ -51,7 +59,7 @@ function StudentExamsPage() {
               course: data.exam.group.course,
               course_title: data.exam.group.course.title,
               date: data.exam.date,
-              room: data.room.name,
+              room: data?.room?.name,
               start_time: data.exam.start_time,
               end_time: data.exam.end_time,
               course_group: data.exam.group.group_name,

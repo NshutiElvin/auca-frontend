@@ -32,9 +32,8 @@ import { isAxiosError } from "axios";
 import useExamsSchedule from "../../../hooks/useExamShedule";
 import { ExamsResponse } from "../../../Layouts/ExamsSchedulesLayout";
 import { Event } from "../../../../types/index";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
-import { DialogHeader } from "../../ui/dialog";
-import { Unscheduled } from "../../../contexts/ExamSchedulesContexts";
+ 
+
 interface  Department{
   id:string;
   code:string;
@@ -192,16 +191,9 @@ export default function CreateNewTimeTableModal() {
 
           setExams(datas);
           if( resp.data.unscheduled){
-            console.log(resp.data.unscheduled)
-            let unschedules= resp.data.unscheduled.map((un:any)=>{
-              let unschedule:Unscheduled={
-                courses:un.courses.map((c:any)=>{
-                  return {courseId: c.course_id, groups:c.groups}
-                }),
-              }
-              return unschedule
-            })
-            console.log(unschedules)
+            
+            let unschedules= resp.data.unscheduled 
+            
             setUnScheduled(unschedules)
 
           }
@@ -242,7 +234,7 @@ export default function CreateNewTimeTableModal() {
     >
       
    {
-    isLoadingCourses?<p>Loading ...</p>:<>  
+    isLoadingCourses || selectedCourses.length<=0?<p>Loading ...</p>:<>  
     <Label htmlFor="start_date">Courses</Label>  
         
         <MultiSelect
