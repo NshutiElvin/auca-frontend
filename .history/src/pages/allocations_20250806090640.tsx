@@ -206,7 +206,7 @@ export function AllocationsPage() {
   const fetchExams = () => {
     startTransition(async () => {
       try {
-        const resp = await axios.get("/api/exams/student-exam/?limit=10&offset=0");
+        const resp = await axios.get("/api/exams/student-exam/?limit=10");
 
         const formattedData = resp.data.data.map((data: any) => {
           return {

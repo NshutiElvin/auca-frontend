@@ -46,7 +46,6 @@ import {
 import useUser from "../hooks/useUser"
 import { StatusButton } from "../components/ui/status-button"
 import { useEffect, useState } from "react"
-import useUserAxios from "../hooks/useUserAxios"
 
 interface Department {
   id: number;
@@ -212,19 +211,8 @@ export default function StudentExams({ exams }: StudentExamsProps) {
   const [data, setData] = useState<Exam[]>([]);
   const[encryptedQrCodeData, setEncryptedQrCodeData]= useState<string>("")
   const[expiredTime, setExpiredTime]= useState<string|null>(null)
-  const axios= useUserAxios()
-  const getQrCodeExpirationTime=async()=>{
-    try {
-      const resp= await axios.get("/api/exams/student-exam/time")
-      if (resp.data.success){
-        setExpiredTime(resp.data.time)
-      }
-      
-    } catch (error) {
-      
-      
-    }
-  }
+
+
 
   function base64UrlToBytes(base64Url: string): Uint8Array {
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -284,29 +272,25 @@ export default function StudentExams({ exams }: StudentExamsProps) {
   }, [exams]);
 useEffect(() => {
   const encryptData = async () => {
-    if (selectedRow && current_student && expiredTime) {
+    if (selectedRow && current_student) {
       try {
         const encryptedData = await encryptMessage(JSON.stringify({
           studentId: current_student.user_id,
           studentEmail: current_student.email,
           examId: selectedRow.id,
           courseId: selectedRow.course.id,
-          expirationTime: expiredTime
           
         }));
         setEncryptedQrCodeData(encryptedData);
       } catch (error) {
+        console.error("Encryption failed:", error);
         setEncryptedQrCodeData("");
       }
     }
   };
 
   encryptData();
-}, [selectedRow, expiredTime]);
-
-useEffect(()=>{
-  getQrCodeExpirationTime()
-},[selectedRow])
+}, [selectedRow]);
   return (
     
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

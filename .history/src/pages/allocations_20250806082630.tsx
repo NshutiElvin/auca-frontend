@@ -11,10 +11,13 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { Skeleton } from "..//components/ui/skeleton";
 
 import {
+  ArrowUpDown,
   ChevronDown,
   MoreHorizontal,
+  PlusCircle,
 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
@@ -164,7 +167,7 @@ export function AllocationsPage() {
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter, 
+    onGlobalFilterChange: setGlobalFilter, // Track global filter changes
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -176,7 +179,7 @@ export function AllocationsPage() {
       columnFilters,
       columnVisibility,
       rowSelection,
-      globalFilter,  
+      globalFilter, // Add global filter state here
     },
     globalFilterFn: (row, columnId, filterValue) => {
       const search = filterValue.toLowerCase();
@@ -206,7 +209,7 @@ export function AllocationsPage() {
   const fetchExams = () => {
     startTransition(async () => {
       try {
-        const resp = await axios.get("/api/exams/student-exam/?limit=10&offset=0");
+        const resp = await axios.get("/api/exams/student-exam/");
 
         const formattedData = resp.data.data.map((data: any) => {
           return {

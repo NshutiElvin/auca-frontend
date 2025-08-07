@@ -18,67 +18,66 @@ interface QrCodeData {
 }
 
 interface VerificationResult {
-  studentName: string | null;
-  studentRegNumber: string | null;
-  amountPaid: number | null;
-  amountToPay: number | null;
+  studentName:string | null;
+  studentRegNumber:string | null;
+  amountPaid:number | null;
+  amountToPay:number | null;
   status: boolean;
   message: string;
-  course: Course | null;
+  course:Course | null;
 }
 
 function InstructorExamScannerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { setToastMessage } = useToast();
   const [isVerifying, startVerifyingTransition] = useTransition();
-  const [scannedData, setScannedData] = useState<string | null>(null);
-  const [verificationResult, setVerificationResult] =
-    useState<VerificationResult | null>(null);
+  const [scannedData, setScannedData] = useState<string| null>(null);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const axios = useUserAxios();
 
-  const performVerification = (data: any) => {
+  const performVerification = (data:any) => {
     startVerifyingTransition(async () => {
       try {
-        const response = await axios.post(
-          "/api/exams/student-exam/verify/",
-          data
-        );
+         
+        const response = await axios.post("/api/exams/student-exam/verify/", data);
         setVerificationResult(response.data.data);
       } catch (error) {
         setToastMessage({
           message: "Error occurred while verifying student exam.",
-          variant: "danger",
+          variant: "danger"
         });
         setVerificationResult({
-          studentRegNumber: null,
-          amountPaid: null,
-          studentName: null,
-          amountToPay: null,
+          studentRegNumber:null,
+          amountPaid:null,
+          studentName:null,
+          amountToPay:null,
 
           status: false,
-          message:
-            "Please make sure the QR code you are using is valid, system-generated, and not expired.",
-          course: null,
+          message: "Please make sure the QR code you are using is valid, system-generated, and not expired."
+,
+          course:null
         });
       }
     });
   };
+ 
 
   const handleQrCodeDetected = (result: any) => {
+    
     if (result) {
       try {
+         
         const parsedData = result[0].rawValue;
 
-        setDialogOpen(true);
+          setDialogOpen(true);
         setScannedData(parsedData);
-
-        performVerification({ encryptedData: parsedData });
+        
+        performVerification({encryptedData:parsedData});
       } catch (error) {
-        console.log(error);
+        console.log(error)
         setToastMessage({
-          message:
-            "Invalid QR code format. Please ensure it's a valid exam QR code.",
-          variant: "danger",
+          message: "Invalid QR code format. Please ensure it's a valid exam QR code.",
+          variant: "danger"
         });
       }
     }
@@ -87,7 +86,7 @@ function InstructorExamScannerPage() {
   const handleScanError = () => {
     setToastMessage({
       variant: "danger",
-      message: "Error occurred while scanning QR code. Please try again.",
+      message: "Error occurred while scanning QR code. Please try again."
     });
   };
 
@@ -96,7 +95,7 @@ function InstructorExamScannerPage() {
       return (
         <div className="flex items-center justify-center space-x-3 py-8">
           <Loader className="animate-spin h-6 w-6 text-blue-600" />
-          <span>Verifying student exam...</span>
+          <span >Verifying student exam...</span>
         </div>
       );
     }
@@ -104,71 +103,53 @@ function InstructorExamScannerPage() {
     if (verificationResult) {
       return (
         <div className="space-y-4">
-          <div
-            className={`flex items-center space-x-3 p-4 rounded-lg ${
-              verificationResult.status
-                ? "bg-green-50 border border-green-200"
-                : "bg-red-50 border border-red-200"
-            }`}
-          >
+          <div className={`flex items-center space-x-3 p-4 rounded-lg ${
+            verificationResult.status 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          }`}>
             {verificationResult.status ? (
               <CheckCircle className="h-6 w-6 text-green-600" />
             ) : (
               <XCircle className="h-6 w-6 text-red-600" />
             )}
             <div>
-              <p
-                className={`font-medium ${
-                  verificationResult.status ? "text-green-800" : "text-red-800"
-                }`}
-              >
-                {verificationResult.status
-                  ? "Verification Successful"
-                  : "Verification Failed"}
+              <p className={`font-medium ${
+                verificationResult.status ? 'text-green-800' : 'text-red-800'
+              }`}>
+                {verificationResult.status ? 'Verification Successful' : 'Verification Failed'}
               </p>
-              <p
-                className={`text-sm ${
-                  verificationResult.status ? "text-green-600" : "text-red-600"
-                }`}
-              >
+              <p className={`text-sm ${
+                verificationResult.status ? 'text-green-600' : 'text-red-600'
+              }`}>
                 {verificationResult.message}
               </p>
             </div>
           </div>
 
-          {verificationResult.status && (
+          {verificationResult.status  && (
             <div className="space-y-3 p-4  rounded-lg">
               <h4 className="font-medium  ">Exam Details</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Reg Number:</span>
-                  <span className="font-mono">
-                    {verificationResult.studentRegNumber}
-                  </span>
+                  <span >Reg Number:</span>
+                  <span className="font-mono">{verificationResult.studentRegNumber}</span>
+                </div>
+                 <div className="flex justify-between">
+                  <span >Names:</span>
+                  <span className="font-mono">{verificationResult.studentName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Names:</span>
-                  <span className="font-mono">
-                    {verificationResult.studentName}
-                  </span>
+                  <span >Course:</span>
+                  <span className="font-mono">{verificationResult.course?.title}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Course:</span>
-                  <span className="font-mono">
-                    {verificationResult.course?.title}
-                  </span>
+                  <span >Amount to pay:</span>
+                  <span className="font-mono">{verificationResult.amountToPay}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Amount to pay:</span>
-                  <span className="font-mono">
-                    {verificationResult.amountToPay}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Amount Paid:</span>
-                  <span className="font-mono">
-                    {verificationResult.amountPaid}
-                  </span>
+                  <span >Amount Paid:</span>
+                  <span className="font-mono">{verificationResult.amountPaid}</span>
                 </div>
               </div>
             </div>
@@ -184,11 +165,12 @@ function InstructorExamScannerPage() {
     <div className="h-2">
       <div className="max-w-2xl mx-auto">
         <div className=" rounded-lg shadow-sm">
-          <Scanner
-            onScan={handleQrCodeDetected}
-            onError={handleScanError}
-            allowMultiple={true}
-          />
+          <Scanner 
+              onScan={handleQrCodeDetected} 
+              onError={handleScanError}
+              allowMultiple={true}
+              
+            />
         </div>
       </div>
 
@@ -199,7 +181,7 @@ function InstructorExamScannerPage() {
               Exam Verification
             </DialogTitle>
           </DialogHeader>
-
+          
           {renderVerificationContent()}
         </DialogContent>
       </Dialog>
