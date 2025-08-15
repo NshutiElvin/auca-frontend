@@ -80,12 +80,12 @@ function StudentExamScannerPage() {
         <div className="space-y-4">
           <div
             className={`flex items-center space-x-3 p-4 rounded-lg ${
-              verificationResult.success
+              verificationResult.status
                 ? "bg-green-50 border border-green-200"
                 : "bg-red-50 border border-red-200"
             }`}
           >
-            {verificationResult.success ? (
+            {verificationResult.status ? (
               <CheckCircle className="h-6 w-6 text-green-600" />
             ) : (
               <XCircle className="h-6 w-6 text-red-600" />
@@ -102,7 +102,7 @@ function StudentExamScannerPage() {
               </p>
               <p
                 className={`text-sm ${
-                  verificationResult.success ? "text-green-600" : "text-red-600"
+                  verificationResult.status ? "text-green-600" : "text-red-600"
                 }`}
               >
                 {verificationResult.message}

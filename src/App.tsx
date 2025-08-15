@@ -37,6 +37,7 @@ import RoomsOccupancies from "./pages/RoomsOccupancies";
 import NotificationLayout from "./Layouts/NotificationLayout";
 import DashboardPage from "./pages/DashboardPage";
 import { TimeTablesPage } from "./pages/recentTimetable";
+import StudentScannerPage from "./pages/StudentScannerPage";
 
 const App = () => {
   return (
@@ -115,7 +116,7 @@ const App = () => {
                               />
                                <Route
                                 path="exam-verification"
-                                element={<InstructorExamScannerPage />}
+                                element={<StudentScannerPage />}
                               />
 
                               <Route

@@ -43,6 +43,8 @@ function InstructorExamScannerPage() {
 
   const handleQrCodeDetected = (result: any) => {
     if (result) {
+      console.log(result);
+      console.log(result[0].rawValue);
       try {
         const parsedData = JSON.parse(result[0].rawValue);
 
@@ -61,7 +63,8 @@ function InstructorExamScannerPage() {
     }
   };
 
-  const handleScanError = () => {
+  const handleScanError = (e:any) => {
+    console.log(String(e));
     setToastMessage({
       variant: "danger",
       message: "Error occurred while scanning QR code. Please try again.",
@@ -83,14 +86,12 @@ function InstructorExamScannerPage() {
         <div className="space-y-4">
           {studentsInfo && (
             <Card className="border-0 shadow-sm  ">
-              <CardContent className="p-0">
+              <CardContent className="overflow-x-scroll"> 
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b  ">
-                        <th className="text-left p-4 text-sm font-medium ">
-                          Id
-                        </th>
+                      
                         <th className="text-left p-4 text-sm font-medium ">
                           Reg No
                         </th>
@@ -111,19 +112,19 @@ function InstructorExamScannerPage() {
                         <th className="text-left p-4 text-sm font-medium ">
                           Status
                         </th>
-                        <th className="w-12"></th>
                       </tr>
                     </thead>
                     <tbody>
                       {studentsInfo.map((student: any, index) => (
                         <tr key={index} className="border-b   last:border-0">
-                          <td className="p-4 text-sm  ">{student.id}</td>
-                          <td className="p-4 text-sm ">{student.first_name}</td>
-                          <td className="p-4 text-sm ">{student.last_name}</td>
-                          <td className="p-4 text-sm  font-medium">
+                          
+                          <td className="p-2 text-sm  ">{student.reg_no}</td>
+                          <td className="p-2 text-sm ">{student.first_name}</td>
+                          <td className="p-2 text-sm ">{student.last_name}</td>
+                          <td className="p-2 text-sm  font-medium">
                             {student.amount_to_pay}
                           </td>
-                          <td className="p-4 text-sm  font-medium">
+                          <td className="p-2 text-sm  font-medium">
                             {student.amount_paid}
                           </td>
 
@@ -161,7 +162,7 @@ function InstructorExamScannerPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] md:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[700px] md:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-center space-y-2 pb-4">
             <DialogTitle className="text-xl font-bold">
               Exam Verification
