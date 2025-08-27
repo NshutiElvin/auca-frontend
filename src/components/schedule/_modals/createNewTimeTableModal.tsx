@@ -1019,6 +1019,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                 id="slot_name"
                 className="col-span-3 p-2"
                 value={newSlot?.name || ""}
+                title="Select slot name"
                 onChange={(e) => {
                   const newName = e.target.value;
                   setNewSlot({ ...newSlot, name: newName });
@@ -1221,9 +1222,10 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                         Name
                       </Label>
                       <select
-                        id="slot_name"
+                        id={`slot_name_${myslot.id}`}
                         className="col-span-3 p-2"
                         value={newDay.slots[index].name || ""}
+                        title="Select slot name"
                         onChange={(e) => {
                           const newName = e.target.value;
                           setNewDay((prev: NewDay) => ({
