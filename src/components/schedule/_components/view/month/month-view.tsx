@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "../../../../ui/button";
 import { Card } from "../../../../ui/card";
@@ -15,27 +15,28 @@ import ShowMoreEventsModal from "../../../../..//components/schedule/_modals/sho
 import EventStyled from "../event-component/event-styled";
 import { Event, CustomEventModal } from "../../../../../../types";
 import CustomModal from "../../../../ui/custom-modal";
-   interface DayObj {
-            day: number;
-          }
 
-          interface MonthViewProps {
-            prevButton?: React.ReactNode;
-            nextButton?: React.ReactNode;
-            CustomEventComponent?: React.FC<Event>;
-            CustomEventModal?: CustomEventModal;
-            classNames?: { prev?: string; next?: string; addEvent?: string };
-          }
+interface DayObj {
+  day: number;
+}
 
-          interface MonthViewGetters {
-            getDaysInMonth: (month: number, year: number) => DayObj[];
-            getEventsForDay: (day: number, date: Date) => Event[];
-          }
+interface MonthViewProps {
+  prevButton?: React.ReactNode;
+  nextButton?: React.ReactNode;
+  CustomEventComponent?: React.FC<Event>;
+  CustomEventModal?: CustomEventModal;
+  classNames?: { prev?: string; next?: string; addEvent?: string };
+}
 
-          interface MonthViewContext {
-            getters: MonthViewGetters;
-            weekStartsOn: "monday" | "sunday";
-          }
+interface MonthViewGetters {
+  getDaysInMonth: (month: number, year: number) => DayObj[];
+  getEventsForDay: (day: number, date: Date) => Event[];
+}
+
+interface MonthViewContext {
+  getters: MonthViewGetters;
+  weekStartsOn: "monday" | "sunday";
+}
 
 const pageTransitionVariants = {
   enter: (direction: number) => ({
@@ -75,6 +76,22 @@ export default function MonthView({
     currentDate.getMonth(),
     currentDate.getFullYear()
   );
+
+  // Find the first day with an event in the current month
+  const firstEventDay = useMemo(() => {
+    for (let i = 0; i < daysInMonth.length; i++) {
+      const dayEvents = getters.getEventsForDay(daysInMonth[i].day, currentDate);
+      if (dayEvents.length > 0) {
+        return daysInMonth[i].day;
+      }
+    }
+    return 1; // fallback to day 1 if no events found
+  }, [daysInMonth, getters, currentDate]);
+
+  // Filter days to show only from the first event day onwards
+  const filteredDaysInMonth = useMemo(() => {
+    return daysInMonth.filter(dayObj => dayObj.day >= firstEventDay);
+  }, [daysInMonth, firstEventDay]);
 
   const handlePrevMonth = useCallback(() => {
     setDirection(-1);
@@ -172,39 +189,37 @@ export default function MonthView({
       ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
       : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const firstDayOfMonth = new Date(
+  // Calculate the day of week for the first event day
+  const firstEventDate = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
-    1
+    firstEventDay
   );
+  const startDayOfWeek = firstEventDate.getDay();
+  const adjustedStartDay = weekStartsOn === "monday" 
+    ? (startDayOfWeek === 0 ? 6 : startDayOfWeek - 1)
+    : startDayOfWeek;
 
-  const startOffset =
-    (firstDayOfMonth.getDay() - (weekStartsOn === "monday" ? 1 : 0) + 7) % 7;
+  // Calculate how many days to show per row (remaining days in first week + full weeks)
+  const daysInFirstWeek = 7 - adjustedStartDay;
+  const remainingDays = filteredDaysInMonth.length - daysInFirstWeek;
+  const additionalRows = Math.ceil(remainingDays / 7);
+  const totalCols = Math.min(filteredDaysInMonth.length, 7);
 
-  // Calculate previous month's last days for placeholders
-  const prevMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() - 1,
-    1
-  );
-  const lastDateOfPrevMonth = new Date(
-    prevMonth.getFullYear(),
-    prevMonth.getMonth() + 1,
-    0
-  ).getDate();
   return (
     <div>
-      <div className="flex flex-col mb-4">
+      <div className="flex flex-col">
         <motion.h2
           key={currentDate.getMonth()}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-3xl my-5 tracking-tighter font-bold"
+          className="text-2xl  tracking-tighter font-bold"
         >
           {currentDate.toLocaleString("default", { month: "long" })}{" "}
-          {currentDate.getFullYear()}
+          {currentDate.getFullYear()}   
+       
         </motion.h2>
         <div className="flex gap-3">
           {prevButton ? (
@@ -233,9 +248,10 @@ export default function MonthView({
           )}
         </div>
       </div>
+      
       <AnimatePresence initial={false} custom={direction} mode="wait">
         <motion.div
-          key={`${currentDate.getFullYear()}-${currentDate.getMonth()}`}
+          key={`${currentDate.getFullYear()}-${currentDate.getMonth()}-${firstEventDay}`}
           custom={direction}
           variants={{
             ...pageTransitionVariants,
@@ -250,31 +266,58 @@ export default function MonthView({
           initial="enter"
           animate="center"
           exit="exit"
-          className="grid grid-cols-7 gap-1 sm:gap-2"
+          className="grid grid-cols-7 gap-1 sm:gap-2 ml-4  "
         >
-          {daysOfWeek.map((day, idx) => (
-            <div
-              key={idx}
-              className="text-left my-8 text-4xl tracking-tighter font-medium"
-            >
-              {day}
+          {/* Show day headers only for the days that will be displayed */}
+          {Array.from({ length: adjustedStartDay }).map((_, idx) => (
+            <div key={`header-empty-${idx}`}  >
+              {/* Empty header cell for alignment */}
             </div>
           ))}
-
-          {Array.from({ length: startOffset }).map((_, idx) => (
-            <div key={`offset-${idx}`} className="h-[150px] opacity-50">
-              <div className={clsx("font-semibold relative text-3xl mb-1")}>
-                {lastDateOfPrevMonth - startOffset + idx + 1}
+          {filteredDaysInMonth.slice(0, 7 - adjustedStartDay).map((dayObj, idx) => {
+            const dayIndex = (adjustedStartDay + idx) % 7;
+            return (
+              <div
+                key={`header-${dayObj.day}`}
+                 
+              >
+                {/* {daysOfWeek[dayIndex]} */}
               </div>
+            );
+          })}
+          {/* Show remaining headers for subsequent weeks if needed */}
+          {filteredDaysInMonth.length > (7 - adjustedStartDay) && 
+            Array.from({ length: Math.min(7, filteredDaysInMonth.length - (7 - adjustedStartDay)) }).map((_, idx) => {
+              const dayIndex = idx % 7;
+              const shouldShow = Math.floor((filteredDaysInMonth.length - (7 - adjustedStartDay)) / 7) > 0 || 
+                               (filteredDaysInMonth.length - (7 - adjustedStartDay)) % 7 > idx;
+              return shouldShow ? (
+                <div
+                  key={`header-week2-${idx}`}
+                  className="text-left my-2 text-2xl tracking-tighter font-medium"
+                >
+                  {daysOfWeek[dayIndex]}
+                </div>
+              ) : (
+                <div key={`header-empty-week2-${idx}`} className="h-[1px]"></div>
+              );
+            })
+          }
+
+          {/* Add empty cells for proper alignment in first week */}
+          {Array.from({ length: adjustedStartDay }).map((_, idx) => (
+            <div key={`empty-${idx}`} className="h-[1px]">
+              {/* Empty cell for alignment */}
             </div>
           ))}
 
-          {daysInMonth.map((dayObj:DayObj) => {
+          {/* Render filtered days (starting from first event day) */}
+          {filteredDaysInMonth.map((dayObj: DayObj) => {
             const dayEvents = getters.getEventsForDay(dayObj.day, currentDate);
 
             return (
               <motion.div
-                className="hover:z-50 border-none h-[150px] rounded group flex flex-col"
+                className="hover:z-50 border-none h-[100px] rounded group flex flex-col "
                 key={dayObj.day}
                 variants={itemVariants}
                 initial="enter"
@@ -284,15 +327,13 @@ export default function MonthView({
                 <Card
                   className="shadow-md cursor-pointer overflow-hidden relative flex p-4 border h-full"
                   onClick={(e) => {
-                    // handleAddEvent(dayObj.day)
                     e.stopPropagation();
-                          handleShowMoreEvents(dayEvents);
+                    handleShowMoreEvents(dayEvents);
                   }}
-                  
                 >
                   <div
                     className={clsx(
-                      "font-semibold relative text-3xl mb-1",
+                      "font-semibold relative text-1xl mb-1",
                       dayEvents.length > 0
                         ? "text-primary-600"
                         : "text-muted-foreground",
@@ -305,34 +346,16 @@ export default function MonthView({
                   >
                     {dayObj.day}
                   </div>
-                  <div className="flex-grow flex flex-col gap-2 w-full">
-                    <AnimatePresence mode="wait">
-                      {dayEvents?.length > 0 && (
-                        <motion.div
-                          key={dayEvents[0].id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <EventStyled
-                            event={{
-                              ...dayEvents[0],
-                              CustomEventComponent,
-                              minmized: true,
-                            }}
-                            CustomEventModal={CustomEventModal}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                  <div className="flex-grow flex flex-col w-full">
+                  
+                 
                     {dayEvents.length > 1 && (
                       <Badge
                         onClick={(e) => {
                           e.stopPropagation();
                           handleShowMoreEvents(dayEvents);
                         }}
-                        variant="outline"
+                        variant="default"
                         className="hover:bg-default-200 absolute right-2 text-xs top-2 transition duration-300"
                       >
                         {dayEvents.length > 1
@@ -340,8 +363,20 @@ export default function MonthView({
                           : " "}
                       </Badge>
                     )}
+                    
+                    {dayEvents?.length > 0 && (
+                         
+                         <EventStyled
+                           event={{
+                             ...dayEvents[0],
+                             CustomEventComponent,
+                             minmized: true,
+                           }}
+                           CustomEventModal={CustomEventModal}
+                         />
+                        
+                     )}
                   </div>
- 
                 </Card>
               </motion.div>
             );

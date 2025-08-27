@@ -11,9 +11,16 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "../components/ui/sidebar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import useAuth from "../hooks/useAuth";
+import { DecodedToken } from "../../types";
+import useToast from "../hooks/useToast";
+import useNotifications from "../hooks/useNotifications";
+import { jwtDecode } from "jwt-decode";
+import { decode } from "punycode";
 
 export function VersionSwitcher({
   versions,
@@ -22,6 +29,27 @@ export function VersionSwitcher({
   versions: string[];
   defaultVersion: string;
 }) {
+  const { auth } = useAuth();
+ 
+ 
+    const [decodedToken, setDecodedToken] = React.useState<DecodedToken | null>(null);
+    const navigate = useNavigate();
+    const { setToastMessage } = useToast();
+    
+
+  
+    React.useEffect(() => {
+      try {
+        const decoded = jwtDecode<DecodedToken>(auth);
+        setDecodedToken(decoded);
+      } catch (error) {
+        setToastMessage({
+          message: "Error of validating access token. Please login again.",
+          variant: "danger",
+        });
+        navigate("/login");
+      }
+    }, [auth]);
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -46,7 +74,7 @@ export function VersionSwitcher({
                     className="text-lg font-semibold  transition-colors flex"
                   >
                     <Shield/>
-                    Admin Portal
+                    {decodedToken?.role} Portal
                   </Link>
                 </motion.div>
               </div>

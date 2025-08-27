@@ -40,6 +40,8 @@ import { LocationProvider } from "./contexts/LocationContext";
 import LocationLayout from "./Layouts/LocationLayout";
 import BulkUpload from "./pages/uploads";
 import StudentExamScannerPage from "./pages/StudentScannerPage";
+import StudentProfile from "./components/Profile";
+import Profile from "./components/Profile";
 
 const App = () => {
   return (
@@ -47,7 +49,7 @@ const App = () => {
       <ErrorContextProvider>
         <ToastProvider>
           <Toaster />
-          
+
           <AuthProvider>
             <ExamscheduleProvider>
               <NotificationProvider>
@@ -101,7 +103,7 @@ const App = () => {
                                     path="timetables"
                                     element={<TimeTablesPage />}
                                   />
-                                   <Route
+                                  <Route
                                     path="uploads"
                                     element={<BulkUpload />}
                                   />
@@ -118,10 +120,7 @@ const App = () => {
                                     element={<StudentsPage />}
                                   />
 
-                                  <Route
-                                    path="messages/:id"
-                                    element={<h1>Message</h1>}
-                                  />
+                                  <Route path="profile" element={<Profile />} />
                                 </Route>
                               </Route>
 
@@ -144,6 +143,8 @@ const App = () => {
                                     path="exams"
                                     element={<StudentExamsPage />}
                                   />
+
+                                  <Route path="profile" element={<Profile />} />
                                 </Route>
                               </Route>
                               <Route element={<InstructorRequiredLayout />}>
@@ -167,10 +168,7 @@ const App = () => {
 
                                   <Route path="exams" element={<ExamsPage />} />
 
-                                  <Route
-                                    path="messages/:id"
-                                    element={<h1>Message</h1>}
-                                  />
+                                  <Route path="profile" element={<Profile />} />
                                 </Route>
                               </Route>
 

@@ -113,22 +113,7 @@ export default function EventStyled({
         event?.minmized ? "border-transparent" : "border-default-400/60"
       )}
     >
-      {/* Delete button - shown by default for non-minimized, or on hover for minimized */}
-      {/* <Button
-        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-          e.stopPropagation();
-          handlers.handleDeleteEvent(event?.id);
-          onDelete?.(event?.id);
-        }}
-        variant="destructive"
-        size="icon"
-        className={cn(
-          "absolute z-[100] right-1 top-[-8px] h-6 w-6 p-0 shadow-md hover:bg-destructive/90 transition-all duration-200",
-          event?.minmized ? "opacity-0 group-hover:opacity-100" : "opacity-100"
-        )}
-      >
-        <TrashIcon size={14} className="text-destructive-foreground" />
-      </Button> */}
+     
 
       {event.CustomEventComponent ? (
         <div

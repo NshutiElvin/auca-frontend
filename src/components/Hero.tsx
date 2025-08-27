@@ -17,13 +17,13 @@ export const Hero = () => {
             src="/hero.jpg"
             alt="Bright Hotel exterior"
             className="w-full h-full object-cover rounded-2xl shadow-xl"
-            initial={{ scale: 1.1, opacity: 0 }}
+            initial={{ scale: 1.1, }}
             animate={{
               scale: [1.1, 1.15, 1.1], // zoom in & out
-              opacity: 1,
+              
             }}
             transition={{
-              duration: 10, // slow cycle
+              duration: 5, // slow cycle
               repeat: Infinity, // keeps looping
               ease: "easeInOut",
             }}

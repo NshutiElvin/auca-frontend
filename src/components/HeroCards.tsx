@@ -17,7 +17,7 @@ export const HeroCards = () => {
         
 
         <CardContent>
-      “No more manual clashes. This system made final exam planning effortless.”  
+      “No more manual clashes. This system made exam planning effortless.”  
     </CardContent>
 
         

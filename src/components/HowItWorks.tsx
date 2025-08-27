@@ -14,13 +14,13 @@ const features: FeatureProps[] = [
     icon: <Upload className="ml-2 w-20 h-20" />,
     title: "Upload Courses & Students",
     description:
-      "Start by uploading course lists and registered students. The system matches each student to their enrolled exams.",
+      "Start by uploading course lists and registered students. The system will link each student to their exams.",
   },
   {
     icon: <BetweenHorizontalStart className="ml-2 w-20 h-20"/>,
     title: "Define Time Slots & Rooms",
     description:
-      "Set up available exam time slots and allocate room capacities — flexible inputs for total control.",
+      "Choose exam times and assign rooms. You have full control over the schedule and room sizes.",
   },
   {
     icon: <CalendarSync className="ml-2 w-20 h-20" />,
@@ -32,7 +32,7 @@ const features: FeatureProps[] = [
     icon: <Bell className="ml-2 w-20 h-20"/>,
     title: "Review, Export & Notify",
     description:
-      "Preview the final schedule, export to Excel, and instantly notify students and faculty via email.",
+      "Check the final schedule, download it to Excel, and send emails to students and teachers.",
   },
 ];
 
@@ -41,7 +41,7 @@ export const HowItWorks = () => {
   return (
     <section
       id="howItWorks"
-      className="container text-center py-24 sm:py-32"
+      className="container text-center py-10"
     >
       <h2 className="text-3xl md:text-4xl font-bold ">
         How It{" "}

@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: "Syne";
-  src: url("/fonts/Syne-VariableFont_wght.ttf");
+  font-family: "Bookman Old Style";
+  /* src: url("/fonts/Syne-VariableFont_wght.ttf"); */
 }
 
 @layer base {

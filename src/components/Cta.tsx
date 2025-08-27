@@ -4,7 +4,7 @@ export const Cta = () => {
   return (
     <section
       id="cta"
-      className="bg-muted/50 py-16 my-24 sm:my-32"
+      className="bg-muted/50 py-10"
     >
       <div className="container lg:grid lg:grid-cols-2 place-items-center">
         <div className="lg:col-start-1">
