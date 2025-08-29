@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-
 import { VersionSwitcher } from "../components/version-switcher";
 import {
   Sidebar,
@@ -14,14 +13,13 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "../components/ui/sidebar";
-
 import useSidebar from "../hooks/useSidebar";
 
 // Define prop types
 type SidebarItem = {
   title: string;
   url: string;
-  icon?:React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 };
 
 type SidebarGroupType = {
@@ -58,27 +56,32 @@ export function AppSidebar({ data, ...props }: AppSidebarProps) {
           defaultVersion={data.versions[0]}
         />
       </SidebarHeader>
+
       <SidebarContent>
-        {data.navMain.map((pItem) => (
-          <SidebarGroup key={pItem.title}>
-            <SidebarGroupLabel>{pItem.title}</SidebarGroupLabel>
+        {data.navMain.map((group) => (
+          <SidebarGroup key={group.title}>
+            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {pItem.items.map((item) => (
+                {group.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
                       isActive={url === item.title}
                       onClick={() => {
                         setSidebarPath(item.title);
-                        setSidebarParentPath(pItem.title);
+                        setSidebarParentPath(group.title);
                       }}
-                    >  <Link
+                    >
+                      {/* Wrap everything in a single element */}
+                      <Link
                         to={item.url}
                         className="flex items-center gap-2"
                       >
-                        {item.icon && <item.icon className="w-4 h-4" />}
-                        <span>{item.title}</span>
+                        <span className="flex items-center gap-2">
+                          {item.icon ? <item.icon className="w-4 h-4" /> : null}
+                          <span>{item.title}</span>
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -88,6 +91,7 @@ export function AppSidebar({ data, ...props }: AppSidebarProps) {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
       <SidebarRail />
     </Sidebar>
   );

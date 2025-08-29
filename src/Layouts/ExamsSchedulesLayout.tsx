@@ -104,13 +104,13 @@ const ExamsScheduleLayout: React.FC = () => {
   }, [selectedLocation]);
 
 
-  return isGettingExams ? (
+  return <>{isGettingExams ? (
     <div className="flex justify-center">
       <Loader className="animate-spin" />
     </div>
   ) : (
     <Outlet />
-  );
+  )}</>
 };
 
 export default ExamsScheduleLayout;

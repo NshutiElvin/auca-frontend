@@ -29,13 +29,15 @@ const RefreshLayout: React.FC = () => {
     }
   }, [auth]);
 
-  return refreshing ? (
-    <center>
-       <Loader className="animate-spin"/>
-    </center>
-  ) : (
-    <Outlet />
-  );
+  return     <>
+      {refreshing ? (
+        <center>
+          <Loader className="animate-spin"/>
+        </center>
+      ) : (
+        <Outlet />
+      )}
+    </>
 };
 
 export default RefreshLayout;
