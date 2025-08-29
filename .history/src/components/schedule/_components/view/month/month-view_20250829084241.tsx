@@ -281,7 +281,7 @@ export default function MonthView({
                 key={`header-${dayObj.day}`}
                  
               >
-                {daysOfWeek[dayIndex]}
+                {/* {daysOfWeek[dayIndex]} */}
               </div>
             );
           })}
@@ -296,7 +296,7 @@ export default function MonthView({
                   key={`header-week2-${idx}`}
                   className="text-left my-2 text-2xl tracking-tighter font-medium"
                 >
-                  {/* {daysOfWeek[dayIndex]} */}
+                  {daysOfWeek[dayIndex]}
                 </div>
               ) : (
                 <div key={`header-empty-week2-${idx}`} className="h-[1px]"></div>
