@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HausLink - Smart Property Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #4F46E5, #7C3AED);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            color: #1e293b;
+        }
+
+        .logo-text p {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #4F46E5;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .login-btn {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .cta-btn {
+            background: #4F46E5;
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .cta-btn:hover {
+            background: #3730A3;
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+            color: white;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .hero-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            line-height: 1.2;
+        }
+
+        .hero .highlight {
+            background: linear-gradient(45deg, #10B981, #34D399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: #4F46E5;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover, .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Problem Section */
+        .problem-section {
+            padding: 5rem 2rem;
+            background: #f8fafc;
+            text-align: center;
+        }
+
+        .problem-section h2 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #4F46E5, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .problem-section p {
+            font-size: 1.2rem;
+            color: #64748b;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* Platform Section */
+        .platform-section {
+            padding: 5rem 2rem;
+            background: #1e293b;
+            color: white;
+        }
+
+        .platform-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .platform-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .platform-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 3rem;
+        }
+
+        .platform-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .demo-side {
+            text-align: left;
+        }
+
+        .demo-label {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .landlord-label {
+            background: #2563EB;
+            color: white;
+        }
+
+        .tenant-label {
+            background: #10B981;
+            color: white;
+        }
+
+        .demo-side h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-side p {
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        .dashboard-mockup {
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 3px solid;
+        }
+
+        .landlord-dashboard {
+            border-color: #2563EB;
+        }
+
+        .tenant-dashboard {
+            border-color: #10B981;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .landlord-header {
+            background: #2563EB;
+        }
+
+        .tenant-header {
+            background: #10B981;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: #374151;
+            padding: 1rem;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10B981;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .activity-section {
+            background: #374151;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .payment-btn {
+            background: #2563EB;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        /* Benefits Section */
+        .benefits-section {
+            padding: 5rem 2rem;
+            background: white;
+        }
+
+        .benefits-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .benefits-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .benefits-section > p {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 4rem;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .benefit-card {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .benefit-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #4F46E5, #7C3AED);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .benefit-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .benefit-card p {
+            color: #64748b;
+        }
+
+        .additional-benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .additional-benefit {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .additional-benefit-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #06B6D4, #0EA5E9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+        }
+
+        /* Testimonials */
+        .testimonials-section {
+            padding: 5rem 2rem;
+            background: #f8fafc;
+        }
+
+        .testimonials-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .testimonials-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #1e293b;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stars {
+            color: #F59E0B;
+            margin-bottom: 1rem;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: #64748b;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #4F46E5, #7C3AED);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            padding: 5rem 2rem;
+            background: white;
+        }
+
+        .pricing-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .pricing-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .pricing-section > p {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 3rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .pricing-card.featured {
+            border-color: #4F46E5;
+            transform: scale(1.05);
+        }
+
+        .popular-badge {
+            background: #4F46E5;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-period {
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .plan-description {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .plan-features li::before {
+            content: "✓";
+            color: #10B981;
+            font-weight: bold;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .plan-button.primary {
+            background: #4F46E5;
+            color: white;
+        }
+
+        .plan-button.secondary {
+            background: #f8fafc;
+            color: #4F46E5;
+            border: 2px solid #4F46E5;
+        }
+
+        .plan-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #10B981;
+        }
+
+        .stat-description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            background: #1e293b;
+            color: white;
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-newsletter {
+            background: #334155;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .footer-newsletter h3 {
+            margin-bottom: 1rem;
+        }
+
+        .footer-newsletter p {
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .newsletter-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .newsletter-btn {
+            background: #4F46E5;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section ul li a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section ul li a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #334155;
+            padding-top: 2rem;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .platform-demo {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">
+                <div class="logo-icon">H</div>
+                <div class="logo-text">
+                    <h1>HausLink</h1>
+                    <p>Smart Property Management</p>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#demo">Demo</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <a href="#" class="login-btn">Login</a>
+                <a href="#" class="cta-btn">Start Free Trial</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Find Homes. Manage Properties. Stay Connected. All-in-One. <span class="highlight">All-in-HausLink.</span></h1>
+            <p>Built for both landlords and tenants, HausLink simplifies property management across the continent — from rental search to payment, communication, and maintenance.</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn-primary">
+                    <span>🏠</span>
+                    I'm a Landlord
+                </a>
+                <a href="#" class="btn-secondary">
+                    <span>🏠</span>
+                    I'm a Tenant
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem-section">
+        <div class="fade-in-up">
+            <h2>The Renting Riddle, Solved.</h2>
+            <p>Fragmented communication. Late payments. Endless maintenance issues. Renting property shouldn't be a logistical nightmare. We created HausLink to simplify every step of the rental experience—for both tenants and landlords.</p>
+        </div>
+    </section>
+
+    <!-- Platform Demo Section -->
+    <section class="platform-section" id="demo">
+        <div class="platform-content">
+            <h2>See HausLink in Action</h2>
+            <p>Experience both sides of our platform. Switch between landlord and tenant dashboards to see how we serve everyone in the rental ecosystem.</p>
+            
+            <div class="platform-demo">
+                <div class="demo-side">
+                    <div class="demo-label landlord-label">For Landlords</div>
+                    <h3>Smart Property Management</h3>
+                    <p>Monitor all your properties, track rent payments, and manage tenants from one powerful dashboard.</p>
+                    
+                    <div class="dashboard-mockup landlord-dashboard">
+                        <div class="dashboard-header landlord-header">
+                            <span>Property Dashboard</span>
+                            <span>●●●</span>
+                        </div>
+                        <div class="dashboard-stats">
+                            <div class="stat-card">
+                                <div class="stat-value">KSh 150,000</div>
+                                <div class="stat-label">Rent Collected<br>This month</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">12</div>
+                                <div class="stat-label">Active Tenants<br>Across 3 properties</div>
+                            </div>
+                        </div>
+                        <div class="activity-section">
+                            <h4>Recent Activity</h4>
+                            <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                                <span>Rent payment received</span>
+                                <span style="color: #10B981;">+KSh 25,000</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                                <span>Maintenance request</span>
+                                <span style="color: #F59E0B;">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-side">
+                    <div class="demo-label tenant-label">For Tenants</div>
+                    <h3>Seamless Living Experience</h3>
+                    <p>Pay rent, request maintenance, and communicate with your landlord - all from your mobile device.</p>
+                    
+                    <div class="dashboard-mockup tenant-dashboard">
+                        <div class="dashboard-header tenant-header">
+                            <span>Tenant Portal</span>
+                            <span>●●●</span>
+                        </div>
+                        <div class="stat-card" style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div class="stat-value" style="color: #2563EB;">KSh 25,000</div>
+                                    <div class="stat-label">Next Rent Payment<br>Due in 5 days</div>
+                                </div>
+                                <div>📧</div>
+                            </div>
+                        </div>
+                        <button class="payment-btn">Pay with M-Pesa</button>
+                        <div class="dashboard-stats">
+                            <div class="stat-card" style="text-align: center;">
+                                <div style="font-size: 2rem;">🔧</div>
+                                <div style="margin-top: 0.5rem;">Maintenance<br>Request Service</div>
+                            </div>
+                            <div class="stat-card" style="text-align: center;">
+                                <div style="font-size: 2rem;">💬</div>
+                                <div style="margin-top: 0.5rem;">Messages<br>2 new</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Benefits Section -->
+    <section class="benefits-section" id="features">
+        <div class="benefits-content">
+            <h2>Core Benefits</h2>
+            <p>Everything you need for house searching and property management, all in one platform.</p>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">🔍</div>
+                    <h3>Effortless Rental Search</h3>
+                    <p>Find your perfect home quickly and easily</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">📋</div>
+                    <h3>Tenant Application</h3>
+                    <p>Submit rental requests in just a few clicks</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">🔧</div>
+                    <h3>Streamlined Maintenance</h3>
+                    <p>Report and manage repairs efficiently</p>
+                </div>
+            </div>
+
+            <div class="additional-benefits">
+                <div class="additional-benefit">
+                    <div class="additional-benefit-icon">💬</div>
+                    <h4>Centralized Messaging</h4>
+                    <p>All landlord-tenant communication in one secure place</p>
+                </div>
+                <div class="additional-benefit">
+                    <div class="additional-benefit-icon">🔔</div>
+                    <h4>Smart Notifications</h4>
+                    <p>Stay informed about rent, maintenance, and updates</p>
+                </div>
+                <div class="additional-benefit">
+                    <div class="additional-benefit-icon">🏠</div>
+                    <h4>Dual Dashboard</h4>
+                    <p>Personalized interface for landlords and tenants</p>
+                </div>
+                <div class="additional-benefit">
+                    <div class="additional-benefit-icon">🛡️</div>
+                    <h4>Secure and Reliable</h4>
+                    <p>Your data protection is our priority</p>
+                </div>
+                <div class="additional-benefit">
+                    <div class="additional-benefit-icon">💳</div>
+                    <h4>Instant Payment and Support</h4>
+                    <p>Pay rent via mobile money and get real-time assistance</p>
+                </div>
+                <div class="additional-benefit">
+                    <div class="additional-benefit-icon">🌍</div>
+                    <h4>Language Support</h4>
+                    <p>Available in English, French, Kiswahili, and Kinyarwanda</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+        <div class="testimonials-content">
+            <h2>Loved by Landlords & Tenants</h2>
+            <p>See how HausLink is transforming property management across East Africa</p>
+            
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-text">"HausLink made rent collection effortless. No more chasing tenants - the system handles everything and sends automated reminders. I get payments on time, every time. Pure convenience."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">GW</div>
+                        <div>
+                            <strong>Grace Wanjiku</strong>
+                            <div style="color: #64748b; font-size: 0.9rem;">Property Owner</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-text">"Reported a maintenance request through the app on a Sunday and it was resolved in a day! The communication with my landlord has never been this smooth."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">DM</div>
+                        <div>
+                            <strong>David Mugisha</strong>
+                            <div style="color: #64748b; font-size: 0.9rem;">Kigali, Rwanda</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-text">"Managing 23 properties across town used to be chaos. Now everything is organized in one place and my tenants pay via mobile money!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SK</div>
+                        <div>
+                            <strong>Sarah Nakato</strong>
+                            <div style="color: #64748b; font-size: 0.9rem;">Property Manager</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="pricing">
+        <div class="pricing-content">
+            <h2>Simple. Transparent Pricing</h2>
+            <p>Choose the plan that fits your property portfolio. Start with our free trial and upgrade as you grow. All plans include mobile money integration and local support.</p>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3 class="plan-name">Starter</h3>
+                    <div class="plan-price">$10.9</div>
+                    <div class="plan-period">/month</div>
+                    <div class="plan-description">Perfect for individual landlords with 1-3 properties</div>
+                    <ul class="plan-features">
+                        <li>Up to 3 properties</li>
+                        <li>Basic rent tracking</li>
+                        <li>Tenant communication</li>
+                        <li>Mobile money payments</li>
+                        <li>Maintenance requests</li>
+                        <li>Email support</li>
+                    </ul>
+                    <button class="plan-button secondary">Start for $10.9</button>
+                </div>
+
+                <div class="pricing-card featured">
+                    <div class="popular-badge">✨ Most Popular</div>
+                    <h3 class="plan-name">Professional</h3>
+                    <div class="plan-price">$49.9</div>
+                    <div class="plan-period">/month</div>
+                    <div class="plan-description">30-day free trial<br>Ideal for growing property portfolios and property managers</div>
+                    <ul class="plan-features">
+                        <li>Unlimited properties</li>
+                        <li>Advanced analytics</li>
+                        <li>SMS rent reminders</li>
+                        <li>Automated late fees</li>
+                        <li>Tenant screening</li>
+                        <li>Priority support</li>
+                        <li>Custom reports</li>
+                        <li>WhatsApp integration</li>
+                    </ul>
+                    <button class="plan-button primary">Start Free Trial</button>
+                </div>
+
+                <div class="pricing-card">
+                    <h3 class="plan-name">Enterprise</h3>
+                    <div class="plan-price">$199.9</div>
+                    <div class="plan-period">/month</div>
+                    <div class="plan-description">Contact Sales<br>For large property management companies and institutions</div>
+                    <ul class="plan-features">
+                        <li>White-label solution</li>
+                        <li>API access</li>
+                        <li>Custom integrations</li>
+                        <li>Dedicated account manager</li>
+                        <li>Training & onboarding</li>
+                        <li>24/7 phone support</li>
+                        <li>Custom workflows</li>
+                        <li>Advanced security</li>
+                    </ul>
+                    <button class="plan-button secondary">Contact Sales</button>
+                </div>
+            </div>
+            
+            <p style="color: #64748b; margin-top: 2rem;">All plans include free onboarding, mobile money integration, and local language support.<br>Need a custom solution? <a href="#contact" style="color: #4F46E5;">Contact our sales team</a></p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>🏠 Ready to find your home or manage properties effortlessly?</h2>
+            <p>Join thousands of tenants and landlords who are already experiencing fast, easy, and direct solutions with HausLink.</p>
+            
+            <div class="cta-buttons">
+                <a href="#" class="btn-primary">
+                    <span>🏠</span>
+                    Start House Hunting
+                </a>
+                <a href="#" class="btn-secondary">
+                    <span>📊</span>
+                    Manage Properties
+                </a>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">1,200+</div>
+                    <div class="stat-description">Active Properties</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-description">Happy Tenants</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">4.9★</div>
+                    <div class="stat-description">User Rating</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="footer-content">
+            <div class="footer-newsletter">
+                <h3>Stay Updated</h3>
+                <p>Get the latest features, tips, and property management insights delivered to your inbox.</p>
+                <div class="newsletter-form">
+                    <input type="email" class="newsletter-input" placeholder="Enter your email">
+                    <button class="newsletter-btn">Subscribe</button>
+                </div>
+            </div>
+
+            <div class="footer-main">
+                <div class="footer-section">
+                    <div class="logo" style="margin-bottom: 1rem;">
+                        <div class="logo-icon">H</div>
+                        <div class="logo-text">
+                            <h1 style="color: white;">HausLink</h1>
+                            <p>The smart property management platform across Africa. Connecting landlords and tenants through technology.</p>
+                        </div>
+                    </div>
+                    <p style="color: #94a3b8; font-style: italic;">We are not a housing real estate.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="#features">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Terms</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Support & Contact</h4>
+                    <ul>
+                        <li><a href="#">📞 WhatsApp Support</a></li>
+                        <li><a href="#">✉️ support@hauslink.com</a></li>
+                        <li><a href="#">📱 +250 788 347 887</a></li>
+                        <li><a href="#">📍 Kigali, Rwanda</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Language & Social</h4>
+                    <ul>
+                        <li><a href="#">🌍 Language</a></li>
+                        <li><a href="#">📘 Facebook</a></li>
+                        <li><a href="#">🐦 Twitter</a></li>
+                        <li><a href="#">📸 Instagram</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 HausLink. All rights reserved. Built with ❤️ for African property management.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to header
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.backdropFilter = 'blur(10px)';
+            } else {
+                header.style.background = 'white';
+                header.style.backdropFilter = 'none';
+            }
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.querySelectorAll('.benefit-card, .testimonial-card, .pricing-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'all 0.6s ease-out';
+            observer.observe(el);
+        });
+
+        // Add hover effects to buttons
+        document.querySelectorAll('.btn-primary, .btn-secondary, .cta-btn, .plan-button').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+                this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+
+        // Newsletter form handling
+        document.querySelector('.newsletter-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const email = document.querySelector('.newsletter-input').value;
+            if (email) {
+                alert('Thank you for subscribing! We\'ll keep you updated with the latest from HausLink.');
+                document.querySelector('.newsletter-input').value = '';
+            } else {
+                alert('Please enter a valid email address.');
+            }
+        });
+
+        // Add mobile menu toggle (for future enhancement)
+        const mobileMenuToggle = document.createElement('button');
+        mobileMenuToggle.innerHTML = '☰';
+        mobileMenuToggle.style.display = 'none';
+        mobileMenuToggle.style.background = 'none';
+        mobileMenuToggle.style.border = 'none';
+        mobileMenuToggle.style.fontSize = '1.5rem';
+        mobileMenuToggle.style.color = '#64748b';
+        mobileMenuToggle.style.cursor = 'pointer';
+
+        // Add responsive menu for mobile
+        if (window.innerWidth <= 768) {
+            document.querySelector('.nav-buttons').appendChild(mobileMenuToggle);
+            mobileMenuToggle.style.display = 'block';
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) {
+                mobileMenuToggle.style.display = 'block';
+            } else {
+                mobileMenuToggle.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
