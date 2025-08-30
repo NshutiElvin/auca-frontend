@@ -916,317 +916,289 @@ function ManualTimeTable() {
             </Button>
           </div>
 
-          <div
-            className={`
+       <div
+  className={`
     container mx-auto px-4 py-6
-    ${
-      serverLoadingMessage?.isServerLoading
-        ? "pointer-events-none opacity-20"
-        : ""
-    }
+    ${serverLoadingMessage?.isServerLoading ? "pointer-events-none opacity-20" : ""}
   `}
-          >
-            <div className="flex flex-col lg:flex-row gap-6 h-full">
-              {/* Unscheduled Courses Sidebar */}
-              {unscheduledExams.length > 0 && showUnscheduled && (
-                <div className="lg:w-80 xl:w-96 flex-shrink-0">
-                  <div className="bg-white rounded-xl shadow-lg border border-gray-200 h-full flex flex-col sticky top-4">
-                    {/* Header */}
-                    <div className="p-6 border-b border-gray-100">
-                      <h2 className="text-xl font-bold text-gray-800 mb-4">
-                        Unscheduled Courses
-                      </h2>
-
-                      {/* Search Input */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                          type="text"
-                          placeholder="Search courses..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg 
+>
+  <div className="flex flex-col lg:flex-row gap-6 h-full">
+    {/* Unscheduled Courses Sidebar */}
+    {unscheduledExams.length > 0 && showUnscheduled && (
+      <div className="lg:w-80 xl:w-96 flex-shrink-0">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 h-full flex flex-col sticky top-4">
+          {/* Header */}
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Unscheduled Courses
+            </h2>
+            
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search courses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg 
                          focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
                          transition-all duration-200"
-                        />
-                      </div>
-                    </div>
+              />
+            </div>
+          </div>
 
-                    {/* Scrollable Course List */}
-                    <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-3">
-                        {allUnscheduled.map((exam) => (
-                          <div
-                            key={exam.course.id}
-                            className="bg-gray-50 hover:bg-gray-100 rounded-lg border-2 border-dashed 
+          {/* Scrollable Course List */}
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-3">
+              {allUnscheduled.map((exam) => (
+                <div
+                  key={exam.course.id}
+                  className="bg-gray-50 hover:bg-gray-100 rounded-lg border-2 border-dashed 
                            border-gray-300 hover:border-blue-400 p-4 transition-all duration-200
                            cursor-move group"
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, exam)}
-                          >
-                            {/* Course Header */}
-                            <div className="flex items-start space-x-3 mb-3">
-                              <Grip
-                                className="h-4 w-4 text-gray-400 group-hover:text-blue-500 
-                                   transition-colors duration-200 mt-1 flex-shrink-0"
-                              />
-                              <h3 className="font-semibold text-sm text-gray-800 leading-tight">
-                                {exam.course.title}
-                              </h3>
-                            </div>
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, exam)}
+                >
+                  {/* Course Header */}
+                  <div className="flex items-start space-x-3 mb-3">
+                    <Grip className="h-4 w-4 text-gray-400 group-hover:text-blue-500 
+                                   transition-colors duration-200 mt-1 flex-shrink-0" />
+                    <h3 className="font-semibold text-sm text-gray-800 leading-tight">
+                      {exam.course.title}
+                    </h3>
+                  </div>
 
-                            {/* Groups Grid */}
-                            <div className="grid grid-cols-2 gap-2 mb-3">
-                              {exam.groups.map((e_group, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="outline"
-                                  draggable
-                                  onDragStart={(e) =>
-                                    handleCourseGroupDragStart(e, {
-                                      ...e_group,
-                                      courseId: exam.id,
-                                    })
-                                  }
-                                  className="flex items-center gap-1 px-2 py-1.5 cursor-move 
+                  {/* Groups Grid */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {exam.groups.map((e_group, idx) => (
+                      <Badge
+                        key={idx}
+                        variant="outline"
+                        draggable
+                        onDragStart={(e) =>
+                          handleCourseGroupDragStart(e, {
+                            ...e_group,
+                            courseId: exam.id,
+                          })
+                        }
+                        className="flex items-center gap-1 px-2 py-1.5 cursor-move 
                                  hover:bg-blue-50 hover:border-blue-400 hover:text-blue-700
                                  transition-all duration-200 text-center justify-center"
-                                >
-                                  <Grip className="h-2 w-2 text-gray-400" />
-                                  <span className="text-xs font-medium">
-                                    {e_group.group.group_name}
-                                  </span>
-                                </Badge>
-                              ))}
-                            </div>
+                      >
+                        <Grip className="h-2 w-2 text-gray-400" />
+                        <span className="text-xs font-medium">
+                          {e_group.group.group_name}
+                        </span>
+                      </Badge>
+                    ))}
+                  </div>
 
-                            {/* Reason Badge */}
-                            {exam.reason && (
-                              <div className="flex justify-end">
+                  {/* Reason Badge */}
+                  {exam.reason && (
+                    <div className="flex justify-end">
+                      <Badge
+                        variant="destructive"
+                        className="text-xs px-2 py-1 rounded-full"
+                      >
+                        {exam.reason}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+    )}
+
+    {/* Scheduled Exams Grid */}
+    <div className="flex-1 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 
+                      2xl:grid-cols-5 gap-4 auto-rows-max">
+        {scheduledExams.map((date, idx) => {
+          let dateObj = new Date(date.day);
+
+          return (
+            <Card
+              key={idx}
+              className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 
+                       overflow-hidden border border-gray-200 hover:border-gray-300
+                       flex flex-col h-fit min-h-[450px] max-h-[600px]"
+            >
+              {/* Date Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white 
+                            text-center py-4 px-4 shadow-sm">
+                <h2 className="text-lg font-bold">
+                  {format(dateObj, "eee")}
+                </h2>
+                <p className="text-sm opacity-90 mt-1">
+                  {format(dateObj, "dd MMM yyyy")}
+                </p>
+              </div>
+
+              {/* Slots Container */}
+              <div className="flex-1 overflow-y-auto p-2">
+                <div className="space-y-3">
+                  {date.exams.map((slot, slotIdx) => (
+                    <Card
+                      key={slotIdx}
+                      className="border border-gray-200 hover:border-gray-300 
+                               transition-all duration-200 overflow-hidden"
+                      onDragOver={handleDragOver}
+                      onDrop={(e) =>
+                        handleDroppedCourse(e, {
+                          day: date.day,
+                          slot: slot,
+                        })
+                      }
+                    >
+                      {/* Slot Header */}
+                      <div className="bg-blue-50 px-3 py-2 border-b border-gray-100
+                                    flex justify-between items-center">
+                        <h3 className="text-sm font-semibold text-blue-800">
+                          {slot.name}
+                        </h3>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={slot.exams.length <= 0}
+                          onClick={() => {
+                            setDialogOption({ option: "changeTime" });
+                            setDialogOpen(true);
+                            setSlotToChange({
+                              name: slot.name,
+                              date: slot.date,
+                              start: slot.start,
+                              end: slot.end,
+                            });
+                          }}
+                          className="h-6 w-6 p-0 hover:bg-blue-100"
+                        >
+                          <Pencil className="h-3 w-3 text-blue-600" />
+                        </Button>
+                      </div>
+
+                      {/* Time Badge */}
+                      <div className="px-3 py-1 bg-gray-50 border-b border-gray-100">
+                        <Badge variant="secondary" className="text-xs font-medium">
+                          {slot.start} - {slot.end}
+                        </Badge>
+                      </div>
+
+                      {/* Exam Content */}
+                      <div className="min-h-[100px]">
+                        {slot.exams && slot.exams.length > 0 ? (
+                          <div className="p-3">
+                            {/* Multiple Exams Indicator */}
+                            {slot.exams.length > 1 && (
+                              <div className="flex justify-between items-center mb-3">
                                 <Badge
-                                  variant="destructive"
-                                  className="text-xs px-2 py-1 rounded-full"
+                                  variant="outline"
+                                  className="bg-blue-100 text-blue-700 border-blue-300 
+                                           hover:bg-blue-200 cursor-pointer text-xs px-2 py-1"
+                                  onClick={() => {
+                                    setMoreExams(
+                                      slot.exams.map((e) => ({
+                                        ...e,
+                                        group: e.group.group_name,
+                                        course: e.group.course.title,
+                                      }))
+                                    );
+                                    setCurrentSlotMeta({
+                                      day: date.day,
+                                      name: slot.name,
+                                    });
+                                    setShowMore(true);
+                                  }}
                                 >
-                                  {exam.reason}
+                                  {slot.exams.length} courses
                                 </Badge>
+
+                                <Button
+                                  onClick={(e) => {
+                                    if (slot.exams.length > 0) {
+                                      const lastExam = slot.exams[slot.exams.length - 1];
+                                      removeExamCourse(e, {
+                                        day: date.day,
+                                        name: slot.name,
+                                        group_id: lastExam.group.id,
+                                        courseId: lastExam.courseId,
+                                      });
+                                    }
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 
+                                           hover:bg-red-50 hover:border-red-300 
+                                           transition-all duration-200"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Main Course Display */}
+                            {slot.exams[slot.exams.length - 1] && (
+                              <div
+                                className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 
+                                         cursor-pointer transition-all duration-200 
+                                         border border-gray-200"
+                                onClick={() => {
+                                  setMoreExams(
+                                    slot.exams.map((e) => ({
+                                      ...e,
+                                      group: e.group,
+                                      real_group: e.group,
+                                      course: e.group.course.title,
+                                    }))
+                                  );
+                                  setCurrentSlotMeta({
+                                    day: date.day,
+                                    name: slot.name,
+                                  });
+                                  setShowMore(true);
+                                }}
+                              >
+                                <span className="font-medium text-sm text-gray-800 
+                                               leading-tight block">
+                                  {slot.exams[slot.exams.length - 1].group.course.title}
+                                </span>
+                                <span className="text-xs text-gray-600 mt-1 block">
+                                  {slot.exams[slot.exams.length - 1].group.group_name}
+                                </span>
                               </div>
                             )}
                           </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </div>
-              )}
-
-              {/* Scheduled Exams Grid */}
-              <div className="flex-1 min-w-0">
-                <div
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 
-                      2xl:grid-cols-5 gap-4 auto-rows-max"
-                >
-                  {scheduledExams.map((date, idx) => {
-                    let dateObj = new Date(date.day);
-
-                    return (
-                      <Card
-                        key={idx}
-                        className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 
-                       overflow-hidden border border-gray-200 hover:border-gray-300
-                       flex flex-col h-fit min-h-[450px] max-h-[600px]"
-                      >
-                        {/* Date Header */}
-                        <div
-                          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white 
-                            text-center py-4 px-4 shadow-sm"
-                        >
-                          <h2 className="text-lg font-bold">
-                            {format(dateObj, "eee")}
-                          </h2>
-                          <p className="text-sm opacity-90 mt-1">
-                            {format(dateObj, "dd MMM yyyy")}
-                          </p>
-                        </div>
-
-                        {/* Slots Container */}
-                        <div className="flex-1 overflow-y-auto p-2">
-                          <div className="space-y-3">
-                            {date.exams.map((slot, slotIdx) => (
-                              <Card
-                                key={slotIdx}
-                                className="border border-gray-200 hover:border-gray-300 
-                               transition-all duration-200 overflow-hidden"
-                                onDragOver={handleDragOver}
-                                onDrop={(e) =>
-                                  handleDroppedCourse(e, {
-                                    day: date.day,
-                                    slot: slot,
-                                  })
-                                }
-                              >
-                                {/* Slot Header */}
-                                <div
-                                  className="bg-blue-50 px-3 py-2 border-b border-gray-100
-                                    flex justify-between items-center"
-                                >
-                                  <h3 className="text-sm font-semibold text-blue-800">
-                                    {slot.name}
-                                  </h3>
-
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    disabled={slot.exams.length <= 0}
-                                    onClick={() => {
-                                      setDialogOption({ option: "changeTime" });
-                                      setDialogOpen(true);
-                                      setSlotToChange({
-                                        name: slot.name,
-                                        date: slot.date,
-                                        start: slot.start,
-                                        end: slot.end,
-                                      });
-                                    }}
-                                    className="h-6 w-6 p-0 hover:bg-blue-100"
-                                  >
-                                    <Pencil className="h-3 w-3 text-blue-600" />
-                                  </Button>
-                                </div>
-
-                                {/* Time Badge */}
-                                <div className="px-3 py-1 bg-gray-50 border-b border-gray-100">
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs font-medium"
-                                  >
-                                    {slot.start} - {slot.end}
-                                  </Badge>
-                                </div>
-
-                                {/* Exam Content */}
-                                <div className="min-h-[100px]">
-                                  {slot.exams && slot.exams.length > 0 ? (
-                                    <div className="p-3">
-                                      {/* Multiple Exams Indicator */}
-                                      {slot.exams.length > 1 && (
-                                        <div className="flex justify-between items-center mb-3">
-                                          <Badge
-                                            variant="outline"
-                                            className="bg-blue-100 text-blue-700 border-blue-300 
-                                           hover:bg-blue-200 cursor-pointer text-xs px-2 py-1"
-                                            onClick={() => {
-                                              setMoreExams(
-                                                slot.exams.map((e) => ({
-                                                  ...e,
-                                                  group: e.group.group_name,
-                                                  course: e.group.course.title,
-                                                }))
-                                              );
-                                              setCurrentSlotMeta({
-                                                day: date.day,
-                                                name: slot.name,
-                                              });
-                                              setShowMore(true);
-                                            }}
-                                          >
-                                            {slot.exams.length} courses
-                                          </Badge>
-
-                                          <Button
-                                            onClick={(e) => {
-                                              if (slot.exams.length > 0) {
-                                                const lastExam =
-                                                  slot.exams[
-                                                    slot.exams.length - 1
-                                                  ];
-                                                removeExamCourse(e, {
-                                                  day: date.day,
-                                                  name: slot.name,
-                                                  group_id: lastExam.group.id,
-                                                  courseId: lastExam.courseId,
-                                                });
-                                              }
-                                            }}
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 
-                                           hover:bg-red-50 hover:border-red-300 
-                                           transition-all duration-200"
-                                          >
-                                            <X className="w-3 h-3" />
-                                          </Button>
-                                        </div>
-                                      )}
-
-                                      {/* Main Course Display */}
-                                      {slot.exams[slot.exams.length - 1] && (
-                                        <div
-                                          className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 
-                                         cursor-pointer transition-all duration-200 
-                                         border border-gray-200"
-                                          onClick={() => {
-                                            setMoreExams(
-                                              slot.exams.map((e) => ({
-                                                ...e,
-                                                group: e.group,
-                                                real_group: e.group,
-                                                course: e.group.course.title,
-                                              }))
-                                            );
-                                            setCurrentSlotMeta({
-                                              day: date.day,
-                                              name: slot.name,
-                                            });
-                                            setShowMore(true);
-                                          }}
-                                        >
-                                          <span
-                                            className="font-medium text-sm text-gray-800 
-                                               leading-tight block"
-                                          >
-                                            {
-                                              slot.exams[slot.exams.length - 1]
-                                                .group.course.title
-                                            }
-                                          </span>
-                                          <span className="text-xs text-gray-600 mt-1 block">
-                                            {
-                                              slot.exams[slot.exams.length - 1]
-                                                .group.group_name
-                                            }
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    /* Empty Slot Drop Zone */
-                                    <div
-                                      className="h-full flex flex-col items-center justify-center 
+                        ) : (
+                          /* Empty Slot Drop Zone */
+                          <div className="h-full flex flex-col items-center justify-center 
                                         py-8 px-4 text-center border-2 border-dashed 
                                         border-gray-300 hover:border-blue-400 hover:bg-blue-50/30 
-                                        m-3 rounded-lg transition-all duration-200"
-                                    >
-                                      <Calendar className="w-8 h-8 text-gray-300 mb-2" />
-                                      <p className="text-sm font-medium text-gray-500">
-                                        Drop course here
-                                      </p>
-                                      <p className="text-xs text-gray-400 mt-1">
-                                        Drag from sidebar
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </Card>
-                            ))}
+                                        m-3 rounded-lg transition-all duration-200">
+                            <Calendar className="w-8 h-8 text-gray-300 mb-2" />
+                            <p className="text-sm font-medium text-gray-500">
+                              Drop course here
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Drag from sidebar
+                            </p>
                           </div>
-                        </div>
-                      </Card>
-                    );
-                  })}
+                        )}
+                      </div>
+                    </Card>
+                  ))}
                 </div>
               </div>
-            </div>
-          </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</div>
 
           {showMore && (
             <div>
