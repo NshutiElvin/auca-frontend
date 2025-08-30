@@ -664,27 +664,19 @@ const OccupanciesPage = () => {
     return (
       <div className="flex flex-col justify-center p-2">
         <div className="flex flex-wrap justify-between">
-          {
-            <Badge variant={"default"}>
-              {isAssigningInstructor ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                occupancies[0].room_instructor
-              )}
-            </Badge>
-          }
+          {<Badge variant={"default"}>{isAssigningInstructor ? <Loader2 className="animate-spin"/>: occupancies[0].room_instructor}</Badge>}
 
           <select
             value={occupancies[0].room_instructor_id}
             onChange={(e) => {
               startAssigningInstructorTransition(async () => {
                 try {
-                  const room = occupancies[0];
-                  const resp = await axios.post("/rooms/assign_instructor", {
-                    instructor_id: e.target.value,
-                    date: room.date,
-                    slot_name: room.slot_name,
-                  });
+                  const room= occupancies[0]
+                  const resp= await axios.post("/rooms/assign_instructor",{
+                  instructor_id: e.target.value,
+                  date:room.date,
+                  slot_name:room.slot_name
+                  })
                 } catch (error) {
                   setToastMessage({
                     message:

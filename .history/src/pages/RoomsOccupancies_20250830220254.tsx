@@ -26,7 +26,6 @@ import {
   Settings,
   HouseIcon,
   QrCodeIcon,
-  Loader2,
 } from "lucide-react";
 import useUserAxios from "../hooks/useUserAxios";
 import { Button } from "../components/ui/button";
@@ -68,9 +67,6 @@ export type RoomOccupancy = {
   course_department?: string;
   course_group?: string;
   room_capacity: number;
-  room_instructor?: string;
-  room_instructor_id?: string;
-  slot_name?: string;
 };
 
 type FilterOptions = {
@@ -111,7 +107,7 @@ const OccupanciesPage = () => {
   const [examsDates, setExamsDates] = useState<Set<string>>(new Set());
   const [isGettingOccupancies, startTransition] = useTransition();
   const [selectedRoom, setSelectedRoom] = useState<SelectedRoom | null>(null);
-  const { selectedLocation } = useContext(LocationContext);
+  const{selectedLocation}= useContext(LocationContext)
   const [draggedCourseGroup, setDraggedCourseGroup] =
     useState<DraggedCourseGroup | null>(null);
   const [courseStudents, setCourseStudents] = useState<any[]>([]);
@@ -149,10 +145,8 @@ const OccupanciesPage = () => {
   const [selectedRoomDetails, setSelectedRoomDetails] = useState<any | null>(
     null
   );
-  const [isAssigningInstructor, startAssigningInstructorTransition] =
-    useTransition();
-  const [instructors, setInstructors] = useState<any[] | null>(null);
-
+  const[instructors, setInstructors]= useState<any[]|null>(null)
+  
   const [dimensions, setDimensions] = useState({
     width: 800, // Initial width
     height: 600, // Initial height
@@ -272,14 +266,20 @@ const OccupanciesPage = () => {
     });
   };
 
-  const getInstructors = async () => {
+
+  const getInstructors= async()=>{
     try {
-      const resp = await axios.get("/users/instructors");
-      if (resp.data.success) {
-        setInstructors(resp.data.data);
+      const resp= await axios.get("/users/instructors")
+      if(resp.data.success){
+        setInstructors(resp.data.data)
+
       }
-    } catch (error) {}
-  };
+      
+    } catch (error) {
+
+      
+    }
+  }
   const handleDroppedGroup = async (
     e: React.DragEvent,
     selectedRoom: SelectedRoom
@@ -488,12 +488,10 @@ const OccupanciesPage = () => {
   const fetchOccupancies = async () => {
     startTransition(async () => {
       try {
-        let resp = null;
-        if (selectedLocation)
-          resp = await axios.get(
-            `/api/rooms/occupancies?location=${selectedLocation.id}`
-          );
-        else {
+        let resp=null
+        if(selectedLocation)
+            resp = await axios.get(`/api/rooms/occupancies?location=${selectedLocation.id}`);
+        else{
           resp = await axios.get("/api/rooms/occupancies/");
         }
         const flatData: RoomOccupancy[] = [];
@@ -510,9 +508,6 @@ const OccupanciesPage = () => {
               flatData.push({
                 room_id: room.room_id,
                 room_name: room.room_name,
-                room_instructor: room.instructor.first_name,
-                room_instructor_id: room.instructor.first_name,
-                slot_name: room.slot_name,
                 date: schedule.date,
                 start_time: schedule.start_time,
                 end_time: schedule.end_time,
@@ -662,94 +657,49 @@ const OccupanciesPage = () => {
       capacity > 0 ? ((totalStudents / capacity) * 100).toFixed(0) : 0;
 
     return (
-      <div className="flex flex-col justify-center p-2">
-        <div className="flex flex-wrap justify-between">
-          {
-            <Badge variant={"default"}>
-              {isAssigningInstructor ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                occupancies[0].room_instructor
-              )}
-            </Badge>
-          }
-
-          <select
-            value={occupancies[0].room_instructor_id}
-            onChange={(e) => {
-              startAssigningInstructorTransition(async () => {
-                try {
-                  const room = occupancies[0];
-                  const resp = await axios.post("/rooms/assign_instructor", {
-                    instructor_id: e.target.value,
-                    date: room.date,
-                    slot_name: room.slot_name,
-                  });
-                } catch (error) {
-                  setToastMessage({
-                    message:
-                      "Failed to assign instructor to this room please try again",
-                    variant: "danger",
-                  });
-                }
-              });
-            }}
-          >
-            {instructors?.map((instructor, idx) => {
-              return (
-                <option value={instructor.id} key={idx}>
-                  {instructor.first_name} {instructor.last_name}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-        <div
-          className={`relative h-16 rounded-md p-2 text-xs cursor-move hover:shadow-md   text-black hover:scale-105 ${
-            isOvercapacity
-              ? "bg-red-800 border border-red-200 hover:bg-red-100"
-              : totalStudents > capacity * 0.8
-              ? "bg-primary border border-primary hover:bg-primary text-white"
-              : "bg-blue-300 border border-blue-300 hover:bg-blue-200"
-          }`}
-          onClick={() => handleShowRoomOccupancies(occupancies)}
-        >
-          <div className="flex flex-col h-full justify-between">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <div
-                  className={`font-medium truncate ${
-                    isOvercapacity ? "text-red-700" : "text-black-700"
-                  }`}
-                >
-                  {occupancies.length === 1
-                    ? occupancies[0].course_code
-                    : `${occupancies.length} Courses`}
-                </div>
-                <div
-                  className={`text-xs truncate flex items-center gap-1 ${
-                    isOvercapacity
-                      ? "text-red-600"
-                      : "text-yellow-400 font-bold"
-                  }`}
-                >
-                  <Users className="w-3 h-3" />
-                  {totalStudents}/{capacity} ({utilizationRate}%)
-                </div>
+      <div
+        className={`relative h-16 rounded-md p-2 text-xs cursor-move hover:shadow-md   text-black hover:scale-105 ${
+          isOvercapacity
+            ? "bg-red-800 border border-red-200 hover:bg-red-100"
+            : totalStudents > capacity * 0.8
+            ? "bg-primary border border-primary hover:bg-primary text-white"
+            : "bg-blue-300 border border-blue-300 hover:bg-blue-200"
+        }`}
+        onClick={() => handleShowRoomOccupancies(occupancies)}
+      >
+        <div className="flex flex-col h-full justify-between">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <div
+                className={`font-medium truncate ${
+                  isOvercapacity ? "text-red-700" : "text-black-700"
+                }`}
+              >
+                {occupancies.length === 1
+                  ? occupancies[0].course_code
+                  : `${occupancies.length} Courses`}
               </div>
-              <MoreHorizontal className="w-4 h-4 font-bold flex-shrink-0 cursor-pointer" />
+              <div
+                className={`text-xs truncate flex items-center gap-1 ${
+                  isOvercapacity ? "text-red-600" : "text-yellow-400 font-bold"
+                }`}
+              >
+                <Users className="w-3 h-3" />
+                {totalStudents}/{capacity} ({utilizationRate}%)
+              </div>
             </div>
-            <div className="text-xs   flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {formatTime(occupancies[0].start_time)}
-            </div>
+            <MoreHorizontal className="w-4 h-4 font-bold flex-shrink-0 cursor-pointer" />
           </div>
-          {isOvercapacity && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-2 h-2" />
-            </div>
-          )}
+          <div className="text-xs   flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {formatTime(occupancies[0].start_time)}
+          </div>
         </div>
+        {isOvercapacity && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+            <AlertTriangle className="w-2 h-2" />
+          </div>
+        )}
       </div>
     );
   };
@@ -758,7 +708,7 @@ const OccupanciesPage = () => {
     fetchOccupancies();
     setOpen(false);
   }, []);
-  useEffect(() => {
+    useEffect(() => {
     fetchOccupancies();
   }, [selectedLocation]);
   useEffect(() => {
@@ -775,7 +725,7 @@ const OccupanciesPage = () => {
         setDialogOpen(!dialogOpen);
         setSelectedRoomDetails(null);
         setShowQrCode(false);
-        setDialogMessage(null);
+        setDialogMessage(null)
       }}
     >
       <div
@@ -977,7 +927,7 @@ const OccupanciesPage = () => {
                 {timeSlots.map((time, index) => (
                   <div
                     key={index}
-                    className="flex-1 p-3  text-center text-sm font-medium  border-r  last:border-r-0 flex col"
+                    className="flex-1 p-3  text-center text-sm font-medium  border-r  last:border-r-0"
                   >
                     {formatTime(time)}
                   </div>
@@ -991,10 +941,12 @@ const OccupanciesPage = () => {
                       <Button
                         className="flex items-center space-x-2 flex-1 min-w-fit"
                         onClick={() => {
+                          console.log(room);
                           setShowQrCode(true);
                           setSelectedRoomDetails({
                             name: room,
                             date: selectedDate,
+                            slot_name:
                           });
                           setDialogOpen(true);
                         }}
