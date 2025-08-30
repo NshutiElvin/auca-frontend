@@ -511,7 +511,7 @@ const OccupanciesPage = () => {
               flatData.push({
                 room_id: room.room_id,
                 room_name: room.room_name,
-                room_instructor: room.instructor? room?.instructor?.first_name:null,
+                room_instructor: room?.instructor ? (room.instructor.first_name || room.instructor.email) : null,
                 room_instructor_id:room.instructor?  room?.instructor?.id:null,
                 slot_name: room.slot_name,
                 date: schedule.date,
@@ -671,7 +671,7 @@ const OccupanciesPage = () => {
               {isAssigningInstructor ? (
                 <Loader2 className="animate-spin" />
               ) : (
-                occupancies[0].room_instructor ? occupancies[0].room_instructor: "None"
+                occupancies[0].room_instructor 
               )}
             </Badge>
           }
