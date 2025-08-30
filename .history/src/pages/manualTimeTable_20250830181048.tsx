@@ -900,32 +900,39 @@ function ManualTimeTable() {
             "pointer-events-none opacity-20"
           }`}
         >
-          <div className="flex justify-start">
-            <Button
-              className="relative inline-flex items-center justify-center w-10 h-10 rounded-full border   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors mr-2"
-              aria-label="Notifications"
-              onClick={() => setShowUnscheduled(!showUnscheduled)}
-              variant={"outline"}
-            >
-              {showUnscheduled ? <ListCollapse /> : <List />}
-              {unscheduledExams.length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-xs  font-medium p-2">
-                  {unscheduledExams.length > 9 ? "9+" : unscheduledExams.length}
-                </span>
-              )}
-            </Button>
-          </div>
+           
+            <div className="flex justify-start">
+              <Button
+                className="relative inline-flex items-center justify-center w-10 h-10 rounded-full border   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors mr-2"
+                aria-label="Notifications"
+                onClick={() => setShowUnscheduled(!showUnscheduled)}
+                variant={"outline"}
+              >
+                {showUnscheduled ? <ListCollapse /> : <List />}
+                {unscheduledExams.length > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-xs  font-medium p-2">
+                    {unscheduledExams.length > 9
+                      ? "9+"
+                      : unscheduledExams.length}
+                  </span>
+                )}
+              </Button>
+            </div>
+       
 
           <div
-            className={`flex flex-col ${
+            className={`grid grid-cols-1 ${
               unscheduledExams.length > 0 &&
               showUnscheduled &&
-              "lg:flex-row w-full"
-            } gap-2`}
+              "lg:grid-cols-3 w-full  "
+            } gap-2 ${
+              serverLoadingMessage?.isServerLoading &&
+              "pointer-events-none opacity-20"
+            }`}
           >
             {" "}
             {unscheduledExams.length > 0 && showUnscheduled && (
-                <div className="lg:w-1/3">
+              <div className="lg:col-span-1">
                 <div className="rounded-md shadow-lg p-2 sticky top-2">
                   <h2 className="text-xl font-bold mb-4">
                     Unscheduled courses with groups
@@ -1001,8 +1008,8 @@ function ManualTimeTable() {
                   </ScrollArea>
                 </div>
               </div>
-            )}<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4   gap-4 lg:w-2/3">
-            
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full gap-4 lg:col-span-2">
               {scheduledExams.map((date, idx) => {
                 let dateObj = new Date(date.day);
 
