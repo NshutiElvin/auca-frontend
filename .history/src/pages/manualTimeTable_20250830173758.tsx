@@ -55,7 +55,6 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import AllSuggestionsDialog from "./AllSuggestions";
 
 interface Slot {
   id: string;
@@ -1658,12 +1657,73 @@ function ManualTimeTable() {
             </DialogContent>
           )}
         </div>
+        {viewAllSuggestions && suggestions && (
+          <DialogContent className="sm:max-w-[800px]   border p-5" asChild>
+            <div>
+              <h4 className="font-semibold text-red-600 dark:text-red-400">
+                All Suggestions
+              </h4>
+            </div>
+
+            <Table>
+              <TableHeader className="bg-muted">
+                <TableRow className="border-b    dark:hover:bg-gray-750">
+                  <TableHead className=" font-semibold">Date</TableHead>
+                  <TableHead className=" font-semibold">Slot</TableHead>
+                  <TableHead className=" font-semibold">Suggested</TableHead>
+                  <TableHead className=" font-semibold">Reason</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {suggestions?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8">
+                      <div className=" ">
+                        {searchTerm ? (
+                          <>
+                            <Search className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                            <p>No students found matching "{searchTerm}"</p>
+                            <p className="text-sm mt-1">
+                              Try adjusting your search terms
+                            </p>
+                          </>
+                        ) : (
+                          <p>No conflicted students found</p>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  suggestions?.map((suggestion, index) => (
+                    <TableRow
+                      key={index}
+                      className={`
+                      border-b   
+                      
+                      transition-colors duration-150
+                 
+                    `}
+                    >
+                      <TableCell className="font-medium  ">
+                        {suggestion.date}
+                      </TableCell>
+                      <TableCell className=" ">{suggestion.slot}</TableCell>
+                      <TableCell className=" ">
+                        {suggestion.suggested ? "Suggested" : "Not Suggested"}
+                      </TableCell>
+                      <TableCell className="  ">
+                        <Badge variant={"default"}>
+                          {suggestion.reason || "N/A"}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </DialogContent>
+        )}
       </Dialog>
-      <AllSuggestionsDialog
-        viewAllSuggestions={viewAllSuggestions}
-        setViewAllSuggestions={setViewAllSuggestions}
-        suggestions={suggestions}
-      />
       <ConflictDialog
         conflictedCourses={conflictedCOurses}
         conflictedStudents={conflictedStudents}
