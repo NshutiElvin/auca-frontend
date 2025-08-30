@@ -667,11 +667,11 @@ const OccupanciesPage = () => {
       <div className="flex flex-col justify-center p-2">
         <div className="flex flex-wrap justify-center gap-2 py-2">
           {
-          <Badge variant={"default"}>
+           occupancies[0].room_instructor&& <Badge variant={"default"}>
               {isAssigningInstructor ? (
                 <Loader2 className="animate-spin" />
               ) : (
-                occupancies[0].room_instructor ? occupancies[0].room_instructor: "None"
+                occupancies[0].room_instructor
               )}
             </Badge>
           }
