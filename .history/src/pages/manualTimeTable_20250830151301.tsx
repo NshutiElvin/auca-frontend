@@ -46,7 +46,6 @@ import { ConflictDialog } from "./ConflictsDialog";
 import { useSidebar } from "../components/ui/sidebar";
 import { Label } from "../components/ui/label";
 import LocationContext from "../contexts/LocationContext";
-import { is } from "date-fns/locale";
 
 interface Slot {
   id: string;
@@ -855,13 +854,9 @@ function ManualTimeTable() {
     reviewConflicts();
   }, [selectedSlotInfo]);
 
-  return (isLoadingUnscheduled)?(
-    <div className="flex justify-center items-center h-96">
-      <Loader2 className="animate-spin h-10 w-10 text-primary" />
-    </div>
-  ):(
+  return (
     
-    <> 
+    <>
       <Dialog
         open={dialogOpen}
         onOpenChange={() => {

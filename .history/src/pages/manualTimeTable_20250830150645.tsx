@@ -39,14 +39,13 @@ import { ScrollArea } from "../components/scroll-area";
 import { Button } from "../components/ui/button";
 import useToast from "../hooks/useToast";
 
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 
 import Draggable from "react-draggable";
 import { ConflictDialog } from "./ConflictsDialog";
 import { useSidebar } from "../components/ui/sidebar";
 import { Label } from "../components/ui/label";
 import LocationContext from "../contexts/LocationContext";
-import { is } from "date-fns/locale";
 
 interface Slot {
   id: string;
@@ -127,7 +126,6 @@ function ManualTimeTable() {
   const [showMore, setShowMore] = useState<boolean>(false);
   const [showConflicts, setShowConflicts] = useState<boolean>(false);
   const [conflictedCOurses, setConflictedCourses] = useState<any[]>([]);
-  const[isLoadingUnscheduled, setIsLoadingUnscheduled]= useState<boolean>(false)
   const [suggesstedSlot, setSuggesstedSlot] = useState<{
     date: string;
     slot: string;
@@ -156,8 +154,7 @@ function ManualTimeTable() {
   );
 
   const getUnscheduledExams = async () => {
-    
-    try { let resp = null;
+    let resp = null;
     if (selectedLocation)
       resp = await axios.get(
         `api/exams/exams/unscheduled_exams?location=${selectedLocation.id}`
@@ -167,11 +164,6 @@ function ManualTimeTable() {
     }
     if (resp.data.success) {
       setUnScheduledExams(resp.data.data);
-    }}
-    catch (error) {
-      setToastMessage ({message:String(error), variant:"danger"})
-    }finally{
-      setIsLoadingUnscheduled(false)
     }
   };
 
@@ -801,10 +793,12 @@ function ManualTimeTable() {
     return `${hours}h ${minutes}m`;
   };
 
-   
+  useEffect(() => {
+    setUnScheduled([]);
+    setOpen(false);
+  }, []);
 
   useEffect(() => {
-     setOpen(false);
     getUnscheduledExams();
     getExams();
   }, []);
@@ -855,13 +849,9 @@ function ManualTimeTable() {
     reviewConflicts();
   }, [selectedSlotInfo]);
 
-  return (isLoadingUnscheduled)?(
-    <div className="flex justify-center items-center h-96">
-      <Loader2 className="animate-spin h-10 w-10 text-primary" />
-    </div>
-  ):(
+  return (
     
-    <> 
+    <>
       <Dialog
         open={dialogOpen}
         onOpenChange={() => {
@@ -931,53 +921,46 @@ function ManualTimeTable() {
                   <ScrollArea className="h-[70vh] rounded-md border p-4 space-y-2 ">
                     {allUnscheduled.map((exam) => (
                       <div
-  key={exam.course.id}
-  className="p-3 mt-3 rounded-xl border border-primary shadow-sm bg-white"
->
-  {/* Exam Header */}
-  <div
-    className="flex justify-between items-center cursor-move hover:opacity-70 transition-all duration-200"
-    draggable
-    onDragStart={(e) => handleDragStart(e, exam)}
-  >
-    <div className="flex items-center space-x-2 w-full overflow-hidden">
-      <Grip className="h-4 w-4 text-muted-foreground" />
-      <h3 className="font-medium text-sm truncate">{exam.course.title}</h3>
-    </div>
-  </div>
-
-  {/* Exam Groups */}
-  <div className="flex flex-wrap justify-center items-center gap-2 mt-3">
-    {exam.groups.map((e_group, idx) => (
-      <Badge
-        key={idx}
-        variant="outline"
-        draggable
-        onDragStart={(e) =>
-          handleCourseGroupDragStart(e, {
-            ...e_group,
-            courseId: exam.id,
-          })
-        }
-        className="flex items-center gap-1 px-2 py-1 cursor-move hover:opacity-70 hover:border-blue-400 transition-all duration-200"
-      >
-        <Grip className="h-3 w-3 text-muted-foreground" />
-        <span className="text-xs">{e_group.group.group_name}</span>
-      </Badge>
-    ))}
-  </div>
-
-  {/* Reason Badge */}
-  {exam.reason && (
-    <div className="flex justify-end mt-2">
-      <Badge variant="destructive" className="text-xs px-2 py-0.5">
-        {exam.reason}
-      </Badge>
-    </div>
-  )}
-</div>
-
-                  
+                        key={exam.course.id}
+                        className="p-2 rounded-lg border border-primary mt-2"
+                      >
+                        <div
+                          className="flex justify-between items-start "
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, exam)}
+                        >
+                          <div className="hover:opacity-45 hover:border-blue-300 cursor-move transition-all duration-200 m-2 w-full">
+                            <div className="flex justify-between align-start p-1 ">
+                              <Grip className="translate-x-3.5 h-4 w-4" />
+                              <h3 className="font-semibold text-sm flex-1 overflow-hidden">
+                                {exam.course.title}
+                              </h3>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-center items-center space-x-2">
+                          {exam.groups.map((e_group, idx) => {
+                            return (
+                              <Badge
+                                key={idx}
+                                variant={"outline"}
+                                draggable
+                                onDragStart={(e) =>
+                                  handleCourseGroupDragStart(e, {
+                                    ...e_group,
+                                    courseId: exam.id,
+                                  })
+                                }
+                                className="w-auto hover:opacity-45 hover:border-blue-300 cursor-move transition-all duration-200 m-2"
+                              >
+                                <Grip className="h-4 w-4" />
+                                {e_group.group.group_name}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                        <Badge variant={"destructive"}>{exam.reason}</Badge>
+                      </div>
                     ))}
                   </ScrollArea>
                 </div>
