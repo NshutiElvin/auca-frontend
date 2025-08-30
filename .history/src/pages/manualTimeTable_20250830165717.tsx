@@ -883,7 +883,6 @@ function ManualTimeTable() {
           setDialogOption(null);
           setSlotToChange(null);
           setIsAllowedToReview(false);
-          setViewAllSuggestions(false)
         }}
       >
         {" "}
