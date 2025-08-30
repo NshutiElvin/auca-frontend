@@ -665,7 +665,7 @@ const OccupanciesPage = () => {
 
     return (
       <div className="flex flex-col justify-center p-2">
-        <div className="flex flex-wrap justify-center gap-2 py-2">
+        <div className="flex flex-wrap justify-between">
           {
            occupancies[0].room_instructor&& <Badge variant={"default"}>
               {isAssigningInstructor ? (
