@@ -1659,7 +1659,7 @@ function ManualTimeTable() {
           )}
         </div>
         {viewAllSuggestions && suggestions && (
-          <DialogContent className="sm:max-w-[800px]   border p-5" asChild>
+          <DialogContent className="sm:max-w-[800px]   border p-5">
             <div>
               <h4 className="font-semibold text-red-600 dark:text-red-400">
                 All Suggestions
