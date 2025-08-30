@@ -908,7 +908,7 @@ function ManualTimeTable() {
 
           <div
             className={`grid grid-cols-1 ${
-             ( unscheduledExams.length > 0 && showUnscheduled )&& "lg:grid-cols-3 w-full  "
+             ( unscheduledExams.length > 0 && showUnscheduled )&& "lg:grid-cols-3 w-full items-center"
             } gap-2 ${
               serverLoadingMessage?.isServerLoading &&
               "pointer-events-none opacity-20"

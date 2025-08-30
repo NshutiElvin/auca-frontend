@@ -908,7 +908,7 @@ function ManualTimeTable() {
 
           <div
             className={`grid grid-cols-1 ${
-             ( unscheduledExams.length > 0 && showUnscheduled )&& "lg:grid-cols-3 w-full  "
+             ( unscheduledExams.length > 0 && showUnscheduled )&& "lg:grid-cols-3 w-full items-center"
             } gap-2 ${
               serverLoadingMessage?.isServerLoading &&
               "pointer-events-none opacity-20"
@@ -1543,7 +1543,7 @@ function ManualTimeTable() {
                 <div className="space-y-3">
                   <h3 className="text-sm text-center px-1">
                     Alternative Suggested Slots 
-                    {suggestions && suggestions.length > 0   && (
+                    {suggestions && suggestions.length > 0 && isAllowedToReview && (
                       <Badge
                         variant="secondary"
                         className="ml-2 cursor-pointer"
@@ -1579,7 +1579,6 @@ function ManualTimeTable() {
                                   <div className="text-sm font-semibold">
                                     {suggestion.slot}
                                   </div>
-                                  
                                 </button>
                               )
                           )}
@@ -1669,16 +1668,16 @@ function ManualTimeTable() {
             <TableHeader className="bg-muted" >
               <TableRow className="border-b    dark:hover:bg-gray-750">
                 <TableHead className=" font-semibold">
-                  Date
+                  Reg No
                 </TableHead>
                 <TableHead className=" font-semibold">
-                  Slot
+                  Name
                 </TableHead>
                 <TableHead className=" font-semibold">
-                  Suggested
+                  Email
                 </TableHead>
                 <TableHead className=" font-semibold">
-                  Reason
+                  Department
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -1721,7 +1720,7 @@ function ManualTimeTable() {
                     </TableCell>
                     <TableCell className="  ">
                       <Badge  variant={"default"}>
-                      {suggestion.reason || "N/A"}
+                      
                       </Badge>
                     </TableCell>
                   </TableRow>
