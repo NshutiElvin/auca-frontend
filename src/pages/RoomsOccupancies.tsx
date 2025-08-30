@@ -686,7 +686,7 @@ const OccupanciesPage = () => {
                     instructor_id: e.target.value,
                     date: room.date,
                     slot_name: room.slot_name,
-                    room_id:room.exam_id
+                    room_id:room.room_id
                   });
                   if (resp.data.success){
                     fetchOccupancies()
