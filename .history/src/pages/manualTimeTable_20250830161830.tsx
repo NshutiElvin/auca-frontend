@@ -876,7 +876,7 @@ function ManualTimeTable() {
         }}
       >    {isLoadingUnscheduled && (
               <div className="flex justify-center items-center">
-                <Loader2 className="animate-spin h-5 w-5 text-primary" />{" "}
+                <Loader2 className="animate-spin h-10 w-10 text-primary" />{" "}
                 loading unscheduled exam ...
               </div>
             )}
@@ -886,7 +886,7 @@ function ManualTimeTable() {
             "pointer-events-none opacity-20"
           }`}
         >
-         {(unscheduledExams.length > 0 && showUnscheduled) && <div className="flex justify-start">
+         {unscheduledExams.length > 0 && showUnscheduled && <div className="flex justify-start">
             <Button
               className="relative inline-flex items-center justify-center w-10 h-10 rounded-full border   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors mr-2"
               aria-label="Notifications"
@@ -904,7 +904,7 @@ function ManualTimeTable() {
 
           <div
             className={`grid grid-cols-1 ${
-             ( unscheduledExams.length > 0 && showUnscheduled )&& "lg:grid-cols-3 w-full items-center"
+             ( unscheduledExams.length > 0 && showUnscheduled )&& "lg:grid-cols-3"
             } gap-2 ${
               serverLoadingMessage?.isServerLoading &&
               "pointer-events-none opacity-20"
@@ -998,7 +998,7 @@ function ManualTimeTable() {
                 return (
                   <Card
                     key={idx}
-                    className="shadow-md cursor-pointer overflow-hidden relative flex flex-col border h-full min-h-[400px] p- w-full"
+                    className="shadow-md cursor-pointer overflow-hidden relative flex flex-col border h-full min-h-[400px] p-0"
                   >
                     <div className="text-center py-2 px-2 bg-primary border-b sticky top-0 z-10 text-white">
                       <h2 className="text-lg font-bold">
