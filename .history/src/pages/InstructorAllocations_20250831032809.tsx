@@ -40,8 +40,6 @@ import TableSkeleton from "../components/TableSkeleton";
 import { string } from "zod";
 import { StatusButton } from "../components/ui/status-button";
 import useToast from "../hooks/useToast";
-import { motion } from "framer-motion";
-import { Badge } from "../components/ui/badge";
 
 export type StudentExam = {
   id: string;
@@ -53,7 +51,6 @@ export type StudentExam = {
   exam: string;
   signin: boolean;
   signout: boolean;
-  room:string |null;
 };
 
 export function InstructorAllocationsPage() {
@@ -69,12 +66,12 @@ export function InstructorAllocationsPage() {
   const [isLoading, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<StudentExam[]>([]);
-  const[room, setRoom]= React.useState<string|null>(null)
+
   const [nextUrl, setNextUrl] = React.useState<string | null>(null);
   const [previousUrl, setPreviousUrl] = React.useState<string | null>(null);
   const { setToastMessage } = useToast();
     const [currentPageIndex, setCurrentPageIndex] = React.useState(0);
-  
+
   const fetchExams = (url: string | null) => {
     startTransition(async () => {
       try {
@@ -96,12 +93,10 @@ export function InstructorAllocationsPage() {
             exam: data.exam?.group?.course?.title,
             signin: data.signin_attendance,
             signout: data.signout_attendance,
-            room:data.exam.room.room_name
           };
         });
 
         setData(formattedData);
-      
       } catch (error) {
         if (error) {
           if (
@@ -260,7 +255,7 @@ export function InstructorAllocationsPage() {
         return (
           <Checkbox
             checked={isSignedIn}
-            className="h-8 w-8 border disabled:bg-primary"
+            className="h-8 w-8 border"
             onCheckedChange={(checked) => {
                  if(typeof checked === "boolean"){
                     signinStudent(studentId, examId, checked);
@@ -283,7 +278,7 @@ export function InstructorAllocationsPage() {
         return (
           <Checkbox
             checked={isSignedOut}
-            className="h-8 w-8 border disabled:bg-primary"
+            className="h-8 w-8 border"
             onCheckedChange={(checked) => {
                 if(!isSignedin){
                     setToastMessage({message:"You need to make checkin first.", variant:"danger"})
@@ -340,10 +335,6 @@ export function InstructorAllocationsPage() {
     };
   }, []);
 
-    React.useEffect(() => {
-     setRoom(data[0].room)
-  }, []);
-
   React.useEffect(() => {
     fetchExams(null);
   }, []);
@@ -367,21 +358,7 @@ export function InstructorAllocationsPage() {
       </Button>
     </div>
   ) : (
-    <div className="w-full flex flex-col">
-       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-             <motion.h2
-            key={new Date().getMonth()}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-2xl tracking-tighter font-bold"
-          >
-            {new Date().toLocaleString("default", { month: "long" })}{" "}
-            {new Date().getFullYear()}
-          </motion.h2>
-          <Badge variant={"default"}>{room}</Badge>
-        </div>
+    <div className="w-full">
       <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <Input
           placeholder="Search..."

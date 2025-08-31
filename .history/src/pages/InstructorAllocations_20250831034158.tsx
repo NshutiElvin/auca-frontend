@@ -96,7 +96,7 @@ export function InstructorAllocationsPage() {
             exam: data.exam?.group?.course?.title,
             signin: data.signin_attendance,
             signout: data.signout_attendance,
-            room:data.exam.room.room_name
+            room:data.exam.room.name
           };
         });
 

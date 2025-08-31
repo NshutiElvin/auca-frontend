@@ -33,7 +33,6 @@ import {
   X,
   Download,
   ChevronUp,
-  Loader,
 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
@@ -72,7 +71,6 @@ import { StatusButton } from "../components/ui/status-button";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import * as XLSX from 'xlsx';
-import { Badge } from "../components/ui/badge";
  
 
 
@@ -643,73 +641,6 @@ const columns: ColumnDef<Exam>[] = [
           </Button>
         </div>
       </div>
-      <Dialog open={viewAttendance} onOpenChange={setViewAttendance}>
-        <DialogContent>
-          <DialogHeader className="p-5 pb-3 flex-shrink-0">
-          <div className="flex justify-between items-center">
-            <DialogTitle className="font-semibold  text-center">
-              All Suggestions
-            </DialogTitle>
-        
-          </div>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-auto px-5">
-          <Table>
-            <TableHeader className="bg-muted sticky top-0">
-              <TableRow className="border-b dark:hover:bg-gray-750">
-                <TableHead className="font-semibold">Reg No</TableHead>
-                <TableHead className="font-semibold">Student Name</TableHead>
-                <TableHead className="font-semibold">Faculity</TableHead>
-                <TableHead className="font-semibold">Course code</TableHead>
-                <TableHead className="font-semibold">Course</TableHead>
-                <TableHead className="font-semibold">Sign in</TableHead>
-                <TableHead className="font-semibold">Sign out</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              { isGettingAttendance? (
-                <TableRow className="flex flex-col justify-center">
-                  <Loader className="animate-spin h-4 w-4"/>
-                </TableRow>
-              ) : (
-                currentAttendance?.map((attendance: any, index: number) => (
-                  <TableRow
-                    key={index}
-                    className="border-b transition-colors duration-150 hover:bg-muted/50"
-                  >
-                    <TableCell className="font-medium">
-                      {attendance.student.reg_no}
-                    </TableCell>
-                    <TableCell>{attendance.student.user.first_name} {attendance.student.user.last_name}</TableCell>
-                    <TableCell>
-                     {attendance.exam.group.course.department.name}
-                    </TableCell>
-                     <TableCell>
-                     {attendance.exam.group.course.title}
-                    </TableCell>
-                     <TableCell>
-                     {attendance.exam.group.course.code}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline"  className= {`${attendance.signin_attendance ? "bg-green-800" :"bg-red-800"}`} >
-                      {  attendance.signin_attendance?"Yes":"No"}
-                      </Badge>
-                    </TableCell>
-                      <TableCell>
-                      <Badge variant="outline"  className= {`${attendance.signout_attendance ? "bg-green-800" :"bg-red-800"}`} >
-                      {  attendance.signout_attendance?"Yes":"No"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        </DialogContent>
-
-      </Dialog>
     </div>
   );
 }
