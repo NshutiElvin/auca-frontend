@@ -39,21 +39,22 @@ import useUserAxios from "../hooks/useUserAxios";
 import TableSkeleton from "../components/TableSkeleton";
 import { string } from "zod";
 import { StatusButton } from "../components/ui/status-button";
-import useToast from "../hooks/useToast";
 
 export type StudentExam = {
   id: string;
-  student_id: string;
-  exam_id: string;
   reg_no: string;
-  name: string;
-  faculity: string;
+  department: string;
   exam: string;
-  signin: boolean;
-  signout: boolean;
+  room: string;
+  status: string;
+  email: string;
+  date: string;
 };
 
+
+
 export function InstructorAllocationsPage() {
+    
   const axios = useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -66,28 +67,100 @@ export function InstructorAllocationsPage() {
   const [isLoading, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<StudentExam[]>([]);
-
+  
+  
   const [nextUrl, setNextUrl] = React.useState<string | null>(null);
   const [previousUrl, setPreviousUrl] = React.useState<string | null>(null);
-  const { setToastMessage } = useToast();
 
-  const fetchExams = (url: string | null) => {
+ const columns: ColumnDef<StudentExam>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "id",
+    header: "Id",
+    cell: ({ row }) => <div className="capitalize">{row.getValue("id")}</div>,
+  },
+  {
+    accessorKey: "reg_no",
+    header: "Reg Number",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("reg_no")}</div>
+    ),
+  },
+  {
+    accessorKey: "name",
+    header: () => <div className="text-right">Name</div>,
+    cell: ({ row }) => <div className="lowercase">{row.getValue("name")}</div>,
+  },
+
+  {
+    accessorKey: "faculity",
+    header: () => <div className="text-right">Faculity</div>,
+    cell: ({ row }) => <div className="lowercase">{row.getValue("faculity")}</div>,
+  },
+  {
+    accessorKey: "exam",
+    header: () => <div className="text-right">Exam</div>,
+    cell: ({ row }) => <div className="lowercase">{row.getValue("exam")}</div>,
+  },
+  
+  {
+    accessorKey: "signedin",
+    header: () => <div className="text-right">Signed in</div>,
+    cell: ({ row }) => (
+    <Checkbox className="h-8 w-8 border"/>
+    ),
+  },
+
+    
+  {
+    accessorKey: "signedout",
+    header: () => <div className="text-right">Signed out</div>,
+    cell: ({ row }) => (
+    <Checkbox className="h-8 w-8 border"/>
+    ),
+  },
+ 
+];
+ 
+  const fetchExams =(url: string | null) => {
     startTransition(async () => {
       try {
-        const resp = await axios.request({
-          url: url ?? "/api/exams/student-exam/instructor_student_exams",
-          method: "get",
-          baseURL: undefined,
-        });
+        const resp = await axios.request(
+          {
+        url: url ?? "/api/exams/student-exam/instructor_student_exams",
+        method: "get",
+        baseURL: undefined,
+      }
+        );
+        
+        
 
         const formattedData = resp.data.students.map((data: any) => {
           return {
-            id: data.id,
-            student_id: data.student.id,
-            exam_id: data.exam.id,
+            ...data,
             reg_no: data.student.reg_no,
-            name:
-              data.student.user.first_name + " " + data.student.user.last_name,
+            name: data.student.user.first_name+ " "+ data.student.user.last_name,
             faculity: data.student.department.name,
             exam: data.exam?.group?.course?.title,
             signin: data.signin_attendance,
@@ -123,163 +196,7 @@ export function InstructorAllocationsPage() {
     });
   };
 
-  const signinStudent = async (student_id: string, exam_id: string, checked:boolean) => {
-    try {
-      const resp = await axios.patch("/api/exams/student_signin", {
-        student_id,
-        exam_id,
-      });
-      if (resp.data.success) {
-        // Update the specific student's signin status
-        setData(prevData => 
-          prevData.map(item => 
-            item.student_id === student_id && item.exam_id === exam_id 
-              ? {...item, signin: checked} 
-              : item
-          )
-        );
-        setToastMessage({
-          message: "Attendance marked successfully",
-          variant: "success",
-        });
-      }
-    } catch (error) {
-      setToastMessage({
-        message: "Failed to mark attendance",
-        variant: "danger",
-      });
-    }
-  };
-
-  const signoutStudent = async (student_id: string, exam_id: string, checked:boolean) => {
-    try {
-      const resp = await axios.patch("/api/exams/student_signout", {
-        student_id,
-        exam_id,
-      });
-      if (resp.data.success) {
-        // Update the specific student's signout status
-        setData(prevData => 
-          prevData.map(item => 
-            item.student_id === student_id && item.exam_id === exam_id 
-              ? {...item, signout: true} 
-              : item
-          )
-        );
-        setToastMessage({
-          message: "Attendance marked successfully",
-          variant: "success",
-        });
-      }
-    } catch (error) {
-      setToastMessage({
-        message: "Failed to mark attendance",
-        variant: "danger",
-      });
-    }
-  };
-
-  const columns: ColumnDef<StudentExam>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "id",
-      header: "Id",
-      cell: ({ row }) => <div className="capitalize">{row.getValue("id")}</div>,
-    },
-    {
-      accessorKey: "reg_no",
-      header: "Reg Number",
-      cell: ({ row }) => (
-        <div className="capitalize">{row.getValue("reg_no")}</div>
-      ),
-    },
-    {
-      accessorKey: "name",
-      header: () => <div className="text-right">Name</div>,
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("name")}</div>
-      ),
-    },
-    {
-      accessorKey: "faculity",
-      header: () => <div className="text-right">Faculity</div>,
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("faculity")}</div>
-      ),
-    },
-    {
-      accessorKey: "exam",
-      header: () => <div className="text-right">Exam</div>,
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("exam")}</div>
-      ),
-    },
-    {
-      accessorKey: "signin",
-      header: () => <div className="text-right">Signed in</div>,
-      cell: ({ row }) => {
-        const isSignedIn = row.getValue("signin") as boolean;
-        const studentId = row.original.student_id;
-        const examId = row.original.exam_id;
-        
-        return (
-          <Checkbox
-            checked={isSignedIn}
-            className="h-8 w-8 border"
-            onCheckedChange={(checked) => {
-                 if(typeof checked === "boolean"){
-                    signinStudent(studentId, examId, checked);
-                 }
-            }}
-            disabled={isSignedIn}
-          />
-        );
-      },
-    },
-    {
-      accessorKey: "signout",
-      header: () => <div className="text-right">Signed out</div>,
-      cell: ({ row }) => {
-        const isSignedOut = row.getValue("signout") as boolean;
-        const studentId = row.original.student_id;
-        const examId = row.original.exam_id;
-        
-        return (
-          <Checkbox
-            checked={isSignedOut}
-            className="h-8 w-8 border"
-            onCheckedChange={(checked) => {
-              if(typeof checked === "boolean"){
-                    signoutStudent(studentId, examId, checked);
-                 }
-            }}
-            disabled={isSignedOut}
-          />
-        );
-      },
-    },
-  ];
+ 
 
   const table = useReactTable({
     data,
@@ -304,9 +221,12 @@ export function InstructorAllocationsPage() {
       const search = filterValue.toLowerCase();
       const valuesToCheck = [
         row.original.reg_no,
-        row.original.name,
-        row.original.faculity,
+        row.original.email,
+        row.original.department,
         row.original.exam,
+        row.original.room,
+        row.original.status,
+        row.original.date,
       ];
       return valuesToCheck.some((value) =>
         (value || "").toLowerCase().includes(search)
@@ -323,8 +243,14 @@ export function InstructorAllocationsPage() {
   }, []);
 
   React.useEffect(() => {
-    fetchExams(null);
-  }, []);
+    fetchExams(nextUrl);
+  }, [nextUrl]);
+
+    React.useEffect(() => {
+    fetchExams(previousUrl);
+  }, [previousUrl]);
+
+  
 
   return isLoading ? (
     <TableSkeleton />
@@ -430,30 +356,31 @@ export function InstructorAllocationsPage() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+   <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="flex-1 text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+     
     </div>
   );
 }

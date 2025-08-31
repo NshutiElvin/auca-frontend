@@ -43,14 +43,13 @@ import useToast from "../hooks/useToast";
 
 export type StudentExam = {
   id: string;
-  student_id: string;
-  exam_id: string;
   reg_no: string;
-  name: string;
-  faculity: string;
+  department: string;
   exam: string;
-  signin: boolean;
-  signout: boolean;
+  room: string;
+  status: string;
+  email: string;
+  date: string;
 };
 
 export function InstructorAllocationsPage() {
@@ -82,12 +81,12 @@ export function InstructorAllocationsPage() {
 
         const formattedData = resp.data.students.map((data: any) => {
           return {
-            id: data.id,
-            student_id: data.student.id,
-            exam_id: data.exam.id,
+            ...data,
             reg_no: data.student.reg_no,
             name:
               data.student.user.first_name + " " + data.student.user.last_name,
+            student_id: data.student.id,
+            exam_id: data.exam.id,
             faculity: data.student.department.name,
             exam: data.exam?.group?.course?.title,
             signin: data.signin_attendance,
@@ -123,23 +122,15 @@ export function InstructorAllocationsPage() {
     });
   };
 
-  const signinStudent = async (student_id: string, exam_id: string, checked:boolean) => {
+  const signinStudent = async (student_id: string, exam_id: string) => {
     try {
       const resp = await axios.patch("/api/exams/student_signin", {
         student_id,
         exam_id,
       });
       if (resp.data.success) {
-        // Update the specific student's signin status
-        setData(prevData => 
-          prevData.map(item => 
-            item.student_id === student_id && item.exam_id === exam_id 
-              ? {...item, signin: checked} 
-              : item
-          )
-        );
         setToastMessage({
-          message: "Attendance marked successfully",
+          message: "Attendance Marked succefully",
           variant: "success",
         });
       }
@@ -151,23 +142,15 @@ export function InstructorAllocationsPage() {
     }
   };
 
-  const signoutStudent = async (student_id: string, exam_id: string, checked:boolean) => {
+  const signoutStudent = async (student_id: string, exam_id: string) => {
     try {
       const resp = await axios.patch("/api/exams/student_signout", {
         student_id,
         exam_id,
       });
       if (resp.data.success) {
-        // Update the specific student's signout status
-        setData(prevData => 
-          prevData.map(item => 
-            item.student_id === student_id && item.exam_id === exam_id 
-              ? {...item, signout: true} 
-              : item
-          )
-        );
         setToastMessage({
-          message: "Attendance marked successfully",
+          message: "Attendance Marked succefully",
           variant: "success",
         });
       }
@@ -178,7 +161,6 @@ export function InstructorAllocationsPage() {
       });
     }
   };
-
   const columns: ColumnDef<StudentExam>[] = [
     {
       id: "select",
@@ -221,6 +203,7 @@ export function InstructorAllocationsPage() {
         <div className="lowercase">{row.getValue("name")}</div>
       ),
     },
+
     {
       accessorKey: "faculity",
       header: () => <div className="text-right">Faculity</div>,
@@ -235,49 +218,31 @@ export function InstructorAllocationsPage() {
         <div className="lowercase">{row.getValue("exam")}</div>
       ),
     },
+
     {
-      accessorKey: "signin",
+      accessorKey: "signedin",
       header: () => <div className="text-right">Signed in</div>,
-      cell: ({ row }) => {
-        const isSignedIn = row.getValue("signin") as boolean;
-        const studentId = row.original.student_id;
-        const examId = row.original.exam_id;
-        
-        return (
-          <Checkbox
-            checked={isSignedIn}
-            className="h-8 w-8 border"
-            onCheckedChange={(checked) => {
-                 if(typeof checked === "boolean"){
-                    signinStudent(studentId, examId, checked);
-                 }
-            }}
-            disabled={isSignedIn}
-          />
-        );
-      },
+      cell: ({ row }) => (
+        <Checkbox
+          className="h-8 w-8 border"
+          onCheckedChange={(value) =>
+            signinStudent(row.getValue("student_id"), row.getValue("exam_id"))
+          }
+        />
+      ),
     },
+
     {
-      accessorKey: "signout",
+      accessorKey: "signedout",
       header: () => <div className="text-right">Signed out</div>,
-      cell: ({ row }) => {
-        const isSignedOut = row.getValue("signout") as boolean;
-        const studentId = row.original.student_id;
-        const examId = row.original.exam_id;
-        
-        return (
-          <Checkbox
-            checked={isSignedOut}
-            className="h-8 w-8 border"
-            onCheckedChange={(checked) => {
-              if(typeof checked === "boolean"){
-                    signoutStudent(studentId, examId, checked);
-                 }
-            }}
-            disabled={isSignedOut}
-          />
-        );
-      },
+      cell: ({ row }) => (
+        <Checkbox
+          className="h-8 w-8 border"
+          onCheckedChange={(value) =>
+            signoutStudent(row.getValue("student_id"), row.getValue("exam_id"))
+          }
+        />
+      ),
     },
   ];
 
@@ -304,9 +269,12 @@ export function InstructorAllocationsPage() {
       const search = filterValue.toLowerCase();
       const valuesToCheck = [
         row.original.reg_no,
-        row.original.name,
-        row.original.faculity,
+        row.original.email,
+        row.original.department,
         row.original.exam,
+        row.original.room,
+        row.original.status,
+        row.original.date,
       ];
       return valuesToCheck.some((value) =>
         (value || "").toLowerCase().includes(search)
@@ -323,8 +291,12 @@ export function InstructorAllocationsPage() {
   }, []);
 
   React.useEffect(() => {
-    fetchExams(null);
-  }, []);
+    fetchExams(nextUrl);
+  }, [nextUrl]);
+
+  React.useEffect(() => {
+    fetchExams(previousUrl);
+  }, [previousUrl]);
 
   return isLoading ? (
     <TableSkeleton />
