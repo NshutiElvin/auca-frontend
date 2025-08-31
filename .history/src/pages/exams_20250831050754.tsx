@@ -145,7 +145,7 @@ export function ExamsPage() {
   const [isGettingAttendance, startGettingAttendanceTransition] =
     React.useTransition();
   const [viewAttendance, setViewAttendance] = React.useState<boolean>(false);
-  console.log(data);
+console.log(data)
   const getCourses = () => {
     startTransition(async () => {
       try {
@@ -161,7 +161,7 @@ export function ExamsPage() {
           resp?.data.data.map((data: any) => {
             return {
               ...data,
-              id: `${data.id}`,
+              id:`${data.id}`,
               code: `${data.group.course.code}`,
               course: `${data.group.course.title}`,
               group: `${data.group.group_name}`,
@@ -184,9 +184,7 @@ export function ExamsPage() {
     startGettingAttendanceTransition(async () => {
       try {
         // Fixed the API endpoint
-        const resp = await axios.get(
-          `/api/exams/attendance?exam_id=${exam_id}`
-        );
+        const resp = await axios.get(`/api/exams/attendance?exam_id=${exam_id}`);
         if (resp.data.success) {
           setCurrentAttendance(resp.data.data);
         }
@@ -328,7 +326,7 @@ export function ExamsPage() {
         pageSize: 10,
       },
     },
-    autoResetPageIndex: false,
+  autoResetPageIndex: false
   });
 
   const uniqueStatuses = React.useMemo(() => {
@@ -660,7 +658,7 @@ export function ExamsPage() {
           </Button>
         </div>
       </div>
-
+      
       <Dialog open={viewAttendance} onOpenChange={setViewAttendance}>
         <DialogContent className="max-w-6xl">
           <DialogHeader className="p-5 pb-3 flex-shrink-0">
@@ -698,21 +696,20 @@ export function ExamsPage() {
                       className="border-b transition-colors duration-150 hover:bg-muted/50"
                     >
                       <TableCell className="font-medium">
-                        {attendance?.student?.reg_no || "N/A"}
+                        {attendance?.student?.reg_no || 'N/A'}
                       </TableCell>
                       <TableCell>
-                        {attendance?.student?.user?.first_name || "N/A"}{" "}
-                        {attendance?.student?.user?.last_name || ""}
+                        {attendance?.student?.user?.first_name || 'N/A'}{" "}
+                        {attendance?.student?.user?.last_name || ''}
                       </TableCell>
                       <TableCell>
-                        {attendance?.exam?.group?.course?.department?.name ||
-                          "N/A"}
+                        {attendance?.exam?.group?.course?.department?.name || 'N/A'}
                       </TableCell>
                       <TableCell>
-                        {attendance?.exam?.group?.course?.code || "N/A"}
+                        {attendance?.exam?.group?.course?.code || 'N/A'}
                       </TableCell>
                       <TableCell>
-                        {attendance?.exam?.group?.course?.title || "N/A"}
+                        {attendance?.exam?.group?.course?.title || 'N/A'}
                       </TableCell>
                       <TableCell>
                         <Badge
