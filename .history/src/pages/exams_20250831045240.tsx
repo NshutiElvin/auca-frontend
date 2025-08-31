@@ -326,7 +326,6 @@ export function ExamsPage() {
         pageSize: 10,
       },
     },
-  autoResetPageIndex: false
   });
 
   const uniqueStatuses = React.useMemo(() => {

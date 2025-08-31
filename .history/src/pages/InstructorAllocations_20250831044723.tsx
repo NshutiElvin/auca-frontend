@@ -287,7 +287,6 @@ export function InstructorAllocationsPage() {
             onCheckedChange={(checked) => {
                 if(!isSignedin){
                     setToastMessage({message:"You need to make checkin first.", variant:"danger"})
-                    return
                 }
               if(typeof checked === "boolean"){
                     signoutStudent(studentId, examId, checked);
