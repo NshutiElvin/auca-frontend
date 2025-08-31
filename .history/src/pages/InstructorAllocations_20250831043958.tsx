@@ -341,8 +341,7 @@ export function InstructorAllocationsPage() {
   }, []);
 
     React.useEffect(() => {
-     if(data.length>0)
-        setRoom(data[0]?.room)
+     setRoom(data[0]?.room)
   }, [data]);
 
   React.useEffect(() => {
