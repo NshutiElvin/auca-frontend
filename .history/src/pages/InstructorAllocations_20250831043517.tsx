@@ -376,7 +376,7 @@ export function InstructorAllocationsPage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             className="text-2xl tracking-tighter font-bold"
-          >{new Date().getDay()}
+          >
             {new Date().toLocaleString("default", { month: "long" })}{" "}
             {new Date().getFullYear()}
           </motion.h2>
