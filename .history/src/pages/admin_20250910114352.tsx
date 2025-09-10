@@ -195,7 +195,7 @@ export default function AdminMainPage() {
             </BreadcrumbList>
           </Breadcrumb>
 
-         
+          <div className="flex-1"></div>
 
           <div className="flex flex-1">
      
