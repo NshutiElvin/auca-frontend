@@ -413,7 +413,12 @@ export function CoursesPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  New Course
+                </Button>
+              </DialogTrigger>
             </div>
           </div>
 
