@@ -199,7 +199,7 @@ export default function AdminMainPage() {
           <div className="flex-1"></div>
 
           <div className="flex flex-1 space-x-2 justify-between">
-            <div className="flex flex-row justify-around">
+            <div className="flex flex-row justify-around rounded-md">
               {locations &&
                 locations.map((loc, idx) => {
                   return (
