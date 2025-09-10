@@ -248,9 +248,9 @@ export function CoursesPage() {
         setData(coursesData);
         
         // Extract unique values for filters
-        const uniqueDepartments = [...new Set(coursesData.map((course: { department: any }) => course.department))].filter(Boolean) as string[];
-        const uniqueCampuses = [...new Set(coursesData.map((course: { campus: any }) => course.campus))].filter(Boolean) as string[];
-        const uniqueSemesters = [...new Set(coursesData.map((course: { semester: any }) => course.semester))].filter(Boolean) as string[];
+        const uniqueDepartments = [...new Set(coursesData.map(course => course.department))].filter(Boolean) as string[];
+        const uniqueCampuses = [...new Set(coursesData.map(course => course.campus))].filter(Boolean) as string[];
+        const uniqueSemesters = [...new Set(coursesData.map(course => course.semester))].filter(Boolean) as string[];
         
         setDepartments(uniqueDepartments);
         setCampuses(uniqueCampuses);
