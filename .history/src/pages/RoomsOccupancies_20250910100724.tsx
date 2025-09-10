@@ -4,6 +4,7 @@ import React, {
   useTransition,
   useMemo,
   useRef,
+  useContext,
 } from "react";
 import {
   ChevronLeft,
@@ -24,6 +25,8 @@ import {
   MapPin,
   Settings,
   HouseIcon,
+  QrCodeIcon,
+  Loader2,
 } from "lucide-react";
 import useUserAxios from "../hooks/useUserAxios";
 import { Button } from "../components/ui/button";
@@ -65,6 +68,9 @@ export type RoomOccupancy = {
   course_department?: string;
   course_group?: string;
   room_capacity: number;
+  room_instructor?: string;
+  room_instructor_id?: string;
+  slot_name?: string;
 };
 
 type FilterOptions = {
@@ -90,6 +96,9 @@ interface DraggedCourseGroup {
   courseGroup?: string;
   roomName?: string;
 }
+import { useSidebar } from "../components/ui/sidebar";
+import QRCode from "react-qr-code";
+import LocationContext from "../contexts/LocationContext";
 const OccupanciesPage = () => {
   const [data, setData] = useState<RoomOccupancy[]>([]);
   const axios = useUserAxios();
@@ -98,9 +107,11 @@ const OccupanciesPage = () => {
   const [selectedOccupancies, setSelectedOccupancies] = useState<
     RoomOccupancy[]
   >([]);
+  const { setOpen } = useSidebar();
   const [examsDates, setExamsDates] = useState<Set<string>>(new Set());
   const [isGettingOccupancies, startTransition] = useTransition();
   const [selectedRoom, setSelectedRoom] = useState<SelectedRoom | null>(null);
+  const { selectedLocation } = useContext(LocationContext);
   const [draggedCourseGroup, setDraggedCourseGroup] =
     useState<DraggedCourseGroup | null>(null);
   const [courseStudents, setCourseStudents] = useState<any[]>([]);
@@ -134,6 +145,14 @@ const OccupanciesPage = () => {
   const [isGettingStudents, startGettingStudentsTransition] = useTransition();
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
   const [dialogMessage, setDialogMessage] = useState<string | null>(null);
+  const [showQrCode, setShowQrCode] = useState<boolean>(false);
+  const [selectedRoomDetails, setSelectedRoomDetails] = useState<any | null>(
+    null
+  );
+  const [isAssigningInstructor, startAssigningInstructorTransition] =
+    useTransition();
+  const [instructors, setInstructors] = useState<any[] | null>(null);
+
   const [dimensions, setDimensions] = useState({
     width: 800, // Initial width
     height: 600, // Initial height
@@ -239,6 +258,7 @@ const OccupanciesPage = () => {
           setCourseStudents(students);
         }
       } catch (error) {
+       
         setToastMessage({
           message: "Failed to fetch students. Please try again.",
           variant: "danger",
@@ -253,6 +273,14 @@ const OccupanciesPage = () => {
     });
   };
 
+  const getInstructors = async () => {
+    try {
+      const resp = await axios.get("/api/users/instructors");
+      if (resp.data.success) {
+        setInstructors(resp.data.data);
+      }
+    } catch (error) {}
+  };
   const handleDroppedGroup = async (
     e: React.DragEvent,
     selectedRoom: SelectedRoom
@@ -461,7 +489,14 @@ const OccupanciesPage = () => {
   const fetchOccupancies = async () => {
     startTransition(async () => {
       try {
-        const resp = await axios.get("/api/rooms/occupancies/");
+        let resp = null;
+        if (selectedLocation)
+          resp = await axios.get(
+            `/api/rooms/occupancies?location=${selectedLocation.id}`
+          );
+        else {
+          resp = await axios.get("/api/rooms/occupancies/");
+        }
         const flatData: RoomOccupancy[] = [];
         let dates: string[] = [];
         let roomSet = new Set<string>();
@@ -476,6 +511,9 @@ const OccupanciesPage = () => {
               flatData.push({
                 room_id: room.room_id,
                 room_name: room.room_name,
+                room_instructor: room?.instructor ? (room.instructor.first_name || room.instructor.email) : null,
+                room_instructor_id:room.instructor?  room?.instructor?.id:null,
+                slot_name: room.slot_name,
                 date: schedule.date,
                 start_time: schedule.start_time,
                 end_time: schedule.end_time,
@@ -497,6 +535,7 @@ const OccupanciesPage = () => {
         setTimeSlots(Array.from(timeSet).sort());
         setExamsDates(new Set(dates));
       } catch (error) {
+         console.log(error)
         setToastMessage({
           message: "Failed to load room occupancies. Please try again.",
           variant: "danger",
@@ -625,56 +664,115 @@ const OccupanciesPage = () => {
       capacity > 0 ? ((totalStudents / capacity) * 100).toFixed(0) : 0;
 
     return (
-      <div
-        className={`relative h-16 rounded-md p-2 text-xs cursor-move hover:shadow-md transition- text-black hover:scale-105 ${
-          isOvercapacity
-            ? "bg-red-800 border border-red-200 hover:bg-red-100"
-            : totalStudents > capacity * 0.8
-            ? "bg-yellow-300 border border-yellow-800 hover:bg-yellow-200"
-            : "bg-blue-300 border border-blue-300 hover:bg-blue-200"
-        }`}
-        onClick={() => handleShowRoomOccupancies(occupancies)}
-      >
-        <div className="flex flex-col h-full justify-between">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <div
-                className={`font-medium truncate ${
-                  isOvercapacity ? "text-red-700" : "text-blue-700"
-                }`}
-              >
-                {occupancies.length === 1
-                  ? occupancies[0].course_code
-                  : `${occupancies.length} Courses`}
-              </div>
-              <div
-                className={`text-xs truncate flex items-center gap-1 ${
-                  isOvercapacity ? "text-red-600" : "text-blue-600"
-                }`}
-              >
-                <Users className="w-3 h-3" />
-                {totalStudents}/{capacity} ({utilizationRate}%)
-              </div>
-            </div>
-            <MoreHorizontal className="w-4 h-4 font-bold flex-shrink-0 cursor-pointer" />
-          </div>
-          <div className="text-xs   flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {formatTime(occupancies[0].start_time)}
-          </div>
+      <div className="flex flex-col justify-center p-2">
+        <div className="flex flex-wrap justify-center gap-2 py-2">
+          {
+          <Badge variant={"default"}>
+              {isAssigningInstructor ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                occupancies[0].room_instructor 
+              )}
+            </Badge>
+          }
+
+          <select
+        
+            onChange={(e) => {
+              startAssigningInstructorTransition(async () => {
+                try {
+                  const room = occupancies[0];
+                  const resp = await axios.post("/api/rooms/assign_instructor/", {
+                    instructor_id: e.target.value,
+                    date: room.date,
+                    slot_name: room.slot_name,
+                    room_id:room.room_id
+                  });
+                  if (resp.data.success){
+                    fetchOccupancies()
+                    setToastMessage({message:"Instructor assigned successfull", variant:"success"})
+                  }
+                } catch (error) {
+                  setToastMessage({
+                    message:
+                      "Failed to assign instructor to this room please try again",
+                    variant: "danger",
+                  });
+                }
+              });
+            }}
+            className="p-2 border rounded-md bg-background"
+          >
+            <option value= "" selected>
+                Select Instructor
+                </option>
+            {instructors?.map((instructor, idx) => {
+              return (
+                <option value={instructor.id} key={idx}>
+                  {instructor.first_name ||instructor.last_name||instructor.email}  
+                </option>
+              );
+            })}
+          </select>
         </div>
-        {isOvercapacity && (
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-2 h-2" />
+        <div
+          className={`relative h-16 rounded-md p-2 text-xs cursor-move hover:shadow-md   text-black hover:scale-105 ${
+            isOvercapacity
+              ? "bg-red-800 border border-red-200 hover:bg-red-100"
+              : totalStudents > capacity * 0.8
+              ? "bg-primary border border-primary hover:bg-primary text-white"
+              : "bg-blue-300 border border-blue-300 hover:bg-blue-200"
+          }`}
+          onClick={() => handleShowRoomOccupancies(occupancies)}
+        >
+          <div className="flex flex-col h-full justify-between">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <div
+                  className={`font-medium truncate ${
+                    isOvercapacity ? "text-red-700" : "text-black-700"
+                  }`}
+                >
+                  {occupancies.length === 1
+                    ? occupancies[0].course_code
+                    : `${occupancies.length} Courses`}
+                </div>
+                <div
+                  className={`text-xs truncate flex items-center gap-1 ${
+                    isOvercapacity
+                      ? "text-red-600"
+                      : "text-yellow-400 font-bold"
+                  }`}
+                >
+                  <Users className="w-3 h-3" />
+                  {totalStudents}/{capacity} ({utilizationRate}%)
+                </div>
+              </div>
+              <MoreHorizontal className="w-4 h-4 font-bold flex-shrink-0 cursor-pointer" />
+            </div>
+            <div className="text-xs   flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {formatTime(occupancies[0].start_time)}
+            </div>
           </div>
-        )}
+          {isOvercapacity && (
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-2 h-2" />
+            </div>
+          )}
+        </div>
       </div>
     );
   };
 
   useEffect(() => {
     fetchOccupancies();
+    getInstructors()
+    setOpen(false);
   }, []);
+  useEffect(() => {
+    fetchOccupancies();
+  }, [selectedLocation]);
   useEffect(() => {
     if (availableDates.length > 0) {
       setSelectedDate(availableDates[0]);
@@ -687,6 +785,9 @@ const OccupanciesPage = () => {
       open={dialogOpen}
       onOpenChange={() => {
         setDialogOpen(!dialogOpen);
+        setSelectedRoomDetails(null);
+        setShowQrCode(false);
+        setDialogMessage(null);
       }}
     >
       <div
@@ -725,26 +826,27 @@ const OccupanciesPage = () => {
                   </div>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={exportData}
-                  className="flex items-center space-x-2 px-3 py-1 bg-green-500 hover:bg-green-600 rounded-md text-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Export</span>
-                </button>
-                <Button
-                  onClick={fetchOccupancies}
-                  className="flex items-center space-x-2 px-3 py-1"
-                  variant={"outline"}
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${
-                      isGettingOccupancies ? "animate-spin" : ""
-                    }`}
-                  />
-                  <span>Refresh</span>
-                </Button>
+              <div className="flex items-center gap-2">
+                {/* Grouped Buttons */}
+                <div className="flex rounded-full border overflow-hidden">
+                  <Button onClick={exportData} variant="default">
+                    <Download className="w-4 h-4" />
+                    <span>Export</span>
+                  </Button>
+
+                  <Button
+                    onClick={fetchOccupancies}
+                    className="flex items-center space-x-2 px-3 py-1 rounded-none last:rounded-r-full text-sm"
+                    variant="outline"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${
+                        isGettingOccupancies ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span>Refresh</span>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -775,67 +877,78 @@ const OccupanciesPage = () => {
 
             {showFilters && (
               <div className="grid grid-cols-4 gap-4 p-4 rounded-md">
-                <Select>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Theme" />
+                {/* Departments (already styled) */}
+                <Select
+                  value={filters.department}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, department: value })
+                  }
+                >
+                  <SelectTrigger className="w-[250px]">
+                    <SelectValue placeholder="All Departments" />
                   </SelectTrigger>
                   <SelectContent>
                     {filterOptions.departments.map((dept) => (
-                            <SelectItem   key={dept} value={dept?dept:""}> Light</SelectItem>
-                     
-                  ))}
-               
+                      <SelectItem key={dept} value={dept ? dept : ""}>
+                        {dept}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+
+                {/* Semesters */}
                 <Select
-                  // className="text-sm border rounded-md px-3 py-2"
-                  value={filters.department}
-                  onValueChange={(e) =>
-                    setFilters({ ...filters, department: e })
-                  }
-                >
-                  <option value="">All Departments</option>
-                  
-                </Select>
-                <select
-                  className="text-sm border  rounded-md px-3 py-2 font-bold"
                   value={filters.semester}
-                  onChange={(e) =>
-                    setFilters({ ...filters, semester: e.target.value })
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, semester: value })
                   }
                 >
-                  <option value="">All Semesters</option>
-                  {filterOptions.semesters.map((sem) => (
-                    <option key={sem} value={sem}>
-                      {sem}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="text-sm border  rounded-md px-3 py-2 font-bold"
+                  <SelectTrigger className="w-[250px]">
+                    <SelectValue placeholder="All Semesters" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filterOptions.semesters.map((sem) => (
+                      <SelectItem key={sem} value={sem ? sem : ""}>
+                        {sem}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Capacities */}
+                <Select
                   value={filters.capacity}
-                  onChange={(e) =>
-                    setFilters({ ...filters, capacity: e.target.value })
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, capacity: value })
                   }
                 >
-                  <option value="">All Capacities</option>
-                  {filterOptions.capacities.map((cap) => (
-                    <option key={cap} value={cap.toString()}>
-                      {cap} students
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="text-sm border  rounded-md px-3 py-2 font-bold"
+                  <SelectTrigger className="w-[250px]">
+                    <SelectValue placeholder="All Capacities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filterOptions.capacities.map((cap) => (
+                      <SelectItem key={cap} value={cap.toString()}>
+                        {cap} students
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Occupancy Status */}
+                <Select
                   value={filters.occupancyStatus}
-                  onChange={(e) =>
-                    setFilters({ ...filters, occupancyStatus: e.target.value })
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, occupancyStatus: value })
                   }
                 >
-                  <option value="">All Statuses</option>
-                  <option value="normal">Normal</option>
-                  <option value="overcapacity">Overcapacity</option>
-                </select>
+                  <SelectTrigger className="w-[250px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="overcapacity">Overcapacity</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>
@@ -872,13 +985,11 @@ const OccupanciesPage = () => {
           <div className="p-6">
             <div className="rounded-lg border  overflow-hidden">
               <div className="flex border-b ">
-                <div className="w-20 p-3  font-medium text-sm  border-r ">
-                  Rooms
-                </div>
+                <div className="w-20 p-3  font-medium text-sm mx-7 ">Rooms</div>
                 {timeSlots.map((time, index) => (
                   <div
                     key={index}
-                    className="flex-1 p-3  text-center text-sm font-medium  border-r  last:border-r-0"
+                    className="flex-1 p-3  text-center text-sm font-medium  border-r  last:border-r-0 flex col"
                   >
                     {formatTime(time)}
                   </div>
@@ -888,11 +999,23 @@ const OccupanciesPage = () => {
               <div className="divide-y divide-gray-800 max-h-[600px] overflow-y-auto">
                 {rooms.map((room) => (
                   <div key={room} className="flex">
-                    <div className="w-20 p-3  flex items-center justify-center border-r ">
-                      <div className="flex items-center space-x-2">
+                    <div className="w-fit p-3  items-center justify-center border-r">
+                      <Button
+                        className="flex items-center space-x-2 flex-1 min-w-fit"
+                        onClick={() => {
+                          setShowQrCode(true);
+                          setSelectedRoomDetails({
+                            name: room,
+                            date: selectedDate,
+                          });
+                          setDialogOpen(true);
+                        }}
+                        variant={"secondary"}
+                      >
                         <HouseIcon className="w-4 h-3" />
                         <span className="text-sm font-medium ">{room}</span>
-                      </div>
+                        <QrCodeIcon className="w-4 h-4" />
+                      </Button>
                     </div>
                     {timeSlots.map((_, timeIndex) => {
                       const occupancies = getOccupancyForSlot(
@@ -962,7 +1085,7 @@ const OccupanciesPage = () => {
               >
                 <div
                   ref={modalRef}
-                  className="bg-background border border-gray-800 shadow-gray-800 rounded-lg  z-50 relative shadow-lg w-fit hover:z-[55]"
+                  className={`bg-background border p-2 animate-in border-gray-800 shadow-gray-800 z-50 relative  w-fit hover:z-[55] rounded-lg shadow-lg duration-200 text-white`}
                   style={{
                     position: "fixed",
                     maxHeight: "80vh",
@@ -988,12 +1111,12 @@ const OccupanciesPage = () => {
                       order={2}
                       className="drag-handle  border-b  cursor-move"
                     >
-                      <div className="text-center space-y-4 p-2 flex items-center justify-between">
+                      <div className="text-center space-y-4 p-4 flex items-center justify-between  bg-gray-800 w-full">
                         <h1 className="text-l font-bold leading-tight">
                           Room Occupancy Details
                         </h1>
                         <Button
-                          className="px-4 py-2 text-sm font-medium  rounded-md"
+                          className="ring-offset-background focus:ring-ring  absolute top-1 right-8 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
                           variant={"secondary"}
                           onClick={handleCloseModal}
                         >
@@ -1140,16 +1263,6 @@ const OccupanciesPage = () => {
                           </div>
                         ))}
                       </div>
-
-                      <div className="flex items-center justify-end space-x-3 p-6 border-t ">
-                        <Button
-                          onClick={handleCloseModal}
-                          className="px-4 py-2 text-sm font-medium rounded-md"
-                          variant={"outline"}
-                        >
-                          Close
-                        </Button>
-                      </div>
                     </Panel>
                     <PanelResizeHandle className="w-1   hover:bg-gray-800 transition-colors" />
 
@@ -1176,7 +1289,7 @@ const OccupanciesPage = () => {
               >
                 <div
                   ref={studentModalRef}
-                  className="bg-background border border-gray-800 shadow-gray-800 rounded-lg  z-50 relative shadow-lg w-fit hover:z-[55]"
+                  className={`bg-background border animate-in border-gray-800 shadow-gray-800 p-2 z-50 relative  text-white w-fit hover:z-[55] rounded-lg shadow-lg duration-200`}
                   style={{
                     position: "fixed",
                     maxHeight: "80vh",
@@ -1213,12 +1326,12 @@ const OccupanciesPage = () => {
                       order={2}
                       className="drag-handle  border-b  cursor-move"
                     >
-                      <div className="text-center space-y-4 p-2 flex items-center justify-between">
+                      <div className="text-center space-y-4 p-4 flex items-center justify-between bg-gray-800 w-full">
                         <h1 className="text-l  font-bold">
                           Students Belongs in Selected Course Group
                         </h1>
                         <Button
-                          className="px-4 py-2 text-sm font-medium  rounded-md"
+                          className="ring-offset-background focus:ring-ring  absolute top-1 right-8 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
                           variant={"secondary"}
                           onClick={handleCloseStudentsModal}
                         >
@@ -1239,7 +1352,7 @@ const OccupanciesPage = () => {
                           <div className="flex items-center">
                             {" "}
                             <Checkbox
-                              className="h-4 w-4 m-2"
+                              className="h-4 w-4 m-2 border shadow-md border-foreground"
                               id="select-all"
                               checked={
                                 courseStudents.length ===
@@ -1251,7 +1364,12 @@ const OccupanciesPage = () => {
                                   : setSelectedStudents([]);
                               }}
                             />{" "}
-                            <Label htmlFor="select-all">Select All</Label>
+                            <Label
+                              htmlFor="select-all"
+                              className="text-foreground"
+                            >
+                              Select All
+                            </Label>
                           </div>
                           <div className=" overflow-y-scroll max-h-[50vh]">
                             {courseStudents.map((student, index) => (
@@ -1264,7 +1382,7 @@ const OccupanciesPage = () => {
                                 }
                               >
                                 <div
-                                  className="flex items-center justify-between hover:opacity-50"
+                                  className="flex items-center justify-between hover:opacity-50 border-foreground"
                                   onClick={() => {
                                     const selected = selectedStudents?.some(
                                       (s) => s.id == student.id
@@ -1282,7 +1400,7 @@ const OccupanciesPage = () => {
                                   }}
                                 >
                                   <Checkbox
-                                    className="h-4 w-4 m-2"
+                                    className="h-4 w-4 m-2 border shadow-md border-foreground"
                                     id={student.id}
                                     checked={selectedStudents?.some(
                                       (s) => s.id == student.id
@@ -1362,6 +1480,31 @@ const OccupanciesPage = () => {
 
             <DialogDescription className="text-sm  max-w-md mx-auto leading-relaxed  text-center">
               {dialogMessage}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* <ShowMoreExamsModal data={moreExams} /> */}
+        </DialogContent>
+      )}
+
+      {showQrCode && selectedRoomDetails && (
+        <DialogContent className="sm:max-w-[425px] md:max-w-[500px] max-h-[90vh] overflow-y-auto ">
+          <DialogHeader className="text-center space-y-4 pb-2 flex items-center justify-center">
+            <DialogTitle className="text-l font-bold  leading-tight">
+              Room {selectedRoomDetails.name}
+            </DialogTitle>
+
+            <DialogDescription className="text-sm  max-w-md mx-auto leading-relaxed  text-center">
+              <div className="relative">
+                <QRCode
+                  size={180}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  value={JSON.stringify(selectedRoomDetails)}
+                  viewBox={`0 0 256 256`}
+                  level="M"
+                  className="rounded-lg"
+                />
+              </div>
             </DialogDescription>
           </DialogHeader>
 
