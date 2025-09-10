@@ -103,12 +103,13 @@ const data = {
           icon: LucideHistory,
         },
 
-        {
+          {
           title: "Uploads",
           url: "Uploads",
           icon: UploadCloud,
         },
       ],
+      
     },
     {
       title: "Users",
@@ -198,7 +199,7 @@ export default function AdminMainPage() {
           <div className="flex-1"></div>
 
           <div className="flex flex-1 space-x-2 justify-between">
-            {/* <div className="flex flex-row justify-around border shadow-md border-foreground rounded-md">
+            <div className="flex flex-row justify-around border shadow-md border-foreground rounded-md">
               {locations &&
                 locations.map((loc, idx) => {
                   return (
@@ -232,7 +233,7 @@ export default function AdminMainPage() {
                     </div>
                   );
                 })}
-            </div> */}
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="p-4">
@@ -250,11 +251,9 @@ export default function AdminMainPage() {
                     {maskEmail(decodedToken?.email.toLocaleLowerCase() || "")})
                   </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to={"/admin/profile"}>
-                    <UserCog className="mr-2 size-4" />
-                    <span>Profile</span>
-                  </Link>
+                <DropdownMenuItem >
+                  <Link to={"/admin/profile"}><UserCog className="mr-2 size-4" />
+                  <span>Profile</span></Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
@@ -263,7 +262,7 @@ export default function AdminMainPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <ModeToggle />
+             <ModeToggle />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
