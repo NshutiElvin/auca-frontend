@@ -67,7 +67,7 @@ export function AppSidebar({ data, ...props }: AppSidebarProps) {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
-                      // isActive={url === item.title}
+                      isActive={url === item.title}
                       onClick={() => {
                         setSidebarPath(item.title);
                         setSidebarParentPath(group.title);
