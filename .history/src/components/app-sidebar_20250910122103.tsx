@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { VersionSwitcher } from "../components/version-switcher";
 import {
   Sidebar,
@@ -37,59 +37,59 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   data: SidebarData;
 };
 
+// Local storage keys
+const SIDEBAR_PATH_KEY = "sidebar_active_path";
+const SIDEBAR_PARENT_PATH_KEY = "sidebar_active_parent_path";
+
 export function AppSidebar({ data, ...props }: AppSidebarProps) {
   const { setSidebarPath, setSidebarParentPath, url } = useSidebar();
-  const location = useLocation();
 
-  // Load saved state from localStorage on component mount
+  // Get initial state from localStorage or use defaults
+  const getInitialState = () => {
+    if (typeof window === "undefined") return null;
+    
+    const savedPath = localStorage.getItem(SIDEBAR_PATH_KEY);
+    const savedParentPath = localStorage.getItem(SIDEBAR_PARENT_PATH_KEY);
+    
+    return {
+      path: savedPath,
+      parentPath: savedParentPath
+    };
+  };
+
+  // Save to localStorage whenever sidebar state changes
   React.useEffect(() => {
-    const savedPath = localStorage.getItem('sidebarActivePath');
-    const savedParentPath = localStorage.getItem('sidebarActiveParentPath');
-    
-    if (savedPath && savedParentPath) {
-      // Verify that the saved paths still exist in the current data
-      const parentGroup = data.navMain.find(group => group.title === savedParentPath);
-      const childItem = parentGroup?.items.find(item => item.title === savedPath);
-      
-      if (parentGroup && childItem) {
-        setSidebarPath(savedPath);
-        setSidebarParentPath(savedParentPath);
-        return;
-      }
+    if (url) {
+      localStorage.setItem(SIDEBAR_PATH_KEY, url);
     }
+  }, [url]);
+
+  const saveParentPath = (parentPath: string) => {
+    localStorage.setItem(SIDEBAR_PARENT_PATH_KEY, parentPath);
+    setSidebarParentPath(parentPath);
+  };
+
+  // Set initial sidebar selection from localStorage or use first item as default
+  React.useEffect(() => {
+    const initialState = getInitialState();
     
-    // Fallback to first item if no valid saved state
-    if (data.navMain.length > 0 && data.navMain[0].items.length > 0) {
-      setSidebarParentPath(data.navMain[0].title);
-      setSidebarPath(data.navMain[0].items[0].title);
+    if (initialState?.path && initialState?.parentPath) {
+      // Restore from localStorage
+      setSidebarPath(initialState.path);
+      setSidebarParentPath(initialState.parentPath);
+    } else if (data.navMain.length > 0 && data.navMain[0].items.length > 0) {
+      // Set default if no saved state exists
+      const defaultParent = data.navMain[0].title;
+      const defaultPath = data.navMain[0].items[0].title;
+      
+      setSidebarParentPath(defaultParent);
+      setSidebarPath(defaultPath);
+      
+      // Save defaults to localStorage
+      localStorage.setItem(SIDEBAR_PARENT_PATH_KEY, defaultParent);
+      localStorage.setItem(SIDEBAR_PATH_KEY, defaultPath);
     }
   }, [data, setSidebarPath, setSidebarParentPath]);
-
-  // Alternative approach: sync with current route
-  React.useEffect(() => {
-    // Find the current item based on the current route
-    for (const group of data.navMain) {
-      for (const item of group.items) {
-        if (location.pathname === item.url) {
-          setSidebarPath(item.title);
-          setSidebarParentPath(group.title);
-          // Save to localStorage
-          localStorage.setItem('sidebarActivePath', item.title);
-          localStorage.setItem('sidebarActiveParentPath', group.title);
-          return;
-        }
-      }
-    }
-  }, [location.pathname, data, setSidebarPath, setSidebarParentPath]);
-
-  const handleItemClick = (item: SidebarItem, group: SidebarGroupType) => {
-    setSidebarPath(item.title);
-    setSidebarParentPath(group.title);
-    
-    // Save to localStorage
-    localStorage.setItem('sidebarActivePath', item.title);
-    localStorage.setItem('sidebarActiveParentPath', group.title);
-  };
 
   return (
     <Sidebar {...props}>
@@ -99,6 +99,7 @@ export function AppSidebar({ data, ...props }: AppSidebarProps) {
           defaultVersion={data.versions[0]}
         />
       </SidebarHeader>
+
       <SidebarContent>
         {data.navMain.map((group) => (
           <SidebarGroup key={group.title}>
@@ -110,8 +111,12 @@ export function AppSidebar({ data, ...props }: AppSidebarProps) {
                     <SidebarMenuButton
                       asChild
                       isActive={url === item.title}
-                      onClick={() => handleItemClick(item, group)}
+                      onClick={() => {
+                        setSidebarPath(item.title);
+                        saveParentPath(group.title);
+                      }}
                     >
+                      {/* Wrap everything in a single element */}
                       <Link
                         to={item.url}
                         className="flex items-center gap-2"
@@ -129,6 +134,7 @@ export function AppSidebar({ data, ...props }: AppSidebarProps) {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
       <SidebarRail />
     </Sidebar>
   );
