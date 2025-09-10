@@ -103,12 +103,13 @@ const data = {
           icon: LucideHistory,
         },
 
-        {
+          {
           title: "Uploads",
           url: "Uploads",
           icon: UploadCloud,
         },
       ],
+      
     },
     {
       title: "Users",
@@ -244,16 +245,16 @@ export default function AdminMainPage() {
 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Link to={"/admin/profile"}>
-                    <User className="mr-2 size-4" />
-                    <span>
-                      My Profile (
-                      {maskEmail(decodedToken?.email.toLocaleLowerCase() || "")}
-                      )
-                    </span>
-                  </Link>
+                  <User className="mr-2 size-4" />
+                  <span>
+                    My Profile (
+                    {maskEmail(decodedToken?.email.toLocaleLowerCase() || "")})
+                  </span>
                 </DropdownMenuItem>
-
+                <DropdownMenuItem >
+                  <Link to={"/admin/profile"}><UserCog className="mr-2 size-4" />
+                  <span>Profile</span></Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <LogOut className="mr-2 size-4" />
@@ -261,7 +262,7 @@ export default function AdminMainPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <ModeToggle />
+             <ModeToggle />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
