@@ -56,7 +56,7 @@ export const FAQ = () => {
       <Accordion type="single" collapsible className="w-full AccordionRoot">
         {FAQList.map(({ question, answer, value }: FAQProps) => (
           <AccordionItem key={value} value={value}>
-            <AccordionTrigger className="text-left no-underline hover:no-underline">{question}</AccordionTrigger>
+            <AccordionTrigger className="text-left">{question}</AccordionTrigger>
             <AccordionContent>{answer}</AccordionContent>
           </AccordionItem>
         ))}
