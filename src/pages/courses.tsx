@@ -138,6 +138,11 @@ export const columns: ColumnDef<Course>[] = [
     header: () => <div className="text-right">Department</div>,
    cell: ({ row }) => <div className="lowercase">{row.getValue("department")}</div>,
   },
+      {
+    accessorKey: "campus",
+    header: () => <div className="text-right">Campus</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("campus")}</div>,
+  },
    {
     accessorKey: "semester",
     header: () => <div className="text-right">Semester</div>,
@@ -198,7 +203,8 @@ const fetchCourses =  () => {
           ...data, 
           department: data.department.name, 
           enrollments: data.students_enrolled, 
-          semester: data.semester.name
+          semester: data.semester.name,
+          campus:data.department.location.name
         })));
       
     } catch (error) {

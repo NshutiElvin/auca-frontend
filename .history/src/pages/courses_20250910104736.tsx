@@ -138,6 +138,11 @@ export const columns: ColumnDef<Course>[] = [
     header: () => <div className="text-right">Department</div>,
    cell: ({ row }) => <div className="lowercase">{row.getValue("department")}</div>,
   },
+      {
+    accessorKey: "campus",
+    header: () => <div className="text-right">Campus</div>,
+   cell: ({ row }) => <div className="lowercase">{row.getValue("campus")}</div>,
+  },
    {
     accessorKey: "semester",
     header: () => <div className="text-right">Semester</div>,
@@ -149,35 +154,7 @@ export const columns: ColumnDef<Course>[] = [
     header: () => <div className="text-right">Enrollments</div>,
    cell: ({ row }) => <div className="lowercase">{row.getValue("enrollments")}</div>,
   },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const course = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(course.code)}
-            >
-              Copy course ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View course</DropdownMenuItem>
-            
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
+ 
 ]
 
 export function CoursesPage() {
@@ -226,7 +203,8 @@ const fetchCourses =  () => {
           ...data, 
           department: data.department.name, 
           enrollments: data.students_enrolled, 
-          semester: data.semester.name
+          semester: data.semester.name,
+          campus:data.department.location.name
         })));
       
     } catch (error) {
@@ -273,9 +251,7 @@ const fetchCourses =  () => {
         />
         <div className="flex-1"></div>
        <div>
-        <DialogTrigger asChild>
-        <Button className="mx-2"><PlusCircle className="h-50 w-50"/>Add new Course</Button>
-      </DialogTrigger>
+      
          
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
