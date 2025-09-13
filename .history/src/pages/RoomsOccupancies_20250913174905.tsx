@@ -1542,7 +1542,6 @@ const OccupanciesPage = () => {
               <div
                 className="relative mt-4 bg-white p-5 rounded-lg shadow-md"
                 ref={qrRef}
-                style={{ width: "360px", height: "360px" }}
                 
               >
                 <QRCode
