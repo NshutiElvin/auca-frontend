@@ -167,7 +167,7 @@ const OccupanciesPage = () => {
 
     try {
       const canvas = await html2canvas(qrRef.current, {
-       scale:2,
+      
         useCORS: true,
        
       });
