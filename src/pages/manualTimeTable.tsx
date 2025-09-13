@@ -1582,7 +1582,7 @@ function ManualTimeTable() {
                                     suggestion.date === suggesstedSlot?.date &&
                                     suggestion.slot === suggesstedSlot?.slot
                                       ? "bg-primary text-white"
-                                      : "hover:bg-yellow-100 hover:text-white"
+                                      : "hover:bg-muted-primary hover:text-white"
                                   }`}
                                 >
                                   <div className="text-xs font-medium">
@@ -1627,7 +1627,7 @@ function ManualTimeTable() {
                   </div>
                   <div className="flex gap-3">
                     <Button
-                      variant="default"
+                      variant="secondary"
                       onClick={scheduleCourse}
                       className="px-6 py-2 font-medium"
                     >
