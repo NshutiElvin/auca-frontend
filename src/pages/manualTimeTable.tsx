@@ -950,7 +950,7 @@ function ManualTimeTable() {
                     {allUnscheduled.map((exam) => (
                       <div
                         key={exam.course.id}
-                        className="p-3 mt-3 rounded-xl border border-primary shadow-sm bg-white"
+                        className="p-3 mt-3 rounded-xl border border-primary shadow-sm bg-background"
                       >
                         {/* Exam Header */}
                         <div
