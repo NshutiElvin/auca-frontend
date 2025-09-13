@@ -1541,13 +1541,13 @@ const OccupanciesPage = () => {
             <DialogDescription className="text-sm  max-w-md mx-auto leading-relaxed  text-center">
               <div
                 className="relative bg-white p-5  rounded-lg shadow-md"
-                ref={qrRef}
+               
                 style={{ width: "180px", height: "180px" }}
                 
               >
                 <QRCode
                   size={180}
-         
+                   ref={qrRef}
                   value={JSON.stringify(selectedRoomDetails)}
                   viewBox={`0 0 256 256`}
                   level="M"
