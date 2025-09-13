@@ -29,6 +29,7 @@ import {
   Loader2,
 } from "lucide-react";
 import useUserAxios from "../hooks/useUserAxios";
+import html2canvas from "html2canvas";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { format } from "date-fns/format";
@@ -158,6 +159,35 @@ const OccupanciesPage = () => {
     height: 600, // Initial height
   });
 
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadQR = async () => {
+    if (!qrRef.current || !selectedRoomDetails) return;
+
+    try {
+      const canvas = await html2canvas(qrRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imageDataUrl = canvas.toDataURL("image/png");
+
+      const link = document.createElement("a");
+      link.href = imageDataUrl;
+      link.download = `room-${selectedRoomDetails.name.replace(
+        /\s+/g,
+        "-"
+      )}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Failed to generate QR image:", error);
+      alert("Failed to download QR code. Please try again.");
+    }
+  };
+
   // Extract unique values from data for filters
   const filterOptions = useMemo(() => {
     const departments = [
@@ -258,7 +288,6 @@ const OccupanciesPage = () => {
           setCourseStudents(students);
         }
       } catch (error) {
-       
         setToastMessage({
           message: "Failed to fetch students. Please try again.",
           variant: "danger",
@@ -511,8 +540,12 @@ const OccupanciesPage = () => {
               flatData.push({
                 room_id: room.room_id,
                 room_name: room.room_name,
-                room_instructor: room?.instructor ? (room.instructor.first_name || room.instructor.email) : null,
-                room_instructor_id:room.instructor?  room?.instructor?.id:null,
+                room_instructor: room?.instructor
+                  ? room.instructor.first_name || room.instructor.email
+                  : null,
+                room_instructor_id: room.instructor
+                  ? room?.instructor?.id
+                  : null,
                 slot_name: room.slot_name,
                 date: schedule.date,
                 start_time: schedule.start_time,
@@ -535,7 +568,7 @@ const OccupanciesPage = () => {
         setTimeSlots(Array.from(timeSet).sort());
         setExamsDates(new Set(dates));
       } catch (error) {
-         console.log(error)
+        console.log(error);
         setToastMessage({
           message: "Failed to load room occupancies. Please try again.",
           variant: "danger",
@@ -666,34 +699,39 @@ const OccupanciesPage = () => {
     return (
       <div className="flex flex-col justify-center p-2">
         <div className="flex flex-wrap justify-center gap-2 py-2">
-          {
-          occupancies[0].room_instructor &&<Badge variant={"default"}>
+          {occupancies[0].room_instructor && (
+            <Badge variant={"default"}>
               {isAssigningInstructor ? (
                 <Loader2 className="animate-spin" />
               ) : (
-                occupancies[0].room_instructor 
+                occupancies[0].room_instructor
               )}
               <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center">
-              <X className="w-2 h-2 text-red" />
-            </div>
+                <X className="w-2 h-2 text-red" />
+              </div>
             </Badge>
-          }
+          )}
 
           <select
-        
             onChange={(e) => {
               startAssigningInstructorTransition(async () => {
                 try {
                   const room = occupancies[0];
-                  const resp = await axios.post("/api/rooms/assign_instructor/", {
-                    instructor_id: e.target.value,
-                    date: room.date,
-                    slot_name: room.slot_name,
-                    room_id:room.room_id
-                  });
-                  if (resp.data.success){
-                    fetchOccupancies()
-                    setToastMessage({message:"Instructor assigned successfull", variant:"success"})
+                  const resp = await axios.post(
+                    "/api/rooms/assign_instructor/",
+                    {
+                      instructor_id: e.target.value,
+                      date: room.date,
+                      slot_name: room.slot_name,
+                      room_id: room.room_id,
+                    }
+                  );
+                  if (resp.data.success) {
+                    fetchOccupancies();
+                    setToastMessage({
+                      message: "Instructor assigned successfull",
+                      variant: "success",
+                    });
                   }
                 } catch (error) {
                   setToastMessage({
@@ -706,13 +744,15 @@ const OccupanciesPage = () => {
             }}
             className="p-2 border rounded-md bg-background"
           >
-            <option value= "" selected>
-                Select Instructor
-                </option>
+            <option value="" selected>
+              Select Instructor
+            </option>
             {instructors?.map((instructor, idx) => {
               return (
                 <option value={instructor.id} key={idx}>
-                  {instructor.first_name ||instructor.last_name||instructor.email}  
+                  {instructor.first_name ||
+                    instructor.last_name ||
+                    instructor.email}
                 </option>
               );
             })}
@@ -770,7 +810,7 @@ const OccupanciesPage = () => {
 
   useEffect(() => {
     fetchOccupancies();
-    getInstructors()
+    getInstructors();
     setOpen(false);
   }, []);
   useEffect(() => {
@@ -1498,7 +1538,10 @@ const OccupanciesPage = () => {
             </DialogTitle>
 
             <DialogDescription className="text-sm  max-w-md mx-auto leading-relaxed  text-center">
-              <div className="relative">
+              <div
+                className="relative mt-4 bg-white p-5 rounded-lg shadow-md"
+                style={{ width: "180px", height: "180px" }}
+              >
                 <QRCode
                   size={180}
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
@@ -1507,6 +1550,29 @@ const OccupanciesPage = () => {
                   level="M"
                   className="rounded-lg p-5 bg-white"
                 />
+                {/* Download Button */}
+                <button
+                  onClick={handleDownloadQR}
+                  className="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 mx-auto"
+                  aria-label="Download QR Code as PNG"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  Download QR Code
+                </button>
               </div>
             </DialogDescription>
           </DialogHeader>

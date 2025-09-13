@@ -4,6 +4,7 @@ import React, {
   useTransition,
   useMemo,
   useRef,
+  useContext,
 } from "react";
 import {
   ChevronLeft,
@@ -25,8 +26,10 @@ import {
   Settings,
   HouseIcon,
   QrCodeIcon,
+  Loader2,
 } from "lucide-react";
 import useUserAxios from "../hooks/useUserAxios";
+import html2canvas from "html2canvas";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { format } from "date-fns/format";
@@ -66,6 +69,9 @@ export type RoomOccupancy = {
   course_department?: string;
   course_group?: string;
   room_capacity: number;
+  room_instructor?: string;
+  room_instructor_id?: string;
+  slot_name?: string;
 };
 
 type FilterOptions = {
@@ -92,6 +98,8 @@ interface DraggedCourseGroup {
   roomName?: string;
 }
 import { useSidebar } from "../components/ui/sidebar";
+import QRCode from "react-qr-code";
+import LocationContext from "../contexts/LocationContext";
 const OccupanciesPage = () => {
   const [data, setData] = useState<RoomOccupancy[]>([]);
   const axios = useUserAxios();
@@ -100,10 +108,11 @@ const OccupanciesPage = () => {
   const [selectedOccupancies, setSelectedOccupancies] = useState<
     RoomOccupancy[]
   >([]);
-  const{setOpen}= useSidebar()
+  const { setOpen } = useSidebar();
   const [examsDates, setExamsDates] = useState<Set<string>>(new Set());
   const [isGettingOccupancies, startTransition] = useTransition();
   const [selectedRoom, setSelectedRoom] = useState<SelectedRoom | null>(null);
+  const { selectedLocation } = useContext(LocationContext);
   const [draggedCourseGroup, setDraggedCourseGroup] =
     useState<DraggedCourseGroup | null>(null);
   const [courseStudents, setCourseStudents] = useState<any[]>([]);
@@ -137,11 +146,47 @@ const OccupanciesPage = () => {
   const [isGettingStudents, startGettingStudentsTransition] = useTransition();
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
   const [dialogMessage, setDialogMessage] = useState<string | null>(null);
-  const [showQrCode, setShowQrCode]= useState<boolean>(false);
+  const [showQrCode, setShowQrCode] = useState<boolean>(false);
+  const [selectedRoomDetails, setSelectedRoomDetails] = useState<any | null>(
+    null
+  );
+  const [isAssigningInstructor, startAssigningInstructorTransition] =
+    useTransition();
+  const [instructors, setInstructors] = useState<any[] | null>(null);
+
   const [dimensions, setDimensions] = useState({
     width: 800, // Initial width
     height: 600, // Initial height
   });
+
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadQR = async () => {
+    if (!qrRef.current || !selectedRoomDetails) return;
+
+    try {
+      const canvas = await html2canvas(qrRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imageDataUrl = canvas.toDataURL("image/png");
+
+      const link = document.createElement("a");
+      link.href = imageDataUrl;
+      link.download = `room-${selectedRoomDetails.name.replace(
+        /\s+/g,
+        "-"
+      )}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Failed to generate QR image:", error);
+      alert("Failed to download QR code. Please try again.");
+    }
+  };
 
   // Extract unique values from data for filters
   const filterOptions = useMemo(() => {
@@ -257,6 +302,14 @@ const OccupanciesPage = () => {
     });
   };
 
+  const getInstructors = async () => {
+    try {
+      const resp = await axios.get("/api/users/instructors");
+      if (resp.data.success) {
+        setInstructors(resp.data.data);
+      }
+    } catch (error) {}
+  };
   const handleDroppedGroup = async (
     e: React.DragEvent,
     selectedRoom: SelectedRoom
@@ -465,7 +518,14 @@ const OccupanciesPage = () => {
   const fetchOccupancies = async () => {
     startTransition(async () => {
       try {
-        const resp = await axios.get("/api/rooms/occupancies/");
+        let resp = null;
+        if (selectedLocation)
+          resp = await axios.get(
+            `/api/rooms/occupancies?location=${selectedLocation.id}`
+          );
+        else {
+          resp = await axios.get("/api/rooms/occupancies/");
+        }
         const flatData: RoomOccupancy[] = [];
         let dates: string[] = [];
         let roomSet = new Set<string>();
@@ -480,6 +540,13 @@ const OccupanciesPage = () => {
               flatData.push({
                 room_id: room.room_id,
                 room_name: room.room_name,
+                room_instructor: room?.instructor
+                  ? room.instructor.first_name || room.instructor.email
+                  : null,
+                room_instructor_id: room.instructor
+                  ? room?.instructor?.id
+                  : null,
+                slot_name: room.slot_name,
                 date: schedule.date,
                 start_time: schedule.start_time,
                 end_time: schedule.end_time,
@@ -501,6 +568,7 @@ const OccupanciesPage = () => {
         setTimeSlots(Array.from(timeSet).sort());
         setExamsDates(new Set(dates));
       } catch (error) {
+        console.log(error);
         setToastMessage({
           message: "Failed to load room occupancies. Please try again.",
           variant: "danger",
@@ -629,57 +697,125 @@ const OccupanciesPage = () => {
       capacity > 0 ? ((totalStudents / capacity) * 100).toFixed(0) : 0;
 
     return (
-      <div
-        className={`relative h-16 rounded-md p-2 text-xs cursor-move hover:shadow-md   text-black hover:scale-105 ${
-          isOvercapacity
-            ? "bg-red-800 border border-red-200 hover:bg-red-100"
-            : totalStudents > capacity * 0.8
-            ? "bg-yellow-300 border border-yellow-800 hover:bg-yellow-200"
-            : "bg-blue-300 border border-blue-300 hover:bg-blue-200"
-        }`}
-        onClick={() => handleShowRoomOccupancies(occupancies)}
-      >
-        <div className="flex flex-col h-full justify-between">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <div
-                className={`font-medium truncate ${
-                  isOvercapacity ? "text-red-700" : "text-blue-700"
-                }`}
-              >
-                {occupancies.length === 1
-                  ? occupancies[0].course_code
-                  : `${occupancies.length} Courses`}
+      <div className="flex flex-col justify-center p-2">
+        <div className="flex flex-wrap justify-center gap-2 py-2">
+          {occupancies[0].room_instructor && (
+            <Badge variant={"default"}>
+              {isAssigningInstructor ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                occupancies[0].room_instructor
+              )}
+              <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center">
+                <X className="w-2 h-2 text-red" />
               </div>
-              <div
-                className={`text-xs truncate flex items-center gap-1 ${
-                  isOvercapacity ? "text-red-600" : "text-blue-600"
-                }`}
-              >
-                <Users className="w-3 h-3" />
-                {totalStudents}/{capacity} ({utilizationRate}%)
-              </div>
-            </div>
-            <MoreHorizontal className="w-4 h-4 font-bold flex-shrink-0 cursor-pointer" />
-          </div>
-          <div className="text-xs   flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {formatTime(occupancies[0].start_time)}
-          </div>
+            </Badge>
+          )}
+
+          <select
+            onChange={(e) => {
+              startAssigningInstructorTransition(async () => {
+                try {
+                  const room = occupancies[0];
+                  const resp = await axios.post(
+                    "/api/rooms/assign_instructor/",
+                    {
+                      instructor_id: e.target.value,
+                      date: room.date,
+                      slot_name: room.slot_name,
+                      room_id: room.room_id,
+                    }
+                  );
+                  if (resp.data.success) {
+                    fetchOccupancies();
+                    setToastMessage({
+                      message: "Instructor assigned successfull",
+                      variant: "success",
+                    });
+                  }
+                } catch (error) {
+                  setToastMessage({
+                    message:
+                      "Failed to assign instructor to this room please try again",
+                    variant: "danger",
+                  });
+                }
+              });
+            }}
+            className="p-2 border rounded-md bg-background"
+          >
+            <option value="" selected>
+              Select Instructor
+            </option>
+            {instructors?.map((instructor, idx) => {
+              return (
+                <option value={instructor.id} key={idx}>
+                  {instructor.first_name ||
+                    instructor.last_name ||
+                    instructor.email}
+                </option>
+              );
+            })}
+          </select>
         </div>
-        {isOvercapacity && (
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-2 h-2" />
+        <div
+          className={`relative h-16 rounded-md p-2 text-xs cursor-move hover:shadow-md   text-black hover:scale-105 ${
+            isOvercapacity
+              ? "bg-red-800 border border-red-200 hover:bg-red-100"
+              : totalStudents > capacity * 0.8
+              ? "bg-primary border border-primary hover:bg-primary text-white"
+              : "bg-blue-300 border border-blue-300 hover:bg-blue-200"
+          }`}
+          onClick={() => handleShowRoomOccupancies(occupancies)}
+        >
+          <div className="flex flex-col h-full justify-between">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <div
+                  className={`font-medium truncate ${
+                    isOvercapacity ? "text-red-700" : "text-black-700"
+                  }`}
+                >
+                  {occupancies.length === 1
+                    ? occupancies[0].course_code
+                    : `${occupancies.length} Courses`}
+                </div>
+                <div
+                  className={`text-xs truncate flex items-center gap-1 ${
+                    isOvercapacity
+                      ? "text-red-600"
+                      : "text-yellow-400 font-bold"
+                  }`}
+                >
+                  <Users className="w-3 h-3" />
+                  {totalStudents}/{capacity} ({utilizationRate}%)
+                </div>
+              </div>
+              <MoreHorizontal className="w-4 h-4 font-bold flex-shrink-0 cursor-pointer" />
+            </div>
+            <div className="text-xs   flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {formatTime(occupancies[0].start_time)}
+            </div>
           </div>
-        )}
+          {isOvercapacity && (
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-2 h-2" />
+            </div>
+          )}
+        </div>
       </div>
     );
   };
 
   useEffect(() => {
     fetchOccupancies();
-    setOpen(false)
+    getInstructors();
+    setOpen(false);
   }, []);
+  useEffect(() => {
+    fetchOccupancies();
+  }, [selectedLocation]);
   useEffect(() => {
     if (availableDates.length > 0) {
       setSelectedDate(availableDates[0]);
@@ -692,6 +828,9 @@ const OccupanciesPage = () => {
       open={dialogOpen}
       onOpenChange={() => {
         setDialogOpen(!dialogOpen);
+        setSelectedRoomDetails(null);
+        setShowQrCode(false);
+        setDialogMessage(null);
       }}
     >
       <div
@@ -733,11 +872,7 @@ const OccupanciesPage = () => {
               <div className="flex items-center gap-2">
                 {/* Grouped Buttons */}
                 <div className="flex rounded-full border overflow-hidden">
-                  <Button
-                    onClick={exportData}
-                    
-                    variant="default"
-                  >
+                  <Button onClick={exportData} variant="default">
                     <Download className="w-4 h-4" />
                     <span>Export</span>
                   </Button>
@@ -893,27 +1028,36 @@ const OccupanciesPage = () => {
           <div className="p-6">
             <div className="rounded-lg border  overflow-hidden">
               <div className="flex border-b ">
-                <div className="w-20 p-3  font-medium text-sm  border-r ">
-                  Rooms
-                </div>
+                <div className="w-20 p-3  font-medium text-sm mx-7 ">Rooms</div>
                 {timeSlots.map((time, index) => (
                   <div
                     key={index}
-                    className="flex-1 p-3  text-center text-sm font-medium  border-r  last:border-r-0"
+                    className="flex-1 p-3  text-center text-sm font-medium  border-r  last:border-r-0 flex col"
                   >
                     {formatTime(time)}
                   </div>
                 ))}
               </div>
 
-              <div className="divide-y divide-gray-800 max-h-[600px] overflow-y-auto min-w-full">
+              <div className="divide-y divide-gray-800 max-h-[600px] overflow-y-auto">
                 {rooms.map((room) => (
                   <div key={room} className="flex">
-                    <div className="w-20 p-3  flex items-center justify-center border-r ">
-                      <Button className="flex items-center space-x-2 flex-1 min-w-fit">
+                    <div className="w-fit p-3  items-center justify-center border-r">
+                      <Button
+                        className="flex items-center space-x-2 flex-1 min-w-fit"
+                        onClick={() => {
+                          setShowQrCode(true);
+                          setSelectedRoomDetails({
+                            name: room,
+                            date: selectedDate,
+                          });
+                          setDialogOpen(true);
+                        }}
+                        variant={"secondary"}
+                      >
                         <HouseIcon className="w-4 h-3" />
                         <span className="text-sm font-medium ">{room}</span>
-                          <QrCodeIcon className="w-4 h-4"/> 
+                        <QrCodeIcon className="w-4 h-4" />
                       </Button>
                     </div>
                     {timeSlots.map((_, timeIndex) => {
@@ -1035,7 +1179,6 @@ const OccupanciesPage = () => {
                                   <MapPin className="w-5 h-5 text-blue-500" />
                                   <span className="font-semibold text-lg">
                                     Room {slot.room_name}
-                                  
                                   </span>
                                 </div>
                                 <div className="flex items-center space-x-2">
@@ -1163,8 +1306,6 @@ const OccupanciesPage = () => {
                           </div>
                         ))}
                       </div>
-
-                      
                     </Panel>
                     <PanelResizeHandle className="w-1   hover:bg-gray-800 transition-colors" />
 
@@ -1266,7 +1407,12 @@ const OccupanciesPage = () => {
                                   : setSelectedStudents([]);
                               }}
                             />{" "}
-                            <Label htmlFor="select-all" className="text-foreground">Select All</Label>
+                            <Label
+                              htmlFor="select-all"
+                              className="text-foreground"
+                            >
+                              Select All
+                            </Label>
                           </div>
                           <div className=" overflow-y-scroll max-h-[50vh]">
                             {courseStudents.map((student, index) => (
@@ -1377,6 +1523,57 @@ const OccupanciesPage = () => {
 
             <DialogDescription className="text-sm  max-w-md mx-auto leading-relaxed  text-center">
               {dialogMessage}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* <ShowMoreExamsModal data={moreExams} /> */}
+        </DialogContent>
+      )}
+
+      {showQrCode && selectedRoomDetails && (
+        <DialogContent className="sm:max-w-[425px] md:max-w-[500px] max-h-[90vh] overflow-y-auto ">
+          <DialogHeader className="text-center space-y-4 pb-2 flex items-center justify-center">
+            <DialogTitle className="text-l font-bold  leading-tight">
+              Room {selectedRoomDetails.name}
+            </DialogTitle>
+
+            <DialogDescription className="text-sm  max-w-md mx-auto leading-relaxed  text-center">
+              <div
+                className="relative mt-4 bg-white p-5 rounded-lg shadow-md"
+                style={{ width: "180px", height: "180px" }}
+              >
+                <QRCode
+                  size={180}
+                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  value={JSON.stringify(selectedRoomDetails)}
+                  viewBox={`0 0 256 256`}
+                  level="M"
+                  className="rounded-lg p-5 bg-white"
+                />
+                {/* Download Button */}
+                <button
+                  onClick={handleDownloadQR}
+                  className="mt-6 px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 mx-auto"
+                  aria-label="Download QR Code as PNG"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  Download QR Code
+                </button>
+              </div>
             </DialogDescription>
           </DialogHeader>
 
