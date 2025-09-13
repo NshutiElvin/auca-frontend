@@ -45,8 +45,6 @@ import {
 import { Badge } from "../components/ui/badge";
 import TableSkeleton from "../components/TableSkeleton";
 import { StatusButton } from "../components/ui/status-button";
-import useUserAxios from "../hooks/useUserAxios";
-import { Table, TableHeader, TableBody, TableRow, TableCell, TableFooter, TableHead } from "../components/ui/table";
 
 export type StudentExam = {
   id: string;
@@ -406,7 +404,7 @@ export function AllocationsPage() {
               <SelectItem value="">All Statuses</SelectItem>
               {STATUS_OPTIONS.map((status) => (
                 <SelectItem key={status} value={status}>
-                  <StatusButton status={status}/>
+                  <StatusButton status={status} />
                 </SelectItem>
               ))}
             </SelectContent>
