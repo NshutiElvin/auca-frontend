@@ -1541,7 +1541,6 @@ const OccupanciesPage = () => {
             <DialogDescription className="text-sm  max-w-md mx-auto leading-relaxed  text-center">
               <div
                 className="relative mt-4 bg-white p-5 rounded-lg shadow-md"
-                ref={qrRef}
                 
               >
                 <QRCode
