@@ -1551,7 +1551,7 @@ const OccupanciesPage = () => {
                   value={JSON.stringify(selectedRoomDetails)}
                   viewBox={`0 0 256 256`}
                   level="M"
-                  className="rounded-lg bg-white"
+                  className="rounded-lg p-5 bg-white"
                 />
               
               </div>
