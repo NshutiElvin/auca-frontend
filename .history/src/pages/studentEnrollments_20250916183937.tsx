@@ -132,7 +132,7 @@ export function EnrollmentsPage() {
               balance: (
                 Number(data.amount_to_pay) - Number(data.amount_paid)
               ).toFixed(2),
-              group: data.group.group_name,
+              group: data?.group?.group_name,
               semester: data.course.semester.name,
             };
           })
