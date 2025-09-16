@@ -140,6 +140,8 @@ function ManualTimeTable() {
   const [conflictedCOurses, setConflictedCourses] = useState<any[]>([]);
   const [isLoadingUnscheduled, setIsLoadingUnscheduled] =
     useState<boolean>(false);
+    const [isLoadingExams, setIsLoadingExams] =
+    useState<boolean>(false);
   const [suggesstedSlot, setSuggesstedSlot] = useState<{
     date: string;
     slot: string;
@@ -210,6 +212,7 @@ function ManualTimeTable() {
 
   const getExams = async () => {
     try {
+      setIsLoadingExams(true)
       const resp = await axios.get("/api/exams/exams");
 
       let exams: DailyExam[] = [];
@@ -281,6 +284,8 @@ function ManualTimeTable() {
       setScheduledExams(exams);
     } catch (error) {
       console.log(error);
+    }finally{
+      setIsLoadingExams(false)
     }
   };
 
@@ -888,10 +893,10 @@ function ManualTimeTable() {
         }}
       >
         {" "}
-        {isLoadingUnscheduled && (
+        {isLoadingUnscheduled || isLoadingExams  && (
           <div className="flex justify-center items-center">
             <Loader2 className="animate-spin h-5 w-5 text-primary" /> loading
-            unscheduled exam ...
+            exams ...
           </div>
         )}
         <div

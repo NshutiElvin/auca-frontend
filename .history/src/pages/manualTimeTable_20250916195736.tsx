@@ -1,7 +1,12 @@
-import React, { useState, useEffect, useTransition, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useTransition,
+  useRef,
+  useContext,
+} from "react";
 import {
   Search,
-  Clock,
   Calendar,
   X,
   Grip,
@@ -10,7 +15,6 @@ import {
   List,
   ListCollapse,
   Pencil,
-  Loader,
   Loader2,
 } from "lucide-react";
 import useUserAxios from "../hooks/useUserAxios";
@@ -19,7 +23,6 @@ import { Exam, MyExam } from "./exams";
 import { Badge } from "../components/ui/badge";
 import {
   CourseGroup,
-  UnscheduledCourse,
   UnscheduledCourseEnhanced,
 } from "../contexts/ExamSchedulesContexts";
 import useExamsSchedule from "../hooks/useExamShedule";
@@ -36,12 +39,23 @@ import { ScrollArea } from "../components/scroll-area";
 import { Button } from "../components/ui/button";
 import useToast from "../hooks/useToast";
 
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 
 import Draggable from "react-draggable";
 import { ConflictDialog } from "./ConflictsDialog";
 import { useSidebar } from "../components/ui/sidebar";
 import { Label } from "../components/ui/label";
+import LocationContext from "../contexts/LocationContext";
+import { is } from "date-fns/locale";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+import AllSuggestionsDialog from "./AllSuggestions";
 
 interface Slot {
   id: string;
@@ -53,35 +67,6 @@ interface Slot {
 
 interface AssignedCourse extends UnscheduledCourseEnhanced {
   slotId: string;
-}
-
-class DailySlot {
-  date: Date;
-  name: string;
-  startTime: string;
-  endTime: string;
-
-  public constructor({
-    date,
-    name,
-    startTime,
-    endTime,
-  }: {
-    date: Date;
-    name: string;
-    startTime: string;
-    endTime: string;
-  }) {
-    this.date = date;
-    this.name = name;
-    this.startTime = startTime;
-    this.endTime = endTime;
-  }
-}
-
-interface ScheduledExam {
-  exam: Exam;
-  groups: CourseGroup[];
 }
 
 interface SlotExam {
@@ -104,6 +89,7 @@ interface Suggestion {
   suggested: boolean;
   date: string;
   slot: string;
+  reason?: string;
 }
 
 interface BestSuggestion {
@@ -128,10 +114,10 @@ function ManualTimeTable() {
     useToast();
   const [timeSlots, setTimeSlots] = useState<Slot[]>([]);
   const { setUnScheduled } = useExamsSchedule();
+  const [viewAllSuggestions, setViewAllSuggestions] = useState<boolean>(false);
   const [unscheduledExams, setUnScheduledExams] = useState<
     UnscheduledCourseEnhanced[]
   >([]);
-
   const [moreExams, setMoreExams] = useState<any[]>([]);
   const [existingDraggedExamGroup, setExistingDraggedExamGroup] =
     useState<MyExam | null>(null);
@@ -147,12 +133,15 @@ function ManualTimeTable() {
   const [bestSuggestion, setBestSuggestion] = useState<BestSuggestion | null>(
     null
   );
-
   const [conflictedStudents, setConflictedStudents] = useState<any[]>([]);
   const [showUnscheduled, setShowUnscheduled] = useState(true);
   const [showMore, setShowMore] = useState<boolean>(false);
   const [showConflicts, setShowConflicts] = useState<boolean>(false);
   const [conflictedCOurses, setConflictedCourses] = useState<any[]>([]);
+  const [isLoadingUnscheduled, setIsLoadingUnscheduled] =
+    useState<boolean>(false);
+    const [isLoadingExams, setIsLoadingExams] =
+    useState<boolean>(false);
   const [suggesstedSlot, setSuggesstedSlot] = useState<{
     date: string;
     slot: string;
@@ -162,11 +151,42 @@ function ManualTimeTable() {
   const [isReviewingConflict, startReviewingConflictTransition] =
     useTransition();
   const [isAllowedToReview, setIsAllowedToReview] = useState<boolean>(false);
+  const { selectedLocation } = useContext(LocationContext);
+
+  const modalRef = useRef(null);
+
+  const filteredCourses = unscheduledExams.filter(
+    (exam) =>
+      exam.course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exam.course.department.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      exam.course.code?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const allUnscheduled = filteredCourses.filter(
+    (exam) =>
+      !assignedCourses.some((assigned) => assigned.course.id === exam.course.id)
+  );
 
   const getUnscheduledExams = async () => {
-    const resp = await axios.get("api/exams/exams/unscheduled_exams");
-    if (resp.data.success) {
-      setUnScheduledExams(resp.data.data);
+    try {
+      setIsLoadingUnscheduled(true);
+      let resp = null;
+      if (selectedLocation)
+        resp = await axios.get(
+          `api/exams/exams/unscheduled_exams?location=${selectedLocation.id}`
+        );
+      else {
+        resp = await axios.get("api/exams/exams/unscheduled_exams");
+      }
+      if (resp.data.success) {
+        setUnScheduledExams(resp.data.data);
+      }
+    } catch (error) {
+      setToastMessage({ message: String(error), variant: "danger" });
+    } finally {
+      setIsLoadingUnscheduled(false);
     }
   };
 
@@ -180,11 +200,11 @@ function ManualTimeTable() {
     setShowConflicts(false);
     setConflictedStudents([]);
   };
+
   const resetAllStates = () => {
     setServerLoadingMessage({ isServerLoading: false });
     setDraggedCourse(null);
     setSelectedSlotInfo(null);
-
     setDraggedCourseGroup(null);
     setExistingDraggedExamGroup(null);
     setSuggesstedSlot(null);
@@ -192,6 +212,7 @@ function ManualTimeTable() {
 
   const getExams = async () => {
     try {
+      setIsLoadingExams(true)
       const resp = await axios.get("/api/exams/exams");
 
       let exams: DailyExam[] = [];
@@ -263,24 +284,10 @@ function ManualTimeTable() {
       setScheduledExams(exams);
     } catch (error) {
       console.log(error);
+    }finally{
+      setIsLoadingExams(false)
     }
   };
-
-  const modalRef = useRef(null);
-
-  const filteredCourses = unscheduledExams.filter(
-    (exam) =>
-      exam.course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exam.course.department.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      exam.course.code?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const allUnscheduled = filteredCourses.filter(
-    (exam) =>
-      !assignedCourses.some((assigned) => assigned.course.id === exam.course.id)
-  );
 
   const handleDragStart = (e: React.DragEvent, course: any) => {
     const dragPreview = document.createElement("div");
@@ -308,6 +315,7 @@ function ManualTimeTable() {
   };
 
   const handleCourseGroupDragStart = (e: React.DragEvent, group: any) => {
+    console.log(group);
     setDraggedCourseGroup({ ...group });
     setBackupDraggedCourseGroup({ ...group });
     e.dataTransfer.effectAllowed = "move";
@@ -401,201 +409,6 @@ function ManualTimeTable() {
     }
   };
 
-  const handleDroppedCourse = async (e: React.DragEvent, slotInfo: any) => {
-    e.preventDefault();
-    console.log(slotInfo);
-    setSelectedSlotInfo(slotInfo);
-    setBackupSelectedSlotInfo(slotInfo);
-
-    if (draggedCourseGroup) {
-      try {
-        setDialogOpen(false);
-        setServerLoadingMessage({
-          message: `Scheduling single exam group`,
-          isServerLoading: true,
-        });
-        const resp = await axios.post("/api/exams/exams/add-exam-to-slot/", {
-          ...slotInfo,
-          course_group: draggedCourseGroup,
-        });
-
-        if (resp.data.success) {
-          if (resp.data.success) {
-            if (resp.data.conflict) {
-              setConflictMessage(resp.data.data);
-              setSuggestions(resp.data.all_suggestions);
-              setBestSuggestion(resp.data.best_suggestion);
-              setDialogOption({ option: "conflict" });
-              setDialogOpen(true);
-            }
-          } else {
-            setToastMessage({ message: resp.data.message, variant: "danger" });
-          }
-        } else {
-          setToastMessage({ message: resp.data.message, variant: "danger" });
-        }
-      } catch (error) {
-        console.log(error);
-        setToastMessage({ message: String(error), variant: "danger" });
-      } finally {
-        setServerLoadingMessage({ isServerLoading: false });
-      }
-    } else if (draggedCourse) {
-      try {
-        setServerLoadingMessage({
-          message: `Processing`,
-          isServerLoading: true,
-        });
-        const resp = await axios.post("/api/exams/exams/add-exam-to-slot/", {
-          ...slotInfo,
-          course_group: draggedCourse,
-        });
-
-        if (resp.data.success) {
-          if (resp.data.conflict) {
-            setConflictMessage(resp.data.data);
-            setSuggestions(resp.data.all_suggestions);
-            setBestSuggestion(resp.data.best_suggestion);
-            setDialogOption({ option: "conflict" });
-            setDialogOpen(true);
-          }
-        } else {
-          setToastMessage({ message: resp.data.message, variant: "danger" });
-        }
-      } catch (error) {
-        setToastMessage({ message: String(error), variant: "danger" });
-      } finally {
-        setServerLoadingMessage({ isServerLoading: false });
-      }
-    } else if (existingDraggedExamGroup) {
-      try {
-        setServerLoadingMessage({
-          message: `Processing`,
-          isServerLoading: true,
-        });
-        const resp = await axios.post("/api/exams/exams/add-exam-to-slot/", {
-          ...slotInfo,
-          course_group: existingDraggedExamGroup,
-        });
-
-        if (resp.data.success) {
-          if (resp.data.conflict) {
-            setConflictMessage(resp.data.data);
-            setSuggestions(resp.data.all_suggestions);
-            setBestSuggestion(resp.data.best_suggestion);
-            setDialogOption({ option: "conflict" });
-            setDialogOpen(true);
-          }
-        } else {
-          setToastMessage({ message: resp.data.message, variant: "danger" });
-        }
-      } catch (error) {
-        setToastMessage({ message: String(error), variant: "danger" });
-      } finally {
-        setServerLoadingMessage({ isServerLoading: false });
-      }
-    }
-  };
-
-  // const scheduleCourse = async () => {
-  //   if (draggedCourse) {
-  //     try {
-  //       setDialogOpen(false);
-  //       setServerLoadingMessage({
-  //         message: `Scheduling Exam`,
-  //         isServerLoading: true,
-  //       });
-  //       const resp = await axios.post(
-  //         "/api/exams/exams/schedule-course-group/",
-  //         {
-  //           ...selectedSlotInfo,
-  //           course_group: draggedCourse,
-  //           suggestedSlot: suggesstedSlot,
-  //         }
-  //       );
-
-  //       if (resp.data.success) {
-  //         setToastMessage({ message: resp.data.message, variant: "success" });
-  //         handleDrop(selectedSlotInfo);
-  //       } else {
-  //         setToastMessage({ message: resp.data.message, variant: "danger" });
-  //       }
-  //     } catch (error) {
-  //       setToastMessage({ message: String(error), variant: "danger" });
-  //     } finally {
-  //       setServerLoadingMessage({ isServerLoading: false });
-  //       setDraggedCourse(null);
-  //       setSelectedSlotInfo(null);
-  //       setDraggedCourseGroup(null);
-  //       setExistingDraggedExamGroup(null);
-  //       setSuggesstedSlot(null);
-  //     }
-  //   } else if (draggedCourseGroup) {
-  //     try {
-  //       setDialogOpen(false);
-  //       setServerLoadingMessage({
-  //         message: `Scheduling Exam`,
-  //         isServerLoading: true,
-  //       });
-  //       const resp = await axios.post(
-  //         "/api/exams/exams/schedule-course-single-group/",
-  //         {
-  //           ...selectedSlotInfo,
-  //           course_group: draggedCourseGroup,
-  //         }
-  //       );
-
-  //       if (resp.data.success) {
-  //         setToastMessage({ message: resp.data.message, variant: "success" });
-  //         handleDrop(selectedSlotInfo);
-  //       } else {
-  //         setToastMessage({ message: resp.data.message, variant: "danger" });
-  //       }
-  //     } catch (error) {
-  //       setToastMessage({ message: String(error), variant: "danger" });
-  //     } finally {
-  //       setServerLoadingMessage({ isServerLoading: false });
-  //       setDraggedCourse(null);
-  //       setSelectedSlotInfo(null);
-  //       setDraggedCourseGroup(null);
-  //       setExistingDraggedExamGroup(null);
-  //       setSuggesstedSlot(null);
-  //     }
-  //   } else if (existingDraggedExamGroup) {
-  //     try {
-  //       setDialogOpen(false);
-  //       setServerLoadingMessage({
-  //         message: `Scheduling Exam`,
-  //         isServerLoading: true,
-  //       });
-  //       const resp = await axios.post(
-  //         "/api/exams/exams/schedule-existing-course-single-group/",
-  //         {
-  //           ...selectedSlotInfo,
-  //           course_group: existingDraggedExamGroup,
-  //         }
-  //       );
-
-  //       if (resp.data.success) {
-  //         setToastMessage({ message: resp.data.message, variant: "success" });
-  //         await getExams();
-  //         handleDrop(selectedSlotInfo);
-  //       } else {
-  //         setToastMessage({ message: resp.data.message, variant: "danger" });
-  //       }
-  //     } catch (error) {
-  //       setToastMessage({ message: String(error), variant: "danger" });
-  //     } finally {
-  //       setServerLoadingMessage({ isServerLoading: false });
-  //       setDraggedCourse(null);
-  //       setSelectedSlotInfo(null);
-  //       setDraggedCourseGroup(null);
-  //       setExistingDraggedExamGroup(null);
-  //       setSuggesstedSlot(null);
-  //     }
-  //   }
-  // };
-
   const scheduleCourse = async () => {
     if (!draggedCourse && !draggedCourseGroup && !existingDraggedExamGroup)
       return;
@@ -634,11 +447,13 @@ function ManualTimeTable() {
         setToastMessage({ message: resp.data.message, variant: "danger" });
       }
     } catch (error) {
-      setToastMessage({ message: String(error), variant: "danger" });
+      getExams();
+      getUnscheduledExams();
     } finally {
       resetAllStates();
     }
   };
+
   const changeExamTime = async () => {
     startChangingTimeTransition(async () => {
       try {
@@ -660,6 +475,7 @@ function ManualTimeTable() {
       }
     });
   };
+
   const removeExamCourse = async (e: any, courseExamInfo: any) => {
     e.preventDefault();
     try {
@@ -695,6 +511,105 @@ function ManualTimeTable() {
       setServerLoadingMessage({ isServerLoading: false });
     }
   };
+
+  const handleDroppedCourse = async (e: React.DragEvent, slotInfo: any) => {
+    e.preventDefault();
+    console.log(slotInfo);
+    setSelectedSlotInfo(slotInfo);
+    setBackupSelectedSlotInfo(slotInfo);
+
+    if (draggedCourseGroup) {
+      try {
+        setDialogOpen(false);
+        setServerLoadingMessage({
+          message: `Scheduling single exam group`,
+          isServerLoading: true,
+        });
+        const resp = await axios.post("/api/exams/exams/add-exam-to-slot/", {
+          ...slotInfo,
+          course_group: draggedCourseGroup,
+        });
+
+        if (resp.data.success) {
+          if (resp.data.success) {
+            if (resp.data.conflict) {
+              setConflictMessage(resp.data.data);
+              setSuggestions(resp.data.all_suggestions);
+              setBestSuggestion(resp.data.best_suggestion);
+              setDialogOption({ option: "conflict" });
+              setDialogOpen(true);
+            }
+          } else {
+            setToastMessage({ message: resp.data.message, variant: "danger" });
+          }
+        } else {
+          setToastMessage({ message: resp.data.message, variant: "danger" });
+        }
+      } catch (error) {
+        getExams();
+        getUnscheduledExams();
+      } finally {
+        setServerLoadingMessage({ isServerLoading: false });
+      }
+    } else if (draggedCourse) {
+      try {
+        setServerLoadingMessage({
+          message: `Processing`,
+          isServerLoading: true,
+        });
+        const resp = await axios.post("/api/exams/exams/add-exam-to-slot/", {
+          ...slotInfo,
+          course_group: draggedCourse,
+        });
+
+        if (resp.data.success) {
+          if (resp.data.conflict) {
+            setConflictMessage(resp.data.data);
+            setSuggestions(resp.data.all_suggestions);
+            setBestSuggestion(resp.data.best_suggestion);
+            setDialogOption({ option: "conflict" });
+            setDialogOpen(true);
+          }
+        } else {
+          setToastMessage({ message: resp.data.message, variant: "danger" });
+        }
+      } catch (error) {
+        getExams();
+        getUnscheduledExams();
+      } finally {
+        setServerLoadingMessage({ isServerLoading: false });
+      }
+    } else if (existingDraggedExamGroup) {
+      try {
+        setServerLoadingMessage({
+          message: `Processing`,
+          isServerLoading: true,
+        });
+        const resp = await axios.post("/api/exams/exams/add-exam-to-slot/", {
+          ...slotInfo,
+          course_group: existingDraggedExamGroup,
+        });
+
+        if (resp.data.success) {
+          if (resp.data.conflict) {
+            setConflictMessage(resp.data.data);
+            setSuggestions(resp.data.all_suggestions);
+            setBestSuggestion(resp.data.best_suggestion);
+            setDialogOption({ option: "conflict" });
+            setDialogOpen(true);
+          }
+        } else {
+          setToastMessage({ message: resp.data.message, variant: "danger" });
+        }
+      } catch (error) {
+        getExams();
+        getUnscheduledExams();
+      } finally {
+        setServerLoadingMessage({ isServerLoading: false });
+      }
+    }
+  };
+
   const handleDrop = (slotInfo: any) => {
     if (suggesstedSlot) {
     }
@@ -804,11 +719,6 @@ function ManualTimeTable() {
     setSuggesstedSlot(null);
   };
 
-  const getCourseForSlot = (slotId: string) => {
-    return assignedCourses.find((assigned) => assigned.slotId === slotId);
-  };
-
-  const uniqueDates = [...new Set(timeSlots.map((slot) => slot.date))];
   const removeCourseFromSlot = (slotInfo: any) => {
     setScheduledExams((prevScheduledExams) => {
       let removedGroup: any = null;
@@ -909,33 +819,10 @@ function ManualTimeTable() {
     return `${hours}h ${minutes}m`;
   };
 
-  // const handleSave = () => {
-  //   if (selectedSlot) {
-  //     setExamSlots((prev: any) => ({
-  //       ...prev,
-  //       [selectedSlot.date]: prev[selectedSlot.date].map((slot: any) =>
-  //         slot.id === selectedSlot.id
-  //           ? { ...slot, start: selectedSlot.start, end: selectedSlot.end }
-  //           : slot
-  //       ),
-  //     }));
-  //     setSelectedSlot(null);
-  //     setDialogOpen(false);
-  //     setFormView({
-  //       addDay: false,
-  //       addSlot: false,
-  //       updateSlot: false,
-  //     });
-  //   }
-  // };
-
   useEffect(() => {
-    setUnScheduled([]);
     setOpen(false);
-  }, []);
-
-  useEffect(() => {
-    getExams(), getUnscheduledExams();
+    getUnscheduledExams();
+    getExams();
   }, []);
 
   useEffect(() => {
@@ -1002,8 +889,16 @@ function ManualTimeTable() {
           setDialogOption(null);
           setSlotToChange(null);
           setIsAllowedToReview(false);
+          setViewAllSuggestions(false);
         }}
       >
+        {" "}
+        {isLoadingUnscheduled || isLoadingExams  && (
+          <div className="flex justify-center items-center">
+            <Loader2 className="animate-spin h-5 w-5 text-primary" /> loading
+            exams ...
+          </div>
+        )}
         <div
           className={`flex flex-col gap-2${
             serverLoadingMessage?.isServerLoading &&
@@ -1019,7 +914,7 @@ function ManualTimeTable() {
             >
               {showUnscheduled ? <ListCollapse /> : <List />}
               {unscheduledExams.length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-yellow-300 text-black text-xs  font-medium p-2">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white text-xs  font-medium p-2">
                   {unscheduledExams.length > 9 ? "9+" : unscheduledExams.length}
                 </span>
               )}
@@ -1028,12 +923,16 @@ function ManualTimeTable() {
 
           <div
             className={`grid grid-cols-1 ${
-              unscheduledExams.length > 0 && showUnscheduled && "lg:grid-cols-3"
+              unscheduledExams.length > 0 && showUnscheduled
+                ? "lg:grid-cols-3 w-full"
+                : ""
             } gap-2 ${
-              serverLoadingMessage?.isServerLoading &&
-              "pointer-events-none opacity-20"
+              serverLoadingMessage?.isServerLoading
+                ? "pointer-events-none opacity-20"
+                : ""
             }`}
           >
+            {" "}
             {unscheduledExams.length > 0 && showUnscheduled && (
               <div className="lg:col-span-1">
                 <div className="rounded-md shadow-lg p-2 sticky top-2">
@@ -1048,7 +947,7 @@ function ManualTimeTable() {
                       placeholder="Search courses..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
 
@@ -1056,61 +955,72 @@ function ManualTimeTable() {
                     {allUnscheduled.map((exam) => (
                       <div
                         key={exam.course.id}
-                        className="p-2 rounded-lg border border-gray-800 mt-2"
+                        className="p-3 mt-3 rounded-xl border border-primary shadow-sm bg-background"
                       >
+                        {/* Exam Header */}
                         <div
-                          className="flex justify-between items-start "
+                          className="flex justify-between items-center cursor-move hover:opacity-70 transition-all duration-200"
                           draggable
                           onDragStart={(e) => handleDragStart(e, exam)}
                         >
-                          <div className="hover:opacity-45 hover:border-blue-300 cursor-move transition-all duration-200 m-2 w-full">
-                            <div className="flex justify-between align-start p-1 ">
-                              <Grip className="translate-x-3.5 h-4 w-4" />
-                              <h3 className="font-semibold text-sm flex-1 overflow-hidden">
-                                {exam.course.title}
-                              </h3>
-                            </div>
+                          <div className="flex items-center space-x-2 w-full overflow-hidden">
+                            <Grip className="h-4 w-4 text-muted-foreground" />
+                            <h3 className="font-medium text-sm truncate">
+                              {exam.course.title}
+                            </h3>
                           </div>
                         </div>
-                        <div className="flex justify-center items-center space-x-2">
-                          {exam.groups.map((e_group, idx) => {
-                            return (
-                              <Badge
-                                key={idx}
-                                variant={"outline"}
-                                draggable
-                                onDragStart={(e) =>
-                                  handleCourseGroupDragStart(e, {
-                                    ...e_group,
-                                    courseId: exam.id,
-                                  })
-                                }
-                                className="w-auto hover:opacity-45 hover:border-blue-300 cursor-move transition-all duration-200 m-2"
-                              >
-                                <Grip className="h-4 w-4" />
+
+                        {/* Exam Groups */}
+                        <div className="flex flex-wrap justify-center items-center gap-2 mt-3">
+                          {exam.groups.map((e_group, idx) => (
+                            <Badge
+                              key={idx}
+                              variant="outline"
+                              draggable
+                              onDragStart={(e) =>
+                                handleCourseGroupDragStart(e, {
+                                  ...e_group,
+                                  courseId: exam.id,
+                                })
+                              }
+                              className="flex items-center gap-1 px-2 py-1 cursor-move hover:opacity-70 hover:border-blue-400 transition-all duration-200"
+                            >
+                              <Grip className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs">
                                 {e_group.group.group_name}
-                              </Badge>
-                            );
-                          })}
+                              </span>
+                            </Badge>
+                          ))}
                         </div>
-                        <Badge variant={"destructive"}>{exam.reason}</Badge>
+
+                        {/* Reason Badge */}
+                        {exam.reason && (
+                          <div className="flex justify-end mt-2">
+                            <Badge
+                              variant="destructive"
+                              className="text-xs px-2 py-0.5"
+                            >
+                              {exam.reason}
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </ScrollArea>
                 </div>
               </div>
             )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full gap-4 lg:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2 col-span-2">
               {scheduledExams.map((date, idx) => {
                 let dateObj = new Date(date.day);
 
                 return (
                   <Card
                     key={idx}
-                    className="shadow-md cursor-pointer overflow-hidden relative flex flex-col border h-full min-h-[400px]"
+                    className="shadow-md cursor-pointer overflow-hidden relative flex flex-col border h-full min-h-[400px] p- w-full"
                   >
-                    <div className="text-center py-4 px-3 bg-gray-800 border-b sticky top-0 z-10 text-white">
+                    <div className="text-center py-2 px-2 bg-primary border-b sticky top-0 z-10 text-white">
                       <h2 className="text-lg font-bold">
                         {format(dateObj, "eee")}
                       </h2>
@@ -1120,11 +1030,11 @@ function ManualTimeTable() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto">
-                      <div className="space-y-3 p-3">
+                      <div className="space-y-0">
                         {date.exams.map((slot, slotIdx) => (
                           <Card
                             key={slotIdx}
-                            className="shadow-sm cursor-pointer overflow-hidden relative border-0 mt-0 transition-all duration-200 hover:shadow-md items-center"
+                            className="shadow-sm cursor-pointer overflow-hidden relative border-0 mt-0 transition-all duration-200 hover:shadow-md items-center p-0"
                             onDragOver={handleDragOver}
                             onDrop={(e) =>
                               handleDroppedCourse(e, {
@@ -1133,9 +1043,6 @@ function ManualTimeTable() {
                               })
                             }
                           >
-                            <Badge variant={"secondary"} className="items-center w-full">
-                              {slot.start} - {slot.end}
-                            </Badge>
                             <div className=" w-full p-3 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 flex justify-between flex-wrap">
                               <h3 className="text-sm font-semibold   text-center ">
                                 {slot.name}
@@ -1159,14 +1066,20 @@ function ManualTimeTable() {
                                 <Pencil className="h-2 w-2" />
                               </Button>
                             </div>
+                            <Badge
+                              variant={"secondary"}
+                              className="items-center w-full"
+                            >
+                              {slot.start} - {slot.end}
+                            </Badge>
 
                             <div
                               className={`
-                    relative min-h-[80px] cursor-pointer transition-all duration-200
+                    relative min-h-[80px] cursor-pointer transition-all duration-200 w-full
                     ${
                       slot.exams
                         ? "bg-inherit"
-                        : "border-2 border-dashed border-gray-800 hover:border-blue-400 hover:bg-blue-50/30 m-2 rounded-md"
+                        : "border-2 border-dashed border-primary hover:border-blue-400 hover:bg-blue-50/30 m-2 rounded-md"
                     }
                   `}
                             >
@@ -1175,7 +1088,7 @@ function ManualTimeTable() {
                                   <div className="flex justify-between items-start mb-2">
                                     <Badge
                                       variant="outline"
-                                      className="hover:bg-inherit text-xs cursor-pointer transition-colors duration-200 px-2 py-1 bg-yellow-300 text-black"
+                                      className="hover:bg-inherit text-xs cursor-pointer transition-colors duration-200 px-2 py-1 bg-primary text-white"
                                       onClick={() => {
                                         setMoreExams(
                                           slot.exams.map((e: any) => ({
@@ -1212,13 +1125,13 @@ function ManualTimeTable() {
                                       }}
                                       variant="outline"
                                       size="sm"
-                                      className="text-gray-500 hover:text-red-600 hover:bg-red-50 border-gray-800 h-6 w-6 p-0 transition-colors duration-200"
+                                      className="text-gray-500 hover:text-red-600 hover:bg-red-50 border-primary h-6 w-6 p-0 transition-colors duration-200"
                                     >
                                       <X className="w-3 h-3" />
                                     </Button>
                                   </div>
 
-                                  <div className="space-y-2">
+                                  <div className="space-y-2 w-full">
                                     {slot.exams[slot.exams.length - 1] && (
                                       <Badge
                                         variant="outline"
@@ -1277,10 +1190,10 @@ function ManualTimeTable() {
               >
                 <div
                   ref={modalRef}
-                  className={`bg-background rounded-lg  z-50 relative shadow-md w-[500px] hover:z-[55] shadow-gray-800  ${
+                  className={`bg-background rounded-lg  z-50 relative shadow-md w-[500px] hover:z-[55] shadow-primary  ${
                     serverLoadingMessage?.isServerLoading &&
                     "pointer-events-none opacity-80"
-                  } border animate-in border-gray-800 shadow-gray-800  hover:z-[55] rounded-lg shadow-lg duration-200`}
+                  } border animate-in border-primary shadow-primary  hover:z-[55] rounded-lg shadow-lg duration-200`}
                   style={{
                     position: "fixed",
 
@@ -1296,7 +1209,7 @@ function ManualTimeTable() {
     
   "
                   >
-                    <div className=" bg-gray-800 w-full text-white">
+                    <div className=" bg-primary w-full text-white">
                       <div className="p-2">
                         {" "}
                         <h4 className="font-semibold text-sm ">
@@ -1369,7 +1282,7 @@ function ManualTimeTable() {
                               }}
                               variant="outline"
                               size="sm"
-                              className="text-gray-500 hover:text-red-600 hover:bg-red-50 border-gray-800 h-8 w-8 p-0 flex-shrink-0 transition-colors duration-200"
+                              className="text-gray-500 hover:text-red-600 hover:bg-red-50 border-primary h-8 w-8 p-0 flex-shrink-0 transition-colors duration-200"
                             >
                               <X className="w-3 h-3" />
                             </Button>
@@ -1486,8 +1399,8 @@ function ManualTimeTable() {
             <DialogContent className="sm:max-w-[600px] md:max-w-[800px] lg:max-w-[900px] max-h-[90vh] flex-col">
               {isReviewingConflict && (
                 <div className="absolute inset-0 flex items-center justify-center z-50 bg-black/30">
-                  <div className="p-4 border-2 border-yellow-300 rounded-lg bg-black/70">
-                    <Loader2 className="h-5 w-5 text-yellow-300 animate-spin" />
+                  <div className="p-4 border-2 border-primary rounded-lg bg-black/70">
+                    <Loader2 className="h-5 w-5 text-primary animate-spin" />
                   </div>
                 </div>
               )}
@@ -1605,7 +1518,7 @@ function ManualTimeTable() {
                       {bestSuggestion ? (
                         <Badge
                           variant="outline"
-                          className="w-full p-4 rounded-md flex items-center justify-center  bg-yellow-300 text-black font-bold"
+                          className="w-full p-4 rounded-md flex items-center justify-center  bg-primary text-white font-bold"
                         >
                           <span className="text-center">
                             <span className="font-semibold">
@@ -1646,6 +1559,16 @@ function ManualTimeTable() {
                 <div className="space-y-3">
                   <h3 className="text-sm text-center px-1">
                     Alternative Suggested Slots
+                    {suggestions && suggestions.length > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-2 cursor-pointer"
+                        onClick={() => setViewAllSuggestions(true)}
+                      >
+                        {" "}
+                        view all
+                      </Badge>
+                    )}
                   </h3>
                   <div className="rounded-md border">
                     <div className="p-4">
@@ -1663,8 +1586,8 @@ function ManualTimeTable() {
                                   className={`p-2 text-center m-1 cursor-pointer  border rounded-md  font-bold ${
                                     suggestion.date === suggesstedSlot?.date &&
                                     suggestion.slot === suggesstedSlot?.slot
-                                      ? "bg-yellow-300 text-black"
-                                      : "hover:bg-yellow-100 hover:text-black"
+                                      ? "bg-primary text-white"
+                                      : "hover:bg-muted-primary hover:text-white"
                                   }`}
                                 >
                                   <div className="text-xs font-medium">
@@ -1696,7 +1619,7 @@ function ManualTimeTable() {
                 </div>
               </div>
 
-              <DialogFooter className="flex-shrink-0 mt-6 p-4 border-t bg-gray-800">
+              <DialogFooter className="flex-shrink-0 mt-6 p-4 border-t bg-primary">
                 <div className="flex items-center justify-between w-full">
                   <div>
                     <p className="text-sm font-medium text-white">
@@ -1709,14 +1632,14 @@ function ManualTimeTable() {
                   </div>
                   <div className="flex gap-3">
                     <Button
-                      variant="default"
+                      variant="secondary"
                       onClick={scheduleCourse}
                       className="px-6 py-2 font-medium"
                     >
                       Yes, Continue
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant="destructive"
                       onClick={() => {
                         setDraggedCourse(null);
                         setBackupDraggedCourse(null);
@@ -1738,6 +1661,11 @@ function ManualTimeTable() {
           )}
         </div>
       </Dialog>
+      <AllSuggestionsDialog
+        viewAllSuggestions={viewAllSuggestions}
+        setViewAllSuggestions={setViewAllSuggestions}
+        suggestions={suggestions}
+      />
       <ConflictDialog
         conflictedCourses={conflictedCOurses}
         conflictedStudents={conflictedStudents}
