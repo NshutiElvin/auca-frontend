@@ -4,13 +4,13 @@ import { HeroCards } from "./HeroCards";
 import { ShieldUser } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-
+import TextType from "./texttype";
 
 export const Hero = () => {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center overflow-hidden mt-5"
+      className="relative min-h-screen flex items-center overflow-hidden mt-8"
     >
       <div className="absolute inset-0 z-0">
         <div className="relative w-full h-full">
@@ -61,7 +61,7 @@ export const Hero = () => {
             student-friendly exam timetables in seconds.
           </p>
 
-
+          
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">

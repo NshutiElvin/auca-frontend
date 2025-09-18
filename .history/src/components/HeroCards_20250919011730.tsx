@@ -1,17 +1,12 @@
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Badge } from "./ui/badge";
-import { Button, buttonVariants } from "./ui/button";
+ 
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
+   
 } from "./ui/card";
-import { Check, Linkedin } from "lucide-react";
-import { LightBulbIcon } from "./Icons";
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
+
+import TextType from "./texttype";
+ 
 
 export const HeroCards = () => {
   return (
@@ -24,7 +19,7 @@ export const HeroCards = () => {
         
 
         <CardContent>
-      “No more manual clashes. This system made final exam planning effortless.”  
+      “No more manual clashes. This system made exam planning effortless.”  
     </CardContent>
 
         
