@@ -385,7 +385,7 @@ export function UsersPage() {
           <div className="flex flex-wrap gap-1">
             {permissions.slice(0, 3).map((permission) => (
               <Badge key={permission} variant="secondary" className="text-xs">
-                {permission }
+                {permission.split("_")[0]}
               </Badge>
             ))}
             {permissions.length > 3 && (
