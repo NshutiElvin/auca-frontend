@@ -4,7 +4,7 @@ import { HeroCards } from "./HeroCards";
 import { ShieldUser } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-
+import DotGrid from "../dotgrid";
 
 export const Hero = () => {
   return (
