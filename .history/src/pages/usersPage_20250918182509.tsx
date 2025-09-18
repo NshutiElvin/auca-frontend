@@ -99,7 +99,7 @@ const dummyUsers: User[] = [
     is_active: true,
     is_staff: true,
     date_joined: "2023-01-15T10:30:00Z",
-    permissions: ["add_user", "change_user", "delete_user", "view_user"],
+    permissions: ["add_user", "change_user", "delete_user", "view_user"]
   },
   {
     id: "2",
@@ -110,7 +110,7 @@ const dummyUsers: User[] = [
     is_active: true,
     is_staff: true,
     date_joined: "2023-02-20T14:45:00Z",
-    permissions: ["view_user", "change_user"],
+    permissions: ["view_user", "change_user"]
   },
   {
     id: "3",
@@ -121,7 +121,7 @@ const dummyUsers: User[] = [
     is_active: true,
     is_staff: false,
     date_joined: "2023-03-10T09:15:00Z",
-    permissions: ["view_user"],
+    permissions: ["view_user"]
   },
   {
     id: "4",
@@ -132,7 +132,7 @@ const dummyUsers: User[] = [
     is_active: false,
     is_staff: false,
     date_joined: "2023-04-05T16:20:00Z",
-    permissions: [],
+    permissions: []
   },
   {
     id: "5",
@@ -143,8 +143,8 @@ const dummyUsers: User[] = [
     is_active: true,
     is_staff: false,
     date_joined: "2023-05-12T11:30:00Z",
-    permissions: ["view_user", "change_user"],
-  },
+    permissions: ["view_user", "change_user"]
+  }
 ];
 
 // Available permissions
@@ -188,11 +188,8 @@ const SortableHeader = ({
 export function UsersPage() {
   const axios = useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [isLoading, setIsLoading] = React.useState(true);
   const { setToastMessage } = useToast();
@@ -215,47 +212,49 @@ export function UsersPage() {
   });
 
   // Get users data
-  const getUsers = async () => {
+  const getUsers = async() => {
+  
     try {
-      setIsLoading(true);
-      const resp = await axios.get("/api/users");
-      if (resp.data.success) {
-        setData(
-          resp.data.data.map((d: any) => {
-            return { ...d, permissions: d.current_permissions };
-          })
-        );
+      setIsLoading(true)
+      const resp=  await axios.get("/api/users")
+      if(resp.data.success){
+        
+        setData(resp.data.data.map((d:any)=>{
+          return {...d, permissions:d.current_permissions}
+        }))
       }
+      
     } catch (error) {
-    } finally {
-      setIsLoading(false);
+      
+    }finally{
+      setIsLoading(false)
     }
   };
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
   // Handle role change
   const handleRoleChange = (value: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      role: value as "student" | "instructor" | "admin",
+      role: value as "student" | "instructor" | "admin"
     }));
   };
 
   // Handle permission toggle
   const togglePermission = (permission: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       permissions: prev.permissions.includes(permission)
-        ? prev.permissions.filter((p) => p !== permission)
-        : [...prev.permissions, permission],
+        ? prev.permissions.filter(p => p !== permission)
+        : [...prev.permissions, permission]
     }));
   };
 
@@ -274,53 +273,41 @@ export function UsersPage() {
   };
 
   // Handle form submit
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setIsSubmitting(true);
-
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
       if (editingUser) {
-        const resp = await axios.put(
-          `/api/users/${editingUser.id}`,
-          editingUser
-        );
-        if (resp.data.success) {
-          setData((prev) =>
-            prev.map((user) =>
-              user.id === editingUser.id
-                ? { ...user, ...formData, id: editingUser.id }
-                : user
-            )
-          );
-          setToastMessage({
-            message: "User updated successfully",
-            variant: "success",
-          });
-          setIsDialogOpen(false);
-          resetForm();
-        }
+        // Update existing user
+        setData(prev => prev.map(user => 
+          user.id === editingUser.id 
+            ? { ...user, ...formData, id: editingUser.id } 
+            : user
+        ));
+        setToastMessage({
+          message: "User updated successfully",
+          variant: "success",
+        });
       } else {
+        // Create new user
         const newUser: User = {
           ...formData,
           id: String(Date.now()),
           date_joined: new Date().toISOString(),
         };
-        const resp = await axios.post(`/api/users/`, newUser);
-        if (resp.data.success) {
-          setData((prev) => [...prev, newUser]);
-          setToastMessage({
-            message: "User created successfully",
-            variant: "success",
-          });
-          setIsDialogOpen(false);
-          resetForm();
-        }
+        setData(prev => [...prev, newUser]);
+        setToastMessage({
+          message: "User created successfully",
+          variant: "success",
+        });
       }
-    } catch (error) {
-      setToastMessage({ variant: "danger", message: "Something went" });
-    } finally {
+      
       setIsSubmitting(false);
-    }
+      setIsDialogOpen(false);
+      resetForm();
+    }, 1000);
   };
 
   // Handle edit user
@@ -341,7 +328,7 @@ export function UsersPage() {
   // Handle delete user
   const handleDelete = (id: string) => {
     // Simulate API call
-    setData((prev) => prev.filter((user) => user.id !== id));
+    setData(prev => prev.filter(user => user.id !== id));
     setToastMessage({
       message: "User deleted successfully",
       variant: "success",
@@ -424,12 +411,10 @@ export function UsersPage() {
         <SortableHeader column={column}>Status</SortableHeader>
       ),
       cell: ({ row }) => (
-        <StatusButton
-          status={row.getValue("is_active") ? "active" : "inactive"}
-        />
+        <StatusButton status={row.getValue("is_active") ? "active" : "inactive"} />
       ),
     },
-
+ 
     {
       id: "permissions",
       header: () => <div>Permissions</div>,
@@ -439,7 +424,7 @@ export function UsersPage() {
           <div className="flex flex-wrap gap-1">
             {permissions.slice(0, 3).map((permission) => (
               <Badge key={permission} variant="secondary" className="text-xs">
-                {permission.split("_")[0]}
+                {permission.split('_')[0]}
               </Badge>
             ))}
             {permissions.length > 3 && (
@@ -847,15 +832,16 @@ export function UsersPage() {
 
       {/* Add/Edit User Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent  >
           <DialogHeader className="p-5 pb-3">
             <DialogTitle className="font-semibold text-lg">
               {editingUser ? "Edit User" : "Add New User"}
             </DialogTitle>
             <DialogDescription>
-              {editingUser
-                ? "Update user information and permissions."
-                : "Create a new user account with specific permissions."}
+              {editingUser 
+                ? "Update user information and permissions." 
+                : "Create a new user account with specific permissions."
+              }
             </DialogDescription>
           </DialogHeader>
 
@@ -916,11 +902,8 @@ export function UsersPage() {
                     id="is_staff"
                     name="is_staff"
                     checked={formData.is_staff}
-                    onCheckedChange={(checked) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        is_staff: checked as boolean,
-                      }))
+                    onCheckedChange={(checked) => 
+                      setFormData(prev => ({ ...prev, is_staff: checked as boolean }))
                     }
                   />
                   <Label htmlFor="is_staff" className="cursor-pointer">
@@ -937,11 +920,8 @@ export function UsersPage() {
                   id="is_active"
                   name="is_active"
                   checked={formData.is_active}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      is_active: checked as boolean,
-                    }))
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, is_active: checked as boolean }))
                   }
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
@@ -963,10 +943,7 @@ export function UsersPage() {
                       checked={formData.permissions.includes(permission)}
                       onCheckedChange={() => togglePermission(permission)}
                     />
-                    <Label
-                      htmlFor={permission}
-                      className="text-sm cursor-pointer"
-                    >
+                    <Label htmlFor={permission} className="text-sm cursor-pointer">
                       {permission}
                     </Label>
                   </div>
@@ -986,9 +963,7 @@ export function UsersPage() {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && (
-                  <Loader className="h-4 w-4 mr-2 animate-spin" />
-                )}
+                {isSubmitting && <Loader className="h-4 w-4 mr-2 animate-spin" />}
                 {editingUser ? "Update User" : "Create User"}
               </Button>
             </DialogFooter>

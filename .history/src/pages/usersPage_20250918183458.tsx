@@ -300,13 +300,14 @@ export function UsersPage() {
           resetForm();
         }
       } else {
-        const newUser: User = {
-          ...formData,
-          id: String(Date.now()),
-          date_joined: new Date().toISOString(),
-        };
+           const newUser: User = {
+            ...formData,
+            id: String(Date.now()),
+            date_joined: new Date().toISOString(),
+          };
         const resp = await axios.post(`/api/users/`, newUser);
         if (resp.data.success) {
+       
           setData((prev) => [...prev, newUser]);
           setToastMessage({
             message: "User created successfully",
