@@ -141,7 +141,7 @@ export function UsersPage() {
     email: "",
     first_name: "",
     last_name: "",
-    role:  "instructor",
+    role:  "",
     is_active: true,
     is_staff: false,
     permissions: [] as string[],
@@ -187,7 +187,7 @@ export function UsersPage() {
   const handleRoleChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      role: value as  "instructor" | "admin",
+      role: value as "student" | "instructor" | "admin",
     }));
   };
 
@@ -207,7 +207,7 @@ export function UsersPage() {
       email: "",
       first_name: "",
       last_name: "",
-      role: "instructor",
+      role: "student",
       is_active: true,
       is_staff: false,
       permissions: [],
