@@ -137,7 +137,7 @@ export function UsersPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [availablePermissions, setAvailablePermissions ] = React.useState<any[]>([])
+  const [availablePermissions, setAvailablePermissions ] = React.useState<string[]>([])
 
   // Form state
   const [formData, setFormData] = React.useState({
@@ -910,17 +910,17 @@ export function UsersPage() {
               </Label>
               <div className="grid grid-cols-2 gap-2 p-4 border rounded-md">
                 {availablePermissions.map((permission) => (
-                  <div key={permission.codename} className="flex items-center space-x-2">
+                  <div key={permission} className="flex items-center space-x-2">
                     <Checkbox
                       id={permission}
-                      checked={formData.permissions.includes(permission.codename)}
-                      onCheckedChange={() => togglePermission(permission.codename)}
+                      checked={formData.permissions.includes(permission)}
+                      onCheckedChange={() => togglePermission(permission)}
                     />
                     <Label
                       htmlFor={permission}
                       className="text-sm cursor-pointer"
                     >
-                      {permission.name}
+                      {permission}
                     </Label>
                   </div>
                 ))}
