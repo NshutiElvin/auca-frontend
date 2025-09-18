@@ -318,7 +318,7 @@ export function UsersPage() {
       role: user.role,
       is_active: user.is_active,
       is_staff: user.is_staff,
-      permissions: user?.permissions || [],
+      permissions: user.permissions || [],
     });
     setIsDialogOpen(true);
   };
