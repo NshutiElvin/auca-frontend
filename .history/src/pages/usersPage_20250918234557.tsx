@@ -38,8 +38,6 @@ import {
   User,
   Calendar,
   Eye,
-  BadgeCheck,
-  Ban,
 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
@@ -77,7 +75,6 @@ import { StatusButton } from "../components/ui/status-button";
 import { Badge } from "../components/ui/badge";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
 // User type based on the Django model
 export type User = {
@@ -706,8 +703,7 @@ export function UsersPage() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                 className="hover:bg-muted/50 cursor-pointer"
-                   onClick={() => handleRowClick(row.original)}
+                  className="hover:bg-muted/50"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-3">
@@ -957,156 +953,6 @@ export function UsersPage() {
               </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* View User Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="p-5 pb-3">
-            <DialogTitle className="font-semibold text-lg flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              User Details
-            </DialogTitle>
-            <DialogDescription>
-              View user information and permissions.
-            </DialogDescription>
-          </DialogHeader>
-
-          {viewingUser && (
-            <div className="px-5 space-y-4">
-              <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="permissions">Permissions</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="details" className="space-y-4 pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">First Name</Label>
-                      <div className="text-sm font-medium">{viewingUser.first_name}</div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Last Name</Label>
-                      <div className="text-sm font-medium">{viewingUser.last_name}</div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Email</Label>
-                    <div className="text-sm font-medium flex items-center">
-                      <Mail className="h-4 w-4 mr-2" />
-                      {viewingUser.email}
-                    </div>
-                  </div>
-
-                 
-
-                 
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Role</Label>
-                      <div>
-                        <Badge
-                          variant="outline"
-                          className={
-                            viewingUser.role === "admin"
-                              ? "bg-purple-100 text-purple-800 border-purple-300"
-                              : viewingUser.role === "instructor"
-                              ? "bg-blue-100 text-blue-800 border-blue-300"
-                              : "bg-green-100 text-green-800 border-green-300"
-                          }
-                        >
-                          {viewingUser.role}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Status</Label>
-                      <div>
-                        {viewingUser.is_active ? (
-                          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                            <BadgeCheck className="h-3 w-3 mr-1" />
-                            Active
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
-                            <Ban className="h-3 w-3 mr-1" />
-                            Inactive
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Date Joined</Label>
-                      <div className="text-sm font-medium flex items-center">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {format(new Date(viewingUser.date_joined), "MMM dd, yyyy")}
-                      </div>
-                    </div>
-                  
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Staff Status</Label>
-                    <div className="text-sm font-medium">
-                      {viewingUser.is_staff ? "Staff member" : "Not a staff member"}
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="permissions" className="pt-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Permissions
-                    </Label>
-                    {viewingUser.permissions && viewingUser.permissions.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-2 p-4 border rounded-md">
-                        {viewingUser.permissions.map((permission) => (
-                          <div key={permission} className="flex items-center space-x-2">
-                            <BadgeCheck className="h-4 w-4 text-green-600" />
-                            <span className="text-sm">{permission}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-4 border rounded-md text-center text-muted-foreground">
-                        No permissions assigned
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
-
-              <DialogFooter className="pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsViewDialogOpen(false)}
-                >
-                  Close
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (viewingUser) {
-                      handleEdit(viewingUser);
-                      setIsViewDialogOpen(false);
-                    }
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit User
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>
