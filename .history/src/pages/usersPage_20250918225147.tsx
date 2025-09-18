@@ -530,14 +530,6 @@ export function UsersPage() {
     setColumnFilters(filters);
   }, [roleFilter, statusFilter]);
 
-
-  React.useEffect(()=>{
-    if(formData.role=="admin"){
-      setFormData({...formData, permissions:[...availablePermissions.map((p)=>p.codename)]})
-    }
-
-  },[formData])
-
   const hasActiveFilters =
     roleFilter !== "all" ||
     statusFilter !== "all" ||
