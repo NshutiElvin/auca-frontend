@@ -43,7 +43,7 @@ export const Features = () => {
   return (
     <section
       id="features"
-      className="container py-10 space-y-8"
+      className="container py-10 space-y-8 px-2"
     >
       <h2 className="text-3xl lg:text-4xl font-bold md:text-center">
         Many{" "}

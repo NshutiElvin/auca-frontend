@@ -41,7 +41,7 @@ export const HowItWorks = () => {
   return (
     <section
       id="howItWorks"
-      className="container text-center py-10 px-2"
+      className="container text-center py-10"
     >
       <h2 className="text-3xl md:text-4xl font-bold ">
         How It{" "}

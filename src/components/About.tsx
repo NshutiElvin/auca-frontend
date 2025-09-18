@@ -6,7 +6,7 @@ export const About = () => {
   return (
     <section
       id="about"
-      className="container py-24"
+      className="container py-24 px-2"
     >
       <h2 className="text-3xl md:text-4xl font-bold ">
         About Our Exam{" "}

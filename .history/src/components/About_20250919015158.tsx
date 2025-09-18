@@ -6,14 +6,14 @@ export const About = () => {
   return (
     <section
       id="about"
-      className="container py-24 sm:py-32"
+      className="container py-24 px-2"
     >
       <h2 className="text-3xl md:text-4xl font-bold ">
         About Our Exam{" "}
         <span className="bg-gradient-to-b from-primary/60 to-primary text-transparent bg-clip-text">
            Scheduling System
         </span>
-        Step-by-Step Guide
+         
       </h2>
      <p className="md:w-3/4 mx-auto mt-4 mb-8 text-xl text-muted-foreground">
      Streamlining exam planning with smart automation—eliminating overlaps, optimizing rooms, and giving admins full control
