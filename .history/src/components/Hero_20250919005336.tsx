@@ -3,28 +3,37 @@ import { buttonVariants } from "./ui/button";
 import { HeroCards } from "./HeroCards";
 import { ShieldUser } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export const Hero = () => {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center overflow-hidden"
+      className="relative min-h-screen flex items-center overflow-hidden mt-10"
     >
-      {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        <img
-          src={"/hero.jpg"}
-          alt="Bright Hotel exterior"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="relative w-full h-full">
+          <motion.img
+            src="/hero.jpg"
+            alt="Bright Hotel exterior"
+            className="w-full h-full object-cover rounded-2xl shadow-xl"
+            initial={{ scale: 1.1, }}
+            animate={{
+              scale: [1.1, 1.15, 1.1], // zoom in & out
+              
+            }}
+            transition={{
+              duration: 5, // slow cycle
+              repeat: Infinity, // keeps looping
+              ease: "easeInOut",
+            }}
+          />
+        </div>
       </div>
 
       <div className="container grid lg:grid-cols-2 place-items-center py-20 gap-16 relative z-10 px-6 md:px-10">
-        
         {/* Hero Content */}
         <div className="text-center lg:text-start space-y-8 max-w-2xl">
-          
           {/* Main Heading */}
           <main className="space-y-4">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight">
@@ -47,21 +56,22 @@ export const Hero = () => {
 
           {/* Description */}
           <p className="text-lg md:text-xl leading-relaxed max-w-lg mx-auto lg:mx-0 text-white">
-            A smart, automated system that generates conflict-free, student-friendly exam timetables in seconds.
+            A smart, automated system that generates conflict-free,
+            student-friendly exam timetables in seconds.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <Button className="px-8 py-3 text-base">
-              Get Started
-            </Button>
+            <Button className="px-8 py-3 text-base">Get Started</Button>
 
             <Link
               rel="noreferrer noopener"
               to="/login"
-              className={`px-8 py-3 text-base inline-flex items-center justify-center ${buttonVariants({
-                variant: "outline",
-              })}`}
+              className={`px-8 py-3 text-base inline-flex items-center justify-center ${buttonVariants(
+                {
+                  variant: "outline",
+                }
+              )}`}
             >
               Login
               <ShieldUser className="ml-2 w-5 h-5" />

@@ -9,7 +9,7 @@ export const Hero = () => {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center overflow-hidden"
+      className="relative min-h-screen flex items-center overflow-hidden mt-10"
     >
       <div className="absolute inset-0 z-0">
         <div className="relative w-full h-full">
