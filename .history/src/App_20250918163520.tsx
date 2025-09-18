@@ -42,7 +42,7 @@ import BulkUpload from "./pages/uploads";
 import StudentExamScannerPage from "./pages/StudentScannerPage";
 import Profile from "./components/Profile";
 import { InstructorAllocationsPage } from "./pages/InstructorAllocations";
- import{ UsersPage} from "./pages/usersPage";
+ import UsersPage from "./pages/usersPage";
 
 const App = () => {
   return (
