@@ -106,15 +106,13 @@ export function AppSidebar({ data, ...props }: AppSidebarProps) {
             <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item) => {
-                  console.log(item)
-
-                  return <SidebarMenuItem key={item.title} >
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
                       isActive={url === item.title}
                       onClick={() => handleItemClick(item, group)}
-                      disabled={item?.allowed}
+                      
                     >
                       <Link
                         to={item.url}
@@ -128,7 +126,7 @@ export function AppSidebar({ data, ...props }: AppSidebarProps) {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-})}
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
