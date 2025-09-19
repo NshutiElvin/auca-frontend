@@ -38,7 +38,7 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
     
   const{setToastMessage}= useToast()
-  const { setAuth } = useAuth();
+  const { setAuth, setPermissions } = useAuth();
   const navigate= useNavigate();
   const location = useLocation();
   const from=  location?.state?.from?.pathname
@@ -67,8 +67,9 @@ export function LoginForm({
     setError("");
     try{
       const resp= await axios.post("api/users/token/", formData)
-      const {access}= resp.data
+      const {access, permissions}= resp.data
       setAuth(access);
+      setPermissions(permissions)
       if(from)
         navigate(from, { replace: true });
       else{
@@ -128,15 +129,7 @@ export function LoginForm({
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
+              
                 <div className="relative">
                   <Input 
                     id="password" 
@@ -144,6 +137,7 @@ export function LoginForm({
                     required 
                     onChange={handleChange} 
                     name="password" 
+                    placeholder="password"
                   />
                   <button
                     type="button"
@@ -157,12 +151,7 @@ export function LoginForm({
               <SubmitButton/>
               
             </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
-            </div>
+            
           </form>
         </CardContent>
       </Card>

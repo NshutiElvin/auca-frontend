@@ -38,7 +38,7 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
     
   const{setToastMessage}= useToast()
-  const { setAuth } = useAuth();
+  const { setAuth, setPermissions } = useAuth();
   const navigate= useNavigate();
   const location = useLocation();
   const from=  location?.state?.from?.pathname
@@ -67,8 +67,9 @@ export function LoginForm({
     setError("");
     try{
       const resp= await axios.post("api/users/token/", formData)
-      const {access}= resp.data
+      const {access, permissions}= resp.data
       setAuth(access);
+      setPermissions(permissions)
       if(from)
         navigate(from, { replace: true });
       else{

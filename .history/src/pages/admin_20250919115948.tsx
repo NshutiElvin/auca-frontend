@@ -65,19 +65,16 @@ const data = {
           title: "Dashboard",
           url: "dashboard",
           icon: LucideLayoutDashboard,
-          allowed:true
         },
         {
           title: "Auto Timetable",
           url: "schedules",
           icon: CalendarClock,
-           allowed:true
         },
         {
           title: "Manual Timetable",
           url: "manual",
           icon: CalendarDays,
-           allowed:true
         },
         {
           title: "Courses",
@@ -90,33 +87,28 @@ const data = {
           title: "Scheduled Exams",
           url: "exams",
           icon: ClipboardList,
-           allowed:true
         },
         {
           title: "Students Exams",
           url: "allocations",
           icon: Users,
-           allowed:true
         },
 
         {
           title: "Room Allocations",
           url: "occupancies",
           icon: Table2,
-           allowed:true
         },
         {
           title: "Recent Timetables",
           url: "timetables",
           icon: LucideHistory,
-           allowed:true
         },
 
         {
           title: "Uploads",
           url: "Uploads",
           icon: UploadCloud,
-           allowed:true
         },
       ],
     },
@@ -128,7 +120,6 @@ const data = {
           title: "Users",
           url: "users",
           icon: UserCog,
-           allowed:true
         },
       ],
     },
@@ -140,13 +131,11 @@ const data = {
           title: "Profile ",
           url: "profile",
           icon: User,
-           allowed:true
         },
         {
           title: "Logout",
           url: "/Logout",
           icon: LogOut,
-           allowed:true
         },
       ],
     },
