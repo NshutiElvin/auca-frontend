@@ -29,19 +29,24 @@ const useRefreshToken = () => {
 
       return resp.data.access;
     } catch (error) {
- 
-      // if (isAxiosError(error)) {
-      //   const toast: ToastMessage = {
-      //     message:
-      //       (error.response?.data as any)?.message ||
-      //       (error.response?.data as any)?.message?.detail ||
-      //       error.message ||
-      //       "Unknown error",
-      //     variant: "danger",
-      //   };
+      console.log(error);
+      if (isAxiosError(error)) {
+       try { const toast: ToastMessage = {
+          message:
+            (error.response?.data as any)?.message ||
+            (error.response?.data as any)?.message?.detail ||
+            error.message ||
+            "Unknown error",
+          variant: "danger",
+        };
 
-      //   setToastMessage(toast);
-      // }
+        setToastMessage(toast);
+        
+       } catch (error) {
+        console.log(error)
+        
+       }
+      }
       return undefined;
     }
   };
