@@ -71,16 +71,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         </p>
 
         <div className="mt-2 max-h-60 overflow-y-auto">
-          <p className="text-xs font-semibold text-muted-foreground mb-1">
-            Exams:
-          </p>
+          <p className="text-xs font-semibold text-muted-foreground mb-1">Exams:</p>
           <ul className="text-xs space-y-1">
             {exams.map((exam: any, index: number) => (
               <li key={index} className="flex justify-between">
                 <span className="text-foreground truncate max-w-[180px]">
                   {exam.name}
                 </span>
-                <span className="text-primary ml-2">{exam.student_count}</span>
+                <span className="text-primary ml-2">
+                  {exam.student_count}
+                </span>
               </li>
             ))}
           </ul>
@@ -402,8 +402,10 @@ const DashboardPage = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center flex justify-evenly">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <p className="text-muted-foreground inline">Loading...</p>
+<Loader2 className="h-4 w-4 animate-spin"/>
+          <p className="text-muted-foreground inline">
+            Loading...
+          </p>
         </div>
       </div>
     );
@@ -493,9 +495,7 @@ const DashboardPage = () => {
         {/* Analytics Section */}
         <div className="space-y-4 px-6">
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">
-              Exam Analytics Overview
-            </h2>
+            <h2 className="text-xl font-semibold text-foreground">Exam Analytics Overview</h2>
             <p className="text-muted-foreground">
               Visual insights into exam performance and student progress
             </p>
@@ -593,8 +593,8 @@ const DashboardPage = () => {
                         tickLine={false}
                         tick={{ fill: "hsl(var(--muted-foreground))" }}
                       />
-                      <YAxis
-                        axisLine={false}
+                      <YAxis 
+                        axisLine={false} 
                         tickLine={false}
                         tick={{ fill: "hsl(var(--muted-foreground))" }}
                       />
@@ -664,14 +664,14 @@ const DashboardPage = () => {
                         stroke="hsl(var(--border))"
                         className="opacity-30"
                       />
-                      <XAxis
-                        dataKey="day"
-                        axisLine={false}
+                      <XAxis 
+                        dataKey="day" 
+                        axisLine={false} 
                         tickLine={false}
                         tick={{ fill: "hsl(var(--muted-foreground))" }}
                       />
-                      <YAxis
-                        axisLine={false}
+                      <YAxis 
+                        axisLine={false} 
                         tickLine={false}
                         tick={{ fill: "hsl(var(--muted-foreground))" }}
                       />
@@ -704,18 +704,13 @@ const DashboardPage = () => {
         <div className="space-y-4 px-6 pb-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-foreground">
-                Recent Timetables
-              </h2>
+              <h2 className="text-xl font-semibold text-foreground">Recent Timetables</h2>
               <p className="text-muted-foreground">
                 Explore our tools that you can use to generate blog posts,
                 analyze SERP and more
               </p>
             </div>
-            <Link
-              to={`/admin/timetables/`}
-              className="text-primary underline hover:text-primary/80"
-            >
+            <Link to={`/admin/timetables/`} className="text-primary underline hover:text-primary/80">
               See all
             </Link>
           </div>
@@ -749,13 +744,8 @@ const DashboardPage = () => {
                   </thead>
                   <tbody>
                     {dashboardData.recent_exams.map((exam: any, index) => (
-                      <tr
-                        key={index}
-                        className="border-b last:border-0 hover:bg-muted/50 transition-colors"
-                      >
-                        <td className="p-4 text-sm text-foreground">
-                          {exam.academic_year}
-                        </td>
+                      <tr key={index} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                        <td className="p-4 text-sm text-foreground">{exam.academic_year}</td>
                         <td className="p-4 text-sm text-foreground">
                           {format(exam.start_date, "MMMM d, yyyy")}
                         </td>
