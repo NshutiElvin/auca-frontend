@@ -93,9 +93,9 @@ export function LoginForm({
       if(isAxiosError(error)){
         console.log(error.response?.data?.error)
         const message= error.response?.data?.message ||  error.response?.data?.error
-       
+        setError(message)
         setToastMessage({
-          message:message?.email?.join(" , ") || message?.password?.join(" , ") ||message?.detail || message ,
+          message:message?.email?.join(" , ") || message?.password?.join(" , ") ||message?.detail ,
           variant: "danger"
         })
       }else{
