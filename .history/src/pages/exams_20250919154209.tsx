@@ -127,8 +127,10 @@ const SortableHeader = ({
 };
 
 export function ExamsPage() {
-  const navigate = useNavigate();
-
+  const navigate= useNavigate()
+      if(!hasPermission(Permissions.VIEW_EXAM)){
+        navigate("/unauthorized")
+      }
   const axios = useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -312,12 +314,10 @@ export function ExamsPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-            {hasPermission(Permissions.CHANGE_EXAM) && (
-              <DropdownMenuItem onClick={() => getAttendance(row.original.id)}>
-                <ListCheck className="w-4 h-4" />
-                <span> Attendance</span>
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={() => getAttendance(row.original.id)}>
+              <ListCheck className="w-4 h-4" />
+              <span> Attendance</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -456,12 +456,6 @@ export function ExamsPage() {
   }, [currentAttendance, searchTerm, signInFilter, signOutFilter]);
 
   const filteredCount = filteredAttendance.length;
-
-  React.useEffect(() => {
-    if (!hasPermission(Permissions.VIEW_EXAM)) {
-      navigate("/unauthorized");
-    }
-  }, []);
 
   return isGettingExams ? (
     <TableSkeleton />
