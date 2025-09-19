@@ -6,7 +6,6 @@ import { AxiosError } from "axios";
 
 interface RefreshResponse {
   access: string;
-  permissions:any[]
 }
 
 interface ToastMessage {
@@ -15,16 +14,13 @@ interface ToastMessage {
 }
 
 const useRefreshToken = () => {
-  const { setAuth, setPermissions} = useAuth();
+  const { setAuth } = useAuth();
   const { setToastMessage } = useToast();
 
   const refresh = async (): Promise<string | undefined> => {
     try {
       const resp = await axios.post<RefreshResponse>("/api/users/token/refresh/", {});
-      const{access, permissions}= resp.data
-      setAuth(access);
-      setPermissions(permissions)
-
+      setAuth(resp.data.access);
       return resp.data.access;
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
