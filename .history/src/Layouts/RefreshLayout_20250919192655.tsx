@@ -15,7 +15,7 @@ const RefreshLayout: React.FC = () => {
     try {
       await refreshToken();
     } catch (error: any) {
-      setToastMessage({message: `Error: ${error?.message||"Invalid credintials"}`, variant: "danger"});
+      setToastMessage({message: `Error: ${error?.message}`, variant: "danger"});
     } finally {
       setRefreshing(false);
     }
