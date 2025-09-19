@@ -3,9 +3,10 @@ import useAuth from "./useAuth";
 import useToast from "./useToast";
 import { AxiosError } from "axios";
 
+
 interface RefreshResponse {
   access: string;
-  permissions: any[];
+  permissions:any[]
 }
 
 interface ToastMessage {
@@ -14,29 +15,22 @@ interface ToastMessage {
 }
 
 const useRefreshToken = () => {
-  const { setAuth, setPermissions } = useAuth();
+  const { setAuth, setPermissions} = useAuth();
   const { setToastMessage } = useToast();
 
   const refresh = async (): Promise<string | undefined> => {
     try {
-      const resp = await axios.post<RefreshResponse>(
-        "/api/users/token/refresh/",
-        {}
-      );
-      const { access, permissions } = resp.data;
+      const resp = await axios.post<RefreshResponse>("/api/users/token/refresh/", {});
+      const{access, permissions}= resp.data
       setAuth(access);
-      setPermissions(permissions);
+      setPermissions(permissions)
 
       return resp.data.access;
     } catch (err) {
       const error = err as AxiosError<{ message: any }>;
 
       const toast: ToastMessage = {
-        message:
-          error.response?.data?.message ||
-          error.response?.data?.message?.datail ||
-          error.message ||
-          "Unknown error",
+        message: error.response?.data?.message ||error.response?.data?.message?.datail|| error.message || "Unknown error",
         variant: "danger",
       };
 
