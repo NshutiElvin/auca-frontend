@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Loader } from "lucide-react";
 import { useTransition } from "react";
@@ -6,6 +6,12 @@ import type { Event } from "../../types";
 import useUserAxios from "../hooks/useUserAxios";
 import useExamsSchedule from "../hooks/useExamShedule";
 import { Course } from "../pages/studentExams";
+import LocationContext from "../contexts/LocationContext";
+import useSocket from "../hooks/useSockets";
+import { RealTimeExamData } from "../contexts/ExamSchedulesContexts";
+import { Permissions } from "../lib/permissions";
+import { hasPermission } from "../hooks/hasPermission";
+import { useNavigate } from "react-router-dom";
 
 interface CourseGroup{
   max_member:string;
@@ -30,14 +36,49 @@ export interface ExamsResponse {
 }
 
 const ExamsScheduleLayout: React.FC = () => {
-  const {  setExams , setStatus, setMasterTimetable} = useExamsSchedule();
+    const navigate= useNavigate()
+    if(!hasPermission(Permissions.VIEW_EXAM)){
+      navigate("/unauthorized")
+    }
+  const {  setExams , setStatus, setMasterTimetable, setCurrentExamData} = useExamsSchedule();
   const [isGettingExams, startTransition] = useTransition();
   const axios = useUserAxios();
+  const{selectedLocation}= useContext(LocationContext)
+  const{connectWebSocket}= useSocket()
+  
+
+  useEffect(() => {
+    const socket=connectWebSocket("/ws/exams/");
+    socket.onmessage = (event: MessageEvent) => {
+      console.log(event)
+      try {
+        const examData: RealTimeExamData = JSON.parse(event.data);
+        if (examData.student) {
+          
+               setCurrentExamData( examData);
+
+        }
+      } catch (e) {
+        console.log(e)
+         
+      }
+    };
+
+    return () => {
+      socket?.close();  
+    };
+  }, []);
 
   const getExams = () => {
     startTransition(async () => {
       try {
-        const resp = await axios.get("/api/exams/exams");
+        let resp=null;
+        if(selectedLocation)
+          resp = await axios.get(`/api/exams/exams?location=${selectedLocation.id}`);
+        else{
+          resp = await axios.get("/api/exams/exams");
+        }
+        
 
         const respTyped = resp as { data: ExamsResponse };
         const datas: Event[] = respTyped.data.data.map((ex: any) => {
@@ -52,7 +93,6 @@ const ExamsScheduleLayout: React.FC = () => {
           };
           return examEvent;
         });
-        console.log(resp.data.maskEmail)
 
         setExams(datas);
         setStatus(resp.data.status)
@@ -66,14 +106,18 @@ const ExamsScheduleLayout: React.FC = () => {
   useEffect(() => {
     getExams();
   }, []);
+   useEffect(() => {
+    getExams();
+  }, [selectedLocation]);
 
-  return isGettingExams ? (
+
+  return <>{isGettingExams ? (
     <div className="flex justify-center">
       <Loader className="animate-spin" />
     </div>
   ) : (
     <Outlet />
-  );
+  )}</>
 };
 
 export default ExamsScheduleLayout;

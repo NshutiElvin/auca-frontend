@@ -9,6 +9,9 @@ import { Course } from "../pages/studentExams";
 import LocationContext from "../contexts/LocationContext";
 import useSocket from "../hooks/useSockets";
 import { RealTimeExamData } from "../contexts/ExamSchedulesContexts";
+import { Permissions } from "../lib/permissions";
+import { hasPermission } from "../hooks/hasPermission";
+import { useNavigate } from "react-router-dom";
 
 interface CourseGroup{
   max_member:string;
@@ -33,6 +36,10 @@ export interface ExamsResponse {
 }
 
 const ExamsScheduleLayout: React.FC = () => {
+    const navigate= useNavigate()
+    if(!hasPermission(Permissions.VIEW_EXAM)){
+      navigate("/unauthorized")
+    }
   const {  setExams , setStatus, setMasterTimetable, setCurrentExamData} = useExamsSchedule();
   const [isGettingExams, startTransition] = useTransition();
   const axios = useUserAxios();
