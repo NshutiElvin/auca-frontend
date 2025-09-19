@@ -39,6 +39,13 @@ import { TimeTablesPage } from "./pages/recentTimetable";
 import { LocationProvider } from "./contexts/LocationContext";
 import LocationLayout from "./Layouts/LocationLayout";
 import BulkUpload from "./pages/uploads";
+import StudentExamScannerPage from "./pages/StudentScannerPage";
+import Profile from "./components/Profile";
+import { InstructorAllocationsPage } from "./pages/InstructorAllocations";
+import { UsersPage } from "./pages/usersPage";
+import { Permission, Permissions } from "./lib/permissions";
+import { hasPermission } from "./hooks/hasPermission";
+import { Navigate } from "react-router-dom";
 
 const App = () => {
   return (
@@ -46,7 +53,6 @@ const App = () => {
       <ErrorContextProvider>
         <ToastProvider>
           <Toaster />
-          
           <AuthProvider>
             <ExamscheduleProvider>
               <NotificationProvider>
@@ -54,23 +60,38 @@ const App = () => {
                   <SocketProvider>
                     <ServerLoader />
                     <Routes>
+                      {/* Public Routes */}
                       <Route path="/" element={<HomePage />} />
                       <Route path="/login" element={<LoginPage />} />
+                      <Route path="/logout" element={<Logout />} />
+                      <Route
+                        path="/unauthorized"
+                        element={<UnauthorizedPage />}
+                      />
+                      <Route path="*" element={<h1>Not Found</h1>} />
 
+                      {/* Protected Routes */}
                       <Route element={<RefreshLayout />}>
                         <Route element={<LocationLayout />}>
                           <Route element={<LoginRequiredLayout />}>
                             <Route element={<NotificationLayout />}>
+                              {/* Admin Routes */}
                               <Route element={<AdminRequiredLayout />}>
                                 <Route path="/admin" element={<AdminPage />}>
-                                  <Route element={<DashboardPage />} index />
+                                  <Route index element={<DashboardPage />} />
                                   <Route
                                     path="dashboard"
                                     element={<DashboardPage />}
                                   />
                                   <Route
                                     path="courses"
-                                    element={<CoursesPage />}
+                                    element={
+                                      hasPermission(Permissions.VIEW_COURSE) ? (
+                                        <CoursesPage />
+                                      ) : (
+                                        <Navigate to={"/unauthorized"} />
+                                      )
+                                    }
                                   />
                                   <Route
                                     path="departments"
@@ -80,8 +101,10 @@ const App = () => {
                                     path="allocations"
                                     element={<AllocationsPage />}
                                   />
+                                  <Route path="users" element={<UsersPage />} />
+
                                   <Route element={<ExamsScheduleLayout />}>
-                                    <Route element={<SchedulesPage />} index />
+                                    <Route index element={<SchedulesPage />} />
                                     <Route
                                       path="schedules"
                                       element={<SchedulesPage />}
@@ -91,6 +114,7 @@ const App = () => {
                                       element={<ManualTimeTable />}
                                     />
                                   </Route>
+
                                   <Route path="exams" element={<ExamsPage />} />
                                   <Route
                                     path="occupancies"
@@ -100,7 +124,7 @@ const App = () => {
                                     path="timetables"
                                     element={<TimeTablesPage />}
                                   />
-                                   <Route
+                                  <Route
                                     path="uploads"
                                     element={<BulkUpload />}
                                   />
@@ -116,74 +140,59 @@ const App = () => {
                                     path="students"
                                     element={<StudentsPage />}
                                   />
-
-                                  <Route
-                                    path="messages/:id"
-                                    element={<h1>Message</h1>}
-                                  />
+                                  <Route path="profile" element={<Profile />} />
                                 </Route>
                               </Route>
 
+                              {/* Student Routes */}
                               <Route element={<StudentRequiredLayout />}>
                                 <Route
                                   path="/student"
                                   element={<StudentPortal />}
                                 >
-                                  <Route element={<EnrollmentsPage />} index />
+                                  <Route index element={<EnrollmentsPage />} />
                                   <Route
                                     path="enrollments"
                                     element={<EnrollmentsPage />}
                                   />
                                   <Route
                                     path="exam-verification"
-                                    element={<InstructorExamScannerPage />}
+                                    element={<StudentExamScannerPage />}
                                   />
-
                                   <Route
                                     path="exams"
                                     element={<StudentExamsPage />}
                                   />
+                                  <Route path="profile" element={<Profile />} />
                                 </Route>
                               </Route>
+
+                              {/* Instructor Routes */}
                               <Route element={<InstructorRequiredLayout />}>
                                 <Route
                                   path="/instructor"
                                   element={<InstructorPortal />}
                                 >
                                   <Route
+                                    index
+                                    element={<InstructorExamScannerPage />}
+                                  />
+                                  <Route
                                     path="exam-verification"
                                     element={<InstructorExamScannerPage />}
                                   />
                                   <Route
-                                    element={<InstructorExamScannerPage />}
-                                    index
-                                  />
-
-                                  <Route
                                     path="allocations"
-                                    element={<AllocationsPage />}
+                                    element={<InstructorAllocationsPage />}
                                   />
-
                                   <Route path="exams" element={<ExamsPage />} />
-
-                                  <Route
-                                    path="messages/:id"
-                                    element={<h1>Message</h1>}
-                                  />
+                                  <Route path="profile" element={<Profile />} />
                                 </Route>
                               </Route>
-
-                              <Route
-                                path="/unauthorized"
-                                element={<UnauthorizedPage />}
-                              />
                             </Route>
                           </Route>
                         </Route>
-
-                        <Route path="/logout" element={<Logout />} />
                       </Route>
-                      <Route path="*" element={<h1>Not Found</h1>} />
                     </Routes>
                   </SocketProvider>
                 </LocationProvider>
