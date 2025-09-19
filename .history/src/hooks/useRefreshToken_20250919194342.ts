@@ -31,7 +31,7 @@ const useRefreshToken = () => {
     } catch (error) {
       console.log(error);
       if (isAxiosError(error)) {
-       try { const toast: ToastMessage = {
+        const toast: ToastMessage = {
           message:
             (error.response?.data as any)?.message ||
             (error.response?.data as any)?.message?.detail ||
@@ -41,11 +41,6 @@ const useRefreshToken = () => {
         };
 
         setToastMessage(toast);
-        
-       } catch (error) {
-        console.log(error)
-        
-       }
       }
       return undefined;
     }
