@@ -165,7 +165,7 @@ export function UsersPage() {
     try {
       setIsLoading(true);
       const resp = await axios.request({
-        url: url ?? "/api/users/?limit=10&offset=0",
+        url: url ?? "/api/users/?limit=7&offset=0",
         method: "get",
         baseURL: undefined,
       });
