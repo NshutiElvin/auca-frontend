@@ -39,13 +39,23 @@ import { ScrollArea } from "../components/scroll-area";
 import { Button } from "../components/ui/button";
 import useToast from "../hooks/useToast";
 
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 
 import Draggable from "react-draggable";
 import { ConflictDialog } from "./ConflictsDialog";
 import { useSidebar } from "../components/ui/sidebar";
 import { Label } from "../components/ui/label";
 import LocationContext from "../contexts/LocationContext";
+import { is } from "date-fns/locale";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+import AllSuggestionsDialog from "./AllSuggestions";
 
 interface Slot {
   id: string;
@@ -79,6 +89,7 @@ interface Suggestion {
   suggested: boolean;
   date: string;
   slot: string;
+  reason?: string;
 }
 
 interface BestSuggestion {
@@ -103,6 +114,7 @@ function ManualTimeTable() {
     useToast();
   const [timeSlots, setTimeSlots] = useState<Slot[]>([]);
   const { setUnScheduled } = useExamsSchedule();
+  const [viewAllSuggestions, setViewAllSuggestions] = useState<boolean>(false);
   const [unscheduledExams, setUnScheduledExams] = useState<
     UnscheduledCourseEnhanced[]
   >([]);
@@ -126,6 +138,9 @@ function ManualTimeTable() {
   const [showMore, setShowMore] = useState<boolean>(false);
   const [showConflicts, setShowConflicts] = useState<boolean>(false);
   const [conflictedCOurses, setConflictedCourses] = useState<any[]>([]);
+  const [isLoadingUnscheduled, setIsLoadingUnscheduled] =
+    useState<boolean>(false);
+  const [isLoadingExams, setIsLoadingExams] = useState<boolean>(false);
   const [suggesstedSlot, setSuggesstedSlot] = useState<{
     date: string;
     slot: string;
@@ -154,16 +169,23 @@ function ManualTimeTable() {
   );
 
   const getUnscheduledExams = async () => {
-    let resp = null;
-    if (selectedLocation)
-      resp = await axios.get(
-        `api/exams/exams/unscheduled_exams?location=${selectedLocation.id}`
-      );
-    else {
-      resp = await axios.get("api/exams/exams/unscheduled_exams");
-    }
-    if (resp.data.success) {
-      setUnScheduledExams(resp.data.data);
+    try {
+      setIsLoadingUnscheduled(true);
+      let resp = null;
+      if (selectedLocation)
+        resp = await axios.get(
+          `api/exams/exams/unscheduled_exams?location=${selectedLocation.id}`
+        );
+      else {
+        resp = await axios.get("api/exams/exams/unscheduled_exams");
+      }
+      if (resp.data.success) {
+        setUnScheduledExams(resp.data.data);
+      }
+    } catch (error) {
+      setToastMessage({ message: String(error), variant: "danger" });
+    } finally {
+      setIsLoadingUnscheduled(false);
     }
   };
 
@@ -189,6 +211,7 @@ function ManualTimeTable() {
 
   const getExams = async () => {
     try {
+      setIsLoadingExams(true);
       const resp = await axios.get("/api/exams/exams");
 
       let exams: DailyExam[] = [];
@@ -260,6 +283,8 @@ function ManualTimeTable() {
       setScheduledExams(exams);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoadingExams(false);
     }
   };
 
@@ -794,12 +819,9 @@ function ManualTimeTable() {
   };
 
   useEffect(() => {
-    setUnScheduled([]);
     setOpen(false);
-  }, []);
-
-  useEffect(() => {
-    getExams(), getUnscheduledExams();
+    getUnscheduledExams();
+    getExams();
   }, []);
 
   useEffect(() => {
@@ -866,8 +888,17 @@ function ManualTimeTable() {
           setDialogOption(null);
           setSlotToChange(null);
           setIsAllowedToReview(false);
+          setViewAllSuggestions(false);
         }}
       >
+        {" "}
+        {isLoadingUnscheduled ||
+          isLoadingExams && (
+            <div className="flex justify-center items-center">
+              <Loader2 className="animate-spin h-5 w-5 text-primary" /> loading
+              exams ...
+            </div>
+          )}
         <div
           className={`flex flex-col gap-2${
             serverLoadingMessage?.isServerLoading &&
@@ -892,12 +923,16 @@ function ManualTimeTable() {
 
           <div
             className={`grid grid-cols-1 ${
-              unscheduledExams.length > 0 && showUnscheduled && "lg:grid-cols-3"
+              unscheduledExams.length > 0 && showUnscheduled
+                ? "lg:grid-cols-3 w-full"
+                : ""
             } gap-2 ${
-              serverLoadingMessage?.isServerLoading &&
-              "pointer-events-none opacity-20"
+              serverLoadingMessage?.isServerLoading
+                ? "pointer-events-none opacity-20"
+                : ""
             }`}
           >
+            {" "}
             {unscheduledExams.length > 0 && showUnscheduled && (
               <div className="lg:col-span-1">
                 <div className="rounded-md shadow-lg p-2 sticky top-2">
@@ -920,59 +955,70 @@ function ManualTimeTable() {
                     {allUnscheduled.map((exam) => (
                       <div
                         key={exam.course.id}
-                        className="p-2 rounded-lg border border-primary mt-2"
+                        className="p-3 mt-3 rounded-xl border border-primary shadow-sm bg-background"
                       >
+                        {/* Exam Header */}
                         <div
-                          className="flex justify-between items-start "
+                          className="flex justify-between items-center cursor-move hover:opacity-70 transition-all duration-200"
                           draggable
                           onDragStart={(e) => handleDragStart(e, exam)}
                         >
-                          <div className="hover:opacity-45 hover:border-blue-300 cursor-move transition-all duration-200 m-2 w-full">
-                            <div className="flex justify-between align-start p-1 ">
-                              <Grip className="translate-x-3.5 h-4 w-4" />
-                              <h3 className="font-semibold text-sm flex-1 overflow-hidden">
-                                {exam.course.title}
-                              </h3>
-                            </div>
+                          <div className="flex items-center space-x-2 w-full overflow-hidden">
+                            <Grip className="h-4 w-4 text-muted-foreground" />
+                            <h3 className="font-medium text-sm truncate">
+                              {exam.course.title}
+                            </h3>
                           </div>
                         </div>
-                        <div className="flex justify-center items-center space-x-2">
-                          {exam.groups.map((e_group, idx) => {
-                            return (
-                              <Badge
-                                key={idx}
-                                variant={"outline"}
-                                draggable
-                                onDragStart={(e) =>
-                                  handleCourseGroupDragStart(e, {
-                                    ...e_group,
-                                    courseId: exam.id,
-                                  })
-                                }
-                                className="w-auto hover:opacity-45 hover:border-blue-300 cursor-move transition-all duration-200 m-2"
-                              >
-                                <Grip className="h-4 w-4" />
+
+                        {/* Exam Groups */}
+                        <div className="flex flex-wrap justify-center items-center gap-2 mt-3">
+                          {exam.groups.map((e_group, idx) => (
+                            <Badge
+                              key={idx}
+                              variant="outline"
+                              draggable
+                              onDragStart={(e) =>
+                                handleCourseGroupDragStart(e, {
+                                  ...e_group,
+                                  courseId: exam.id,
+                                })
+                              }
+                              className="flex items-center gap-1 px-2 py-1 cursor-move hover:opacity-70 hover:border-blue-400 transition-all duration-200"
+                            >
+                              <Grip className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs">
                                 {e_group.group.group_name}
-                              </Badge>
-                            );
-                          })}
+                              </span>
+                            </Badge>
+                          ))}
                         </div>
-                        <Badge variant={"destructive"}>{exam.reason}</Badge>
+
+                        {/* Reason Badge */}
+                        {exam.reason && (
+                          <div className="flex justify-end mt-2">
+                            <Badge
+                              variant="destructive"
+                              className="text-xs px-2 py-0.5"
+                            >
+                              {exam.reason}
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </ScrollArea>
                 </div>
               </div>
             )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full gap-4 lg:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2 col-span-2">
               {scheduledExams.map((date, idx) => {
                 let dateObj = new Date(date.day);
 
                 return (
                   <Card
                     key={idx}
-                    className="shadow-md cursor-pointer overflow-hidden relative flex flex-col border h-full min-h-[400px] p-0"
+                    className="shadow-md cursor-pointer overflow-hidden relative flex flex-col border h-full min-h-[400px] p- w-full"
                   >
                     <div className="text-center py-2 px-2 bg-primary border-b sticky top-0 z-10 text-white">
                       <h2 className="text-lg font-bold">
@@ -1513,6 +1559,16 @@ function ManualTimeTable() {
                 <div className="space-y-3">
                   <h3 className="text-sm text-center px-1">
                     Alternative Suggested Slots
+                    {suggestions && suggestions.length > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-2 cursor-pointer"
+                        onClick={() => setViewAllSuggestions(true)}
+                      >
+                        {" "}
+                        view all
+                      </Badge>
+                    )}
                   </h3>
                   <div className="rounded-md border">
                     <div className="p-4">
@@ -1531,7 +1587,7 @@ function ManualTimeTable() {
                                     suggestion.date === suggesstedSlot?.date &&
                                     suggestion.slot === suggesstedSlot?.slot
                                       ? "bg-primary text-white"
-                                      : "hover:bg-yellow-100 hover:text-white"
+                                      : "hover:bg-muted-primary hover:text-white"
                                   }`}
                                 >
                                   <div className="text-xs font-medium">
@@ -1576,14 +1632,14 @@ function ManualTimeTable() {
                   </div>
                   <div className="flex gap-3">
                     <Button
-                      variant="default"
+                      variant="secondary"
                       onClick={scheduleCourse}
                       className="px-6 py-2 font-medium"
                     >
                       Yes, Continue
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant="destructive"
                       onClick={() => {
                         setDraggedCourse(null);
                         setBackupDraggedCourse(null);
@@ -1605,6 +1661,11 @@ function ManualTimeTable() {
           )}
         </div>
       </Dialog>
+      <AllSuggestionsDialog
+        viewAllSuggestions={viewAllSuggestions}
+        setViewAllSuggestions={setViewAllSuggestions}
+        suggestions={suggestions}
+      />
       <ConflictDialog
         conflictedCourses={conflictedCOurses}
         conflictedStudents={conflictedStudents}
