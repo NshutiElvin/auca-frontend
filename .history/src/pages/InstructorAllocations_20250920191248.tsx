@@ -12,7 +12,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { ChevronDown, Loader2, MoreHorizontal } from "lucide-react";
+import { ChevronDown, MoreHorizontal } from "lucide-react";
 
 import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
@@ -267,7 +267,7 @@ export function InstructorAllocationsPage() {
         return (
           <Checkbox
             checked={isSignedIn}
-            className="h-8 w-8 border border-primary disabled:bg-primary"
+            className="h-8 w-8 border disabled:bg-primary"
             onCheckedChange={(checked) => {
                  if(typeof checked === "boolean"){
                     signinStudent(studentId, examId, checked);
@@ -378,7 +378,6 @@ export function InstructorAllocationsPage() {
   ) : (
     <div className="w-full flex flex-col">
        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        {isMarkingAttendance&&<Loader2 className="h-5 w-5 animate-spin"/>}
              <motion.h2
             key={new Date().getMonth()}
             initial={{ opacity: 0 }}

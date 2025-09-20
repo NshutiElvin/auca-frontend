@@ -378,7 +378,7 @@ export function InstructorAllocationsPage() {
   ) : (
     <div className="w-full flex flex-col">
        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        {isMarkingAttendance&&<Loader2 className="h-5 w-5 animate-spin"/>}
+        {isMarkingAttendance&&<Loader2 className="h-5 w-5"/>}
              <motion.h2
             key={new Date().getMonth()}
             initial={{ opacity: 0 }}
