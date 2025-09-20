@@ -35,7 +35,6 @@ import {
   Eye,
   BadgeCheck,
   Ban,
-  Loader2,
 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
@@ -561,8 +560,7 @@ export function UsersPage() {
       <div className="flex flex-col gap-4 p-4 border rounded-lg">
         {/* Search and Filters Row */}
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[250px] flex justify-evenly items-center">
-            {isSearching &&<Loader2 className="animate-spin h-5 w-5"/>}
+          <div className="flex-1 min-w-[250px]">
             <Input
               placeholder="Search users..."
               value={searchQuery}
