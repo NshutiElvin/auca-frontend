@@ -91,7 +91,7 @@ export type User = {
   first_name: string;
   last_name: string;
   role: string;
-  is_active: boolean;
+  is_active?: boolean;
   is_staff?: boolean;
   date_joined?: string;
   permissions?: string[];
@@ -301,7 +301,7 @@ export function UsersPage() {
       first_name: user.first_name,
       last_name: user.last_name,
       role: user.role,
-      is_active: user?.is_active  ,
+      is_active: user?.is_active || true,
       is_staff: user?.is_staff || false,
       permissions: user?.permissions || [],
     });
