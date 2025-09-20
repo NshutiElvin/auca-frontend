@@ -770,7 +770,7 @@ export function UsersPage() {
               setPreviousUrl(previous);
             
             }}
-            disabled={previous == null  }
+            disabled={next == null  }
           >
             Previous
           </Button>
