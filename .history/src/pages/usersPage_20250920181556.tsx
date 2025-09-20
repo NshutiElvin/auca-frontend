@@ -169,9 +169,7 @@ export function UsersPage() {
     try {
       setIsLoading(true);
       const resp = await axios.request({
-        url:
-          url ??
-          `/api/users/?limit=${table.getState().pagination.pageSize}&offset=0`,
+        url: url ?? `/api/users/?limit=${table.getState().pagination.pageSize}&offset=0`,
         method: "get",
         baseURL: undefined,
       });
@@ -465,11 +463,8 @@ export function UsersPage() {
 
   const handleSearch = async () => {
     try {
-      setIsSearching(true);
       const resp = await axios.request({
-        url: `/api/users/?search=${searchQuery}&limit=${
-          table.getState().pagination.pageSize
-        }&offset=0`,
+        url: `/api/users/?search=${searchQuery}&limit=${table.getState().pagination.pageSize}&offset=0`,
         method: "get",
         baseURL: undefined,
       });
@@ -563,8 +558,8 @@ export function UsersPage() {
   React.useEffect(() => {
     if (searchQuery.length > 0) {
       handleSearch();
-    } else {
-      setNextUrl(null);
+    }else{
+      setNextUrl(null)
     }
   }, [searchQuery]);
 
@@ -581,16 +576,16 @@ export function UsersPage() {
       <div className="flex flex-col gap-4 p-4 border rounded-lg">
         {/* Search and Filters Row */}
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[250px] flex flex-col ">
+          
+          <div className="flex-1 min-w-[250px]  ">
+           
             <Input
               placeholder="Search users..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="max-w-sm border-primary"
             />
-            {isSearching && (
-              <p className="font-bold text-primary">searching ...</p>
-            )}
+
           </div>
 
           <div className="flex items-center gap-2">
