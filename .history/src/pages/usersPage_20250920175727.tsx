@@ -559,7 +559,7 @@ export function UsersPage() {
     if (searchQuery.length > 0) {
       handleSearch();
     }else{
-      setNextUrl(null)
+      setNext(null)
     }
   }, [searchQuery]);
 
