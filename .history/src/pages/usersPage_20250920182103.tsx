@@ -79,7 +79,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import { useDebouncedCallback } from "use-debounce";
 
 // User type based on the Django model
 export type User = {
@@ -464,7 +463,7 @@ export function UsersPage() {
     return Array.from(new Set(roles));
   }, [data]);
 
-  const handleSearch = useDebouncedCallback(async () => {
+  const handleSearch = async () => {
     try {
       setIsSearching(true);
       const resp = await axios.request({
@@ -488,7 +487,7 @@ export function UsersPage() {
     } finally {
       setIsSearching(false);
     }
-  }, 1000)
+  };
 
   // Export to Excel function
   const exportToExcel = () => {
