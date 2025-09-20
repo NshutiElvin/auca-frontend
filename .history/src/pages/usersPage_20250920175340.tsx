@@ -577,7 +577,7 @@ export function UsersPage() {
         {/* Search and Filters Row */}
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1  min-w-[250px] flex justify-evenly items-center">
-            {isSearching && <Loader2 className="animate-spin h-4 w-4" />}
+            {isSearching && <Loader2 className="animate-spin h-5 w-5" />}
             <Input
               placeholder="Search users..."
               value={searchQuery}
