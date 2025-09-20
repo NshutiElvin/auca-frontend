@@ -146,8 +146,8 @@ export function UsersPage() {
   const [nextUrl, setNextUrl] = React.useState<string | null>(null);
   const [previousUrl, setPreviousUrl] = React.useState<string | null>(null);
   const [counts, setCounts] = React.useState<number>(0);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [isSearching, setIsSearching] = React.useState(false);
+  const[searchQuery, setSearchQuery]= React.useState("")
+  const[isSearching, setIsSearching]= React.useState(false)
   // Form state
   const [formData, setFormData] = React.useState({
     email: "",
@@ -182,7 +182,7 @@ export function UsersPage() {
         );
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
     } finally {
       setIsLoading(false);
     }
@@ -459,16 +459,19 @@ export function UsersPage() {
     return Array.from(new Set(roles));
   }, [data]);
 
-  const handleSearch = async () => {
+  const handleSearch= async()=>{
     try {
-      setIsSearching(true);
-      const resp = await axios.get(`/api/users/?search=${searchQuery}`);
-      console.log(resp.data);
+      setIsSearching(true)
+      const resp= await axios.get(`/api/users/?search=${searchQuery}`)
+      console.log(resp.data)
+      
     } catch (error) {
-    } finally {
-      setIsSearching(false);
+
+      
+    }finally{
+      setIsSearching(false)
     }
-  };
+  }
 
   // Export to Excel function
   const exportToExcel = () => {
@@ -518,8 +521,8 @@ export function UsersPage() {
     setStatusFilter("all");
     table.resetColumnFilters();
   };
-  React.useEffect(() => {
-    getPermissions();
+ React.useEffect(() => {
+    getPermissions()
   }, []);
   React.useEffect(() => {
     Promise.all([getUsers(nextUrl)]);
@@ -542,9 +545,9 @@ export function UsersPage() {
   }, [roleFilter, statusFilter]);
 
   React.useEffect(() => {
-    if (searchQuery.length > 0) {
-      handleSearch();
-    }
+     if(searchQuery.length>0){
+      handleSearch()
+     }
   }, [searchQuery]);
 
   const hasActiveFilters =
@@ -563,8 +566,12 @@ export function UsersPage() {
           <div className="flex-1 min-w-[250px]">
             <Input
               placeholder="Search users..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              value={
+              searchQuery
+              }
+              onChange={(event) =>
+               setSearchQuery(event.target.value)
+              }
               className="max-w-sm border-primary"
             />
           </div>
@@ -770,7 +777,12 @@ export function UsersPage() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={() => setNextUrl(null)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={()  =>setNextUrl(null)}
+            
+          >
             First
           </Button>
           <Button
@@ -778,8 +790,9 @@ export function UsersPage() {
             size="sm"
             onClick={() => {
               setPreviousUrl(previous);
+            
             }}
-            disabled={previous == null}
+            disabled={previous == null  }
           >
             Previous
           </Button>
@@ -788,8 +801,9 @@ export function UsersPage() {
             size="sm"
             onClick={() => {
               next !== null && setNextUrl(next);
+              
             }}
-            disabled={next == null}
+            disabled={  next == null}
           >
             Next
           </Button>
