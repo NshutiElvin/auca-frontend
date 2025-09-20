@@ -21,6 +21,8 @@ const Logout: React.FC = () => {
       setToastMessage({message:errorMessage, variant:"danger"});
     } finally {
       setIsLoggedOut(true);
+        localStorage.removeItem('sidebarActivePath');
+          localStorage.removeItem('sidebarActiveParentPath');
     }
   };
 

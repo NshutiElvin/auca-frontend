@@ -21,6 +21,9 @@ const Logout: React.FC = () => {
       setToastMessage({message:errorMessage, variant:"danger"});
     } finally {
       setIsLoggedOut(true);
+        localStorage.removeItem('sidebarActivePath');
+          localStorage.removeItem('sidebarActiveParentPath');
+           localStorage.removeItem('sidebarActiveUrl');
     }
   };
 
@@ -33,7 +36,7 @@ const Logout: React.FC = () => {
       <Loader className="animate-spin"/>  
     </div>
   ) : (
-    <Navigate to="/login" state={{ message: "Logged out" }}  />
+    <Navigate to="/" state={{ message: "Logged out" }}  />
   );
 };
 
