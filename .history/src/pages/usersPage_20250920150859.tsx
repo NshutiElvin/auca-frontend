@@ -161,20 +161,13 @@ export function UsersPage() {
     setIsViewDialogOpen(true);
   };
   // Get users data
-  const getUsers = async (url: string | null) => {
+  const getUsers = async () => {
     try {
       setIsLoading(true);
-      const resp = await axios.request({
-        url: url ?? "/api/users/?limit=7&offset=0",
-        method: "get",
-        baseURL: undefined,
-      });
-      setCounts(resp.data.count);
-      setNext(resp.data.next);
-      setPrevious(resp.data.previous);
+      const resp = await axios.get("/api/users");
       if (resp.data.success) {
         setData(
-          resp.data.results.data.map((d: any) => {
+          resp.data.data.map((d: any) => {
             return { ...d, permissions: d.current_permissions };
           })
         );
@@ -506,12 +499,8 @@ export function UsersPage() {
   };
 
   React.useEffect(() => {
-    Promise.all([getUsers(nextUrl), getPermissions()]);
-  }, [nextUrl]);
-
-  React.useEffect(() => {
-    getUsers(previousUrl);
-  }, [previousUrl]);
+    Promise.all([getUsers(), getPermissions()]);
+  }, []);
 
   // Apply custom filters
   React.useEffect(() => {
@@ -763,22 +752,16 @@ export function UsersPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              setPrevious(previous);
-              table.previousPage();
-            }}
-            disabled={next == null || !table.getCanPreviousPage()}
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
           >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              next !== null && setNextUrl(next);
-              table.nextPage();
-            }}
-            disabled={!table.getCanNextPage() || next == null}
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
           >
             Next
           </Button>

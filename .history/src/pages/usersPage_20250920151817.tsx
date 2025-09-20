@@ -510,7 +510,7 @@ export function UsersPage() {
   }, [nextUrl]);
 
   React.useEffect(() => {
-    getUsers(previousUrl);
+    getUsers(previousUrl)
   }, [previousUrl]);
 
   // Apply custom filters
@@ -763,9 +763,10 @@ export function UsersPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              setPrevious(previous);
-              table.previousPage();
+ 
+             onClick={() => {
+              next !== null && setNextUrl(next);
+              table.previousPage()
             }}
             disabled={next == null || !table.getCanPreviousPage()}
           >
@@ -774,11 +775,8 @@ export function UsersPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              next !== null && setNextUrl(next);
-              table.nextPage();
-            }}
-            disabled={!table.getCanNextPage() || next == null}
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
           >
             Next
           </Button>

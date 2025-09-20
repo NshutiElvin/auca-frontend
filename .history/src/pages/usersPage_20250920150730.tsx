@@ -19,6 +19,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+ 
 } from "../components/ui/dialog";
 import {
   ChevronDown,
@@ -141,11 +142,7 @@ export function UsersPage() {
   );
   const [isViewDialogOpen, setIsViewDialogOpen] = React.useState(false);
   const [viewingUser, setViewingUser] = React.useState<User | null>(null);
-  const [next, setNext] = React.useState<string | null>(null);
-  const [previous, setPrevious] = React.useState<string | null>(null);
-  const [nextUrl, setNextUrl] = React.useState<string | null>(null);
-  const [previousUrl, setPreviousUrl] = React.useState<string | null>(null);
-  const [counts, setCounts] = React.useState<number>(0);
+
   // Form state
   const [formData, setFormData] = React.useState({
     email: "",
@@ -161,20 +158,13 @@ export function UsersPage() {
     setIsViewDialogOpen(true);
   };
   // Get users data
-  const getUsers = async (url: string | null) => {
+  const getUsers = async () => {
     try {
       setIsLoading(true);
-      const resp = await axios.request({
-        url: url ?? "/api/users/?limit=7&offset=0",
-        method: "get",
-        baseURL: undefined,
-      });
-      setCounts(resp.data.count);
-      setNext(resp.data.next);
-      setPrevious(resp.data.previous);
+      const resp = await axios.get("/api/users");
       if (resp.data.success) {
         setData(
-          resp.data.results.data.map((d: any) => {
+          resp.data.data.map((d: any) => {
             return { ...d, permissions: d.current_permissions };
           })
         );
@@ -243,18 +233,15 @@ export function UsersPage() {
       if (editingUser) {
         const resp = await axios.put(`/api/users/${editingUser.id}/`, {
           ...formData,
-          user_permissions: formData.permissions,
+          user_permissions: formData.permissions,  
         });
 
+      
         if (resp.data) {
           setData((prev) =>
             prev.map((user) =>
               user.id === editingUser.id
-                ? {
-                    ...user,
-                    ...resp.data.data,
-                    permissions: resp.data.data.current_permissions,
-                  }
+                ? { ...user, ...resp.data.data, permissions: resp.data.data.current_permissions }  
                 : user
             )
           );
@@ -271,15 +258,9 @@ export function UsersPage() {
           password: "password123.",
           user_permissions: formData.permissions,
         });
-
+ 
         if (resp.data) {
-          setData((prev) => [
-            ...prev,
-            {
-              ...resp.data.data,
-              permissions: resp.data.data.current_permissions,
-            },
-          ]); // ← Use server response data
+          setData((prev) => [...prev, {...resp.data.data,  permissions: resp.data.data.current_permissions}]); // ← Use server response data
           setToastMessage({
             message: "User created successfully",
             variant: "success",
@@ -506,12 +487,8 @@ export function UsersPage() {
   };
 
   React.useEffect(() => {
-    Promise.all([getUsers(nextUrl), getPermissions()]);
-  }, [nextUrl]);
-
-  React.useEffect(() => {
-    getUsers(previousUrl);
-  }, [previousUrl]);
+    Promise.all([getUsers(), getPermissions()]);
+  }, []);
 
   // Apply custom filters
   React.useEffect(() => {
@@ -763,22 +740,16 @@ export function UsersPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              setPrevious(previous);
-              table.previousPage();
-            }}
-            disabled={next == null || !table.getCanPreviousPage()}
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
           >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              next !== null && setNextUrl(next);
-              table.nextPage();
-            }}
-            disabled={!table.getCanNextPage() || next == null}
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
           >
             Next
           </Button>
@@ -851,6 +822,7 @@ export function UsersPage() {
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
+                    
                     <SelectItem value="instructor">Instructor</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>

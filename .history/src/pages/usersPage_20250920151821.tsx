@@ -764,7 +764,7 @@ export function UsersPage() {
             variant="outline"
             size="sm"
             onClick={() => {
-              setPrevious(previous);
+              next !== null && setNextUrl(next);
               table.previousPage();
             }}
             disabled={next == null || !table.getCanPreviousPage()}
@@ -774,11 +774,8 @@ export function UsersPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              next !== null && setNextUrl(next);
-              table.nextPage();
-            }}
-            disabled={!table.getCanNextPage() || next == null}
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
           >
             Next
           </Button>
