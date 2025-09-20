@@ -577,15 +577,14 @@ export function UsersPage() {
         {/* Search and Filters Row */}
         <div className="flex flex-wrap items-center gap-4">
           
-          <div className="flex-1  min-w-[250px] flex  flex-col items-center">
-           
+          <div className="flex-1  min-w-[250px] flex  flex-col-reverse items-center">
+            {isSearching && <p className="text-primary">searching ...</p>}
             <Input
               placeholder="Search users..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="max-w-sm border-primary"
             />
-             {isSearching && <p className="text-primary">searching ...</p>}
           </div>
 
           <div className="flex items-center gap-2">
