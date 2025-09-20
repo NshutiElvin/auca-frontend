@@ -237,15 +237,15 @@ export function UsersPage() {
       if (editingUser) {
         const resp = await axios.put(`/api/users/${editingUser.id}/`, {
           ...formData,
-          user_permissions: formData.permissions,  
+          user_permissions: formData.permissions, // Use formData, not editingUser
         });
 
-      
+        // ✅ USE THE RESPONSE DATA FROM SERVER
         if (resp.data) {
           setData((prev) =>
             prev.map((user) =>
               user.id === editingUser.id
-                ? { ...user, ...resp.data.data, permissions: resp.data.data.current_permissions }  
+                ? { ...user, ...resp.data } // ← Use server response data
                 : user
             )
           );
@@ -265,7 +265,7 @@ export function UsersPage() {
 
         // ✅ USE THE RESPONSE DATA FROM SERVER
         if (resp.data) {
-          setData((prev) => [...prev, {...resp.data.data,  permissions: resp.data.data.current_permissions}]); // ← Use server response data
+          setData((prev) => [...prev, resp.data]); // ← Use server response data
           setToastMessage({
             message: "User created successfully",
             variant: "success",
