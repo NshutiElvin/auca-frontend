@@ -149,7 +149,6 @@ export function UsersPage() {
   const [counts, setCounts] = React.useState<number>(0);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isSearching, setIsSearching] = React.useState(false);
-  
   // Form state
   const [formData, setFormData] = React.useState({
     email: "",

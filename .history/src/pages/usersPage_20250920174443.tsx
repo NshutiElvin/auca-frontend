@@ -149,7 +149,6 @@ export function UsersPage() {
   const [counts, setCounts] = React.useState<number>(0);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isSearching, setIsSearching] = React.useState(false);
-  
   // Form state
   const [formData, setFormData] = React.useState({
     email: "",
@@ -169,7 +168,7 @@ export function UsersPage() {
     try {
       setIsLoading(true);
       const resp = await axios.request({
-        url: url ?? `/api/users/?limit=${table.getState().pagination.pageSize}&offset=0`,
+        url: url ?? "/api/users/?limit=10&offset=0",
         method: "get",
         baseURL: undefined,
       });
@@ -464,7 +463,7 @@ export function UsersPage() {
   const handleSearch = async () => {
     try {
       const resp = await axios.request({
-        url: `/api/users/?search=${searchQuery}&limit=${table.getState().pagination.pageSize}&offset=0`,
+        url: `/api/users/?search=${searchQuery}&limit=10&offset=0`,
         method: "get",
         baseURL: undefined,
       });
