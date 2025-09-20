@@ -647,7 +647,7 @@ export function UsersPage() {
                  <Loader2 className="animate-spin h-4 w-4"/>
               ) : (
                 <span>
-                  Showing {table.getFilteredRowModel().rows.length} user(s) of {counts}
+                  Showing {table.getFilteredRowModel().rows.length} user(s)
                 </span>
               ))}
           </div>
