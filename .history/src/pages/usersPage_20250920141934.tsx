@@ -228,58 +228,69 @@ export function UsersPage() {
     });
     setEditingUser(null);
   };
-// Handle form submit
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    setIsSubmitting(true);
+const sleep = (ms:number) => new Promise((resolve) => setTimeout(resolve, ms));
+  // Handle form submit
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsSubmitting(true);
 
-    if (editingUser) {
-      const resp = await axios.put(`/api/users/${editingUser.id}/`, {
-        ...formData,
-        user_permissions: formData.permissions, // Use formData, not editingUser
-      });
+      if (editingUser) {
+         
+          const resp = await axios.put(`/api/users/${editingUser.id}`, {
+            ...editingUser,
+            user_permissions: editingUser.permissions,
+          });
 
-      // ✅ USE THE RESPONSE DATA FROM SERVER
-      if (resp.data) {
-        setData((prev) =>
-          prev.map((user) =>
-            user.id === editingUser.id
-              ? { ...user, ...resp.data } // ← Use server response data
-              : user
-          )
-        );
-        setToastMessage({
-          message: "User updated successfully",
-          variant: "success",
-        });
-        setIsDialogOpen(false);
-        resetForm();
-      }
-    } else {
-      const resp = await axios.post(`/api/users/`, {
-        ...formData,
-        password: "password123.",
-        user_permissions: formData.permissions,
-      });
+          if (resp.data.success ) {
+            setData((prev) =>
+              prev.map((user) =>
+                user.id === editingUser.id
+                  ? { ...user, ...formData, id: editingUser.id }
+                  : user
+              )
+            );
+            setToastMessage({
+              message: "User updated successfully",
+              variant: "success",
+            });
+            setIsDialogOpen(false);
+            resetForm();
+          }
+        
+      } else {
+        const newUser: User = {
+          ...formData,
+          id: String(Date.now()),
+          date_joined: new Date().toISOString(),
+          password: "password123.",
+        };
 
-      // ✅ USE THE RESPONSE DATA FROM SERVER
-      if (resp.data) {
-        setData((prev) => [...prev, resp.data]); // ← Use server response data
-        setToastMessage({
-          message: "User created successfully",
-          variant: "success",
-        });
-        setIsDialogOpen(false);
-        resetForm();
-      }
+        let created = false;
+     
+          const resp = await axios.post(`/api/users/`, {
+            ...newUser,
+            user_permissions: newUser.permissions,
+          });
+
+          if (resp.data.success && !created) {
+            setData((prev) => [...prev, newUser]);
+            setToastMessage({
+              message: "User created successfully",
+              variant: "success",
+            });
+            setIsDialogOpen(false);
+            resetForm();
+            created = true; // Prevent adding twice to state
+          }
+        }
+      
+    } catch (error) {
+      setToastMessage({ variant: "danger", message: "Something went wrong" });
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    setToastMessage({ variant: "danger", message: "Something went wrong" });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
  
 // Handle edit user
