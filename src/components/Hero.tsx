@@ -5,23 +5,23 @@ import { ShieldUser } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
-
 export const Hero = () => {
   return (
     <section
       id="hero"
       className="relative min-h-screen flex items-center overflow-hidden mt-6 px-2"
     >
-      {/* DotGrid Background */}
-     
-      
-      {/* Hero Image */}
+      {/* Background with Blur Effect */}
       <div className="absolute inset-0 z-1">
         <div className="relative w-full h-full">
-          <motion.img
-            src="/hero.jpg"
-            alt="Bright Hotel exterior"
-            className="w-full h-full object-cover rounded-2xl shadow-xl"
+          {/* Blurred Background */}
+          <motion.div
+            className="absolute inset-0 bg-cover bg-center rounded-2xl"
+            style={{
+              backgroundImage: "url('/hero.jpg')",
+              filter: "blur(8px)",
+              transform: "scale(1.1)",
+            }}
             initial={{ scale: 1.1 }}
             animate={{
               scale: [1.1, 1.15, 1.1],
@@ -32,6 +32,9 @@ export const Hero = () => {
               ease: "easeInOut",
             }}
           />
+          
+          {/* Dark Overlay for Better Text Readability */}
+          <div className="absolute inset-0 bg-black/30 rounded-2xl"></div>
         </div>
       </div>
 
