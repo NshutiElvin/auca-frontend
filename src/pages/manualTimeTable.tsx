@@ -140,6 +140,7 @@ function ManualTimeTable() {
   const [conflictedCOurses, setConflictedCourses] = useState<any[]>([]);
   const [isLoadingUnscheduled, setIsLoadingUnscheduled] =
     useState<boolean>(false);
+  const [loadingInitialData, setInitialLoadingInitialData] = useState(false);
   const [isLoadingExams, setIsLoadingExams] = useState<boolean>(false);
   const [suggesstedSlot, setSuggesstedSlot] = useState<{
     date: string;
@@ -421,6 +422,7 @@ function ManualTimeTable() {
 
       let endpoint = "";
       let payload = { ...selectedSlotInfo };
+      console.log(payload)
 
       if (draggedCourse) {
         endpoint = "/api/exams/exams/schedule-course-group/";
@@ -820,7 +822,10 @@ function ManualTimeTable() {
 
   useEffect(() => {
     setOpen(false);
-    Promise.all([getUnscheduledExams(), getExams()]);
+    setInitialLoadingInitialData(true);
+    Promise.all([getUnscheduledExams(), getExams()]).finally(() => {
+      setInitialLoadingInitialData(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -891,13 +896,12 @@ function ManualTimeTable() {
         }}
       >
         {" "}
-        {isLoadingUnscheduled ||
-          (isLoadingExams && (
-            <div className="flex justify-center items-center">
-              <Loader2 className="animate-spin h-5 w-5 text-primary" /> loading
-              exams ...
-            </div>
-          ))}
+        {loadingInitialData && (
+          <div className="flex justify-center   flex-col h-screen items-center">
+            <Loader2 className="animate-spin h-15 w-15 text-primary" /> loading
+            Existing Timetable ...
+          </div>
+        )}
         <div
           className={`flex flex-col gap-2${
             serverLoadingMessage?.isServerLoading &&
