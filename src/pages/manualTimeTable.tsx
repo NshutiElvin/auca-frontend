@@ -448,8 +448,8 @@ function ManualTimeTable() {
         setToastMessage({ message: resp.data.message, variant: "danger" });
       }
     } catch (error) {
-      // getExams();
-      // getUnscheduledExams();
+      getExams();
+      getUnscheduledExams();
     } finally {
       resetAllStates();
     }
@@ -547,8 +547,8 @@ function ManualTimeTable() {
           setToastMessage({ message: resp.data.message, variant: "danger" });
         }
       } catch (error) {
-        // getExams();
-        // getUnscheduledExams();
+        getExams();
+        getUnscheduledExams();
       } finally {
         setServerLoadingMessage({ isServerLoading: false });
       }
@@ -575,8 +575,8 @@ function ManualTimeTable() {
           setToastMessage({ message: resp.data.message, variant: "danger" });
         }
       } catch (error) {
-        // getExams();
-        // getUnscheduledExams();
+        getExams();
+        getUnscheduledExams();
       } finally {
         setServerLoadingMessage({ isServerLoading: false });
       }
@@ -603,8 +603,8 @@ function ManualTimeTable() {
           setToastMessage({ message: resp.data.message, variant: "danger" });
         }
       } catch (error) {
-        // getExams();
-        // getUnscheduledExams();
+        getExams();
+        getUnscheduledExams();
       } finally {
         setServerLoadingMessage({ isServerLoading: false });
       }
