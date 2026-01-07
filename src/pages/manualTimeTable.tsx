@@ -253,11 +253,28 @@ function ManualTimeTable() {
         } else {
           let newDay: DailyExam = {
             day: ex_date,
-
             exams: [
-              { name: "Morning", start: "", end: "", date: "", exams: [] },
-              { name: "Afternoon", start: "", end: "", date: "", exams: [] },
-              { name: "Evening", start: "", end: "", date: "", exams: [] },
+              {
+                name: "Morning",
+                start: ex.slot_name === "Morning" ? ex.start_time : "08:00",
+                end: ex.slot_name === "Morning" ? ex.end_time : "11:00",
+                date: "",
+                exams: [],
+              },
+              {
+                name: "Afternoon",
+                start: ex.slot_name === "Afternoon" ? ex.start_time : "13:00",
+                end: ex.slot_name === "Afternoon" ? ex.end_time : "16:00",
+                date: "",
+                exams: [],
+              },
+              {
+                name: "Evening",
+                start: ex.slot_name === "Evening" ? ex.start_time : "18:00",
+                end: ex.slot_name === "Evening" ? ex.end_time : "21:00",
+                date: "",
+                exams: [],
+              },
             ],
           };
           if (ex.slot_name == "Morning") {
@@ -422,7 +439,7 @@ function ManualTimeTable() {
 
       let endpoint = "";
       let payload = { ...selectedSlotInfo };
-      console.log(payload)
+      console.log(payload);
 
       if (draggedCourse) {
         endpoint = "/api/exams/exams/schedule-course-group/";
@@ -533,7 +550,7 @@ function ManualTimeTable() {
 
         if (resp.data.success) {
           if (resp.data.success) {
-            if (resp.data ) {
+            if (resp.data) {
               setConflictMessage(resp.data.data);
               setSuggestions(resp.data.all_suggestions);
               setBestSuggestion(resp.data.best_suggestion);
