@@ -348,7 +348,7 @@ function ManualTimeTable() {
             );
 
             if (resp.data.success) {
-              if (resp.data.conflict) {
+              if (resp.data) {
                 setConflictMessage(resp.data.data);
                 // setBackupSelectedSlotInfo({...selectedSlotInfo})
               }
@@ -368,7 +368,7 @@ function ManualTimeTable() {
             );
 
             if (resp.data.success) {
-              if (resp.data.conflict) {
+              if (resp.data) {
                 setConflictMessage(resp.data.data);
               }
             } else {
@@ -387,7 +387,7 @@ function ManualTimeTable() {
             );
 
             if (resp.data.success) {
-              if (resp.data.conflict) {
+              if (resp.data) {
                 setConflictMessage(resp.data.data);
                 setSuggestions(resp.data.all_suggestions);
                 setBestSuggestion(resp.data.best_suggestion);
@@ -533,7 +533,7 @@ function ManualTimeTable() {
 
         if (resp.data.success) {
           if (resp.data.success) {
-            if (resp.data.conflict) {
+            if (resp.data ) {
               setConflictMessage(resp.data.data);
               setSuggestions(resp.data.all_suggestions);
               setBestSuggestion(resp.data.best_suggestion);
@@ -564,7 +564,7 @@ function ManualTimeTable() {
         });
 
         if (resp.data.success) {
-          if (resp.data.conflict) {
+          if (resp.data) {
             setConflictMessage(resp.data.data);
             setSuggestions(resp.data.all_suggestions);
             setBestSuggestion(resp.data.best_suggestion);
@@ -592,7 +592,7 @@ function ManualTimeTable() {
         });
 
         if (resp.data.success) {
-          if (resp.data.conflict) {
+          if (resp.data) {
             setConflictMessage(resp.data.data);
             setSuggestions(resp.data.all_suggestions);
             setBestSuggestion(resp.data.best_suggestion);
