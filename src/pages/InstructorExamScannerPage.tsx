@@ -18,27 +18,28 @@ import { StatusButton } from "../components/ui/status-button";
 function InstructorExamScannerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { setToastMessage } = useToast();
-  const [isVerifying, startVerifyingTransition] = useTransition();
+  const [isVerifying, setVerifying] = useState(false);
  
   
   const [studentsInfo, setStudentsInfo] = useState<any[]|null>([]);
   const axios = useUserAxios();
 
-  const performVerification = (data: any) => {
-    startVerifyingTransition(async () => {
+  const performVerification = async (data: any) => {
+    setVerifying(true);
       try {
         const response = await axios.post(
           "/api/rooms/instructor_check_qr/",
           data
         );
-        setStudentsInfo(response.data.data);
+        setStudentsInfo(response.data.data || response.data);
       } catch (error) {
         setToastMessage({
           message: "Error occurred while  students info.",
           variant: "danger",
         });
+      }finally{
+        setVerifying(false);
       }
-    });
   };
 
   const handleQrCodeDetected = (result: any) => {
