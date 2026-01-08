@@ -9,24 +9,24 @@ import { useState, useTransition } from "react";
 import useToast from "../hooks/useToast";
 import { Loader, CheckCircle, XCircle } from "lucide-react";
 import useUserAxios from "../hooks/useUserAxios";
-import { Course } from "./courses";
  
 
 function StudentExamScannerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { setToastMessage } = useToast();
-  const [isVerifying, startVerifyingTransition] = useTransition();
+  const [isVerifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] =
     useState<any | null>(null);
   const axios = useUserAxios();
 
-  const performVerification = (data: any) => {
-    startVerifyingTransition(async () => {
+  const performVerification = async (data: any) => {
+    setVerifying(true);
       try {
         const response = await axios.post(
           "/api/rooms/student_check_qr/",
           data
         );
+        console.log("Verification response:", response.data);
         setVerificationResult(response.data.data);
       } catch (error) {
         setToastMessage({
@@ -34,8 +34,9 @@ function StudentExamScannerPage() {
           variant: "danger",
         });
       
+      }finally{
+        setVerifying(false);
       }
-    });
   };
 
   const handleQrCodeDetected = (result: any) => {
@@ -115,7 +116,7 @@ function StudentExamScannerPage() {
       );
     }
 
-    return null;
+    return <h2>No verification result or error occurred.</h2>;
   };
 
   return (
