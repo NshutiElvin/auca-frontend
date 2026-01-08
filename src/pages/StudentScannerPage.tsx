@@ -27,7 +27,7 @@ function StudentExamScannerPage() {
           data
         );
         console.log("Verification response:", response.data);
-        setVerificationResult(response.data.data);
+        setVerificationResult(response.data.data || response.data);
       } catch (error) {
         setToastMessage({
           message: "Error occurred while verifying student exam.",
