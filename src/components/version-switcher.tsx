@@ -59,7 +59,7 @@ export function VersionSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex flex-col items-start leading-none">
+              <div className="flex flex-col items-start leading-none bg-white rounded-md">
                 <motion.div
                   animate={{ y: [0, -5, 0] }}  
                   transition={{
@@ -71,10 +71,9 @@ export function VersionSwitcher({
                   <Link
                     rel="noreferrer noopener"
                     to=""
-                    className="text-lg font-semibold  transition-colors flex"
+                    className="text-lg font-semibold  transition-colors flex "
                   >
-                    <Shield/>
-                    {decodedToken?.role} Portal
+                     <img src="/logo.png"/>
                   </Link>
                 </motion.div>
               </div>
