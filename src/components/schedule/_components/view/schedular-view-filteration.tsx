@@ -589,32 +589,7 @@ export default function SchedulerViewFilteration({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="term" className="text-sm font-medium">
-                  Term
-                </Label>
-                <select
-                  title="Select Term"
-                  id="term"
-                  className="w-full h-10 px-3 py-2 text-sm rounded-md bg-background border border-input focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  onChange={(e) => {
-                    setConfiguration({
-                      ...configuration,
-                      term: e.target.value,
-                    });
-                  }}
-                  value={configuration.term}
-                >
-                  <option value="">Select a term</option>
-                  {defaultConfigurations.semesters.map((semester: any, index) => 
-                    semester.name && semester.name !="nan" ? (
-                      <option value={semester?.id} key={index}>
-                        {semester.name}
-                      </option>
-                    ) : null
-                  )}
-                </select>
-              </div>
+            
 
               <div className="space-y-2">
                 <Label htmlFor="location" className="text-sm font-medium">

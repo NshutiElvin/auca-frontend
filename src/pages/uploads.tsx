@@ -19,16 +19,29 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import * as XLSX from "xlsx";
 import useUserAxios from "../hooks/useUserAxios";
 import useToast from "../hooks/useToast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 interface FileProcessingState {
-  status: 'idle' | 'uploading' | 'processing' | 'success' | 'error';
+  status: "idle" | "uploading" | "processing" | "success" | "error";
   message: string;
   progress: number;
 }
@@ -44,23 +57,35 @@ const BulkUpload = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<PreviewDataItem[]>([]);
   const [fileProcessing, setFileProcessing] = useState<FileProcessingState>({
-    status: 'idle',
-    message: '',
-    progress: 0
+    status: "idle",
+    message: "",
+    progress: 0,
   });
   const { setToastMessage } = useToast();
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const axios = useUserAxios();
+  //state for keeping the terms from dataset
+  const [terms, setTerms] = useState<string[]>([]);
+  const [selectedTerm, setSelectedTerm] = useState<string>("");
 
   // Debounce file processing to avoid multiple triggers on rapid drag/drop
   const processFileDebounced = useCallback((file: File) => {
-    setFileProcessing(prev => ({ ...prev, status: 'processing', message: 'Reading file...', progress: 25 }));
-    
+    setFileProcessing((prev) => ({
+      ...prev,
+      status: "processing",
+      message: "Reading file...",
+      progress: 25,
+    }));
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        setFileProcessing(prev => ({ ...prev, message: 'Processing data...', progress: 50 }));
+        setFileProcessing((prev) => ({
+          ...prev,
+          message: "Processing data...",
+          progress: 50,
+        }));
 
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
@@ -68,47 +93,67 @@ const BulkUpload = () => {
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-        setFileProcessing(prev => ({ ...prev, message: 'Validating data...', progress: 75 }));
+        setFileProcessing((prev) => ({
+          ...prev,
+          message: "Validating data...",
+          progress: 75,
+        }));
 
         setTimeout(() => {
           if (jsonData.length < 2) {
-            setValidationErrors(["File appears to be empty or has no data rows. Please check your file."]);
+            setValidationErrors([
+              "File appears to be empty or has no data rows. Please check your file.",
+            ]);
             setFileProcessing({
-              status: 'error',
-              message: 'Validation failed: No data found',
-              progress: 0
+              status: "error",
+              message: "Validation failed: No data found",
+              progress: 0,
             });
             return;
           }
 
           const headers = jsonData[0] as string[];
           const rows = jsonData.slice(1) as any[][];
-          
+
           // Only preview first 10 rows for performance
           const preview = rows.slice(0, 10).map((row, index) => {
             const item: PreviewDataItem = { id: index, selected: true };
             headers.forEach((header, headerIndex) => {
-              item[header] = row[headerIndex] !== undefined ? row[headerIndex] : '';
+              item[header] =
+                row[headerIndex] !== undefined ? row[headerIndex] : "";
             });
             return item;
           });
 
           setPreviewData(preview);
+          // extract unique terms from preview (all non-empty cell values across headers)
+          const uniqueTerms = new Set<string>();
+          preview.forEach((item) => {
+            headers.forEach((header) => {
+              const val = item["TERM"];
+              if (val !== undefined && val !== null) {
+                const s = String(val).trim();
+                if (s.length) uniqueTerms.add(s);
+              }
+            });
+          });
+          setTerms(Array.from(uniqueTerms));
           setFileProcessing({
-            status: 'success',
+            status: "success",
             message: `Successfully processed ${rows.length} rows`,
-            progress: 100
+            progress: 100,
           });
           setShowPreview(true);
         }, 600); // Smooth UX delay
-
       } catch (err) {
         console.error("File parsing error:", err);
-        setValidationErrors(["Error processing file. Ensure it’s a valid .xlsx file."]);
+        setValidationErrors([
+          "Error processing file. Ensure it’s a valid .xlsx file.",
+        ]);
         setFileProcessing({
-          status: 'error',
-          message: 'Failed to parse file format',
-          progress: 0
+          status: "error",
+          message: "Failed to parse file format",
+          progress: 0,
         });
       }
     };
@@ -116,9 +161,9 @@ const BulkUpload = () => {
     reader.onerror = () => {
       setValidationErrors(["Error reading file. Try uploading again."]);
       setFileProcessing({
-        status: 'error',
-        message: 'Failed to read file',
-        progress: 0
+        status: "error",
+        message: "Failed to read file",
+        progress: 0,
       });
     };
 
@@ -150,10 +195,10 @@ const BulkUpload = () => {
     setValidationErrors([]);
     setPreviewData([]);
     setShowPreview(false);
-    setFileProcessing({ status: 'idle', message: '', progress: 0 });
+    setFileProcessing({ status: "idle", message: "", progress: 0 });
 
     // Validate file type
-    const ext = file.name.toLowerCase().endsWith('.xlsx') ? 'xlsx'   : null;
+    const ext = file.name.toLowerCase().endsWith(".xlsx") ? "xlsx" : null;
     if (!ext) {
       setValidationErrors(["Please upload a valid Excel (.xlsx) file."]);
       return;
@@ -161,7 +206,9 @@ const BulkUpload = () => {
 
     // Validate size
     if (file.size > 10 * 1024 * 1024) {
-      setValidationErrors(["File size must not exceed 10MB. Compress or split your file."]);
+      setValidationErrors([
+        "File size must not exceed 10MB. Compress or split your file.",
+      ]);
       return;
     }
 
@@ -170,16 +217,31 @@ const BulkUpload = () => {
   };
 
   const handleUpload = async () => {
-    if (!uploadedFile) return;
+    if (!uploadedFile){
+       setToastMessage({
+        message: "Please select the file to upload",
+        variant: "danger",
+      });
+      return;
+      
+    };
+    if (!selectedTerm) {
+      setToastMessage({
+        message: "Please select the semester",
+        variant: "danger",
+      });
+      return;
+    }
 
     setFileProcessing({
-      status: 'uploading',
-      message: 'Uploading to server...',
-      progress: 0
+      status: "uploading",
+      message: "Uploading to server...",
+      progress: 0,
     });
 
     const formData = new FormData();
     formData.append("myFile", uploadedFile);
+    formData.append("selectedSemester", selectedTerm);
 
     try {
       const resp = await axios.post("/api/uploads/", formData, {
@@ -188,44 +250,44 @@ const BulkUpload = () => {
         },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / (progressEvent.total || 1)
+            (progressEvent.loaded * 100) / (progressEvent.total || 1),
           );
-          setFileProcessing(prev => ({
+          setFileProcessing((prev) => ({
             ...prev,
-            progress: percentCompleted
+            progress: percentCompleted,
           }));
         },
       });
 
       if (resp.status === 200) {
         setFileProcessing({
-          status: 'success',
-          message: 'Upload completed successfully!',
-          progress: 100
+          status: "success",
+          message: "Upload completed successfully!",
+          progress: 100,
         });
         setToastMessage({
           message: "File uploaded successfully!",
-          variant: "success"
+          variant: "success",
         });
         // Auto-hide preview after successful upload
         setTimeout(() => setShowPreview(false), 1500);
       } else {
-        throw new Error('Upload failed');
+        throw new Error("Upload failed");
       }
     } catch (error) {
       console.error("Error uploading file:", error);
       setFileProcessing({
-        status: 'error',
-        message: 'Upload failed. Please check your connection and try again.',
-        progress: 0
+        status: "error",
+        message: "Upload failed. Please check your connection and try again.",
+        progress: 0,
       });
       setValidationErrors([
         "Upload failed. Please ensure you're connected to the internet and try again.",
-        "If the issue persists, contact support."
+        "If the issue persists, contact support.",
       ]);
       setToastMessage({
         message: "Upload failed. Please try again.",
-        variant: "danger"
+        variant: "danger",
       });
     }
   };
@@ -236,35 +298,35 @@ const BulkUpload = () => {
     setValidationErrors([]);
     setShowPreview(false);
     setFileProcessing({
-      status: 'idle',
-      message: '',
-      progress: 0
+      status: "idle",
+      message: "",
+      progress: 0,
     });
   };
 
   const toggleSelection = (id: number) => {
     setPreviewData((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, selected: !item.selected } : item
-      )
+        item.id === id ? { ...item, selected: !item.selected } : item,
+      ),
     );
   };
 
   const toggleAllSelection = () => {
-    const allSelected = previewData.every(item => item.selected);
-    setPreviewData(prev =>
-      prev.map(item => ({ ...item, selected: !allSelected }))
+    const allSelected = previewData.every((item) => item.selected);
+    setPreviewData((prev) =>
+      prev.map((item) => ({ ...item, selected: !allSelected })),
     );
   };
 
   const getStatusIcon = () => {
     switch (fileProcessing.status) {
-      case 'processing':
-      case 'uploading':
+      case "processing":
+      case "uploading":
         return <Loader2 className="w-5 h-5 animate-spin" />;
-      case 'success':
+      case "success":
         return <CheckCircle2 className="w-5 h-5 text-green-500" />;
-      case 'error':
+      case "error":
         return <AlertCircle className="w-5 h-5 text-red-500" />;
       default:
         return <File className="w-5 h-5 text-muted-foreground" />;
@@ -274,40 +336,64 @@ const BulkUpload = () => {
   // Memoize headers for performance
   const headers = useMemo(() => {
     return previewData.length > 0
-      ? Object.keys(previewData[0]).filter(key => key !== 'id' && key !== 'selected')
+      ? Object.keys(previewData[0]).filter(
+          (key) => key !== "id" && key !== "selected",
+        )
       : [];
   }, [previewData]);
 
   // Count selected rows
-  const selectedCount = useMemo(() => 
-    previewData.filter(item => item.selected).length, 
-  [previewData]);
+  const selectedCount = useMemo(
+    () => previewData.filter((item) => item.selected).length,
+    [previewData],
+  );
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-10 space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">Bulk Upload</h1>
+        <div className="mb-10 space-y-2 flex justify-between items-center flex-wrap">
+         <div> <h1 className="text-3xl font-bold text-foreground">Bulk Upload</h1>
           <p className="text-lg text-muted-foreground max-w-3xl">
-            Upload Excel (.xlsx) file to import large datasets quickly. 
-            Maximum file size: <strong>10MB</strong>. Use our template for best results.
-          </p>
-          
+            Upload Excel (.xlsx) file to import large datasets quickly. Maximum
+            file size: <strong>10MB</strong>. Use our template for best results.
+          </p></div>
+          <div className="flex flex-col items-center justify-center">
+            <h1>Select Semester</h1>
+            <Select
+              value={selectedTerm}
+              disabled={terms.length === 0}
+              onValueChange={(value) => {
+                setSelectedTerm(value);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={"Select Semester"} />
+              </SelectTrigger>
+              <SelectContent side="top">
+                {terms.map((term) => (
+                  <SelectItem key={term} value={`${term}`}>
+                    {term}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Template Link with Tooltip */}
           <div className="flex items-center gap-2 mt-4">
-            <a 
-              href="/sample.xlsx" 
-              download 
+            <a
+              href="/sample.xlsx"
+              download
               className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
               aria-label="Download sample template"
             >
               <Download className="w-4 h-4" />
               Download Sample Template
             </a>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-6 w-6 p-0"
               aria-label="Learn how to format your file"
             >
@@ -337,26 +423,34 @@ const BulkUpload = () => {
                 <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
                   <Upload className="w-10 h-10 text-muted-foreground" />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-foreground">Upload Your File</h3>
+                  <h3 className="text-xl font-semibold text-foreground">
+                    Upload Your File
+                  </h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
-                    Drag and drop your Excel (.xlsx) file here, or click below to browse.
+                    Drag and drop your Excel (.xlsx) file here, or click below
+                    to browse.
                   </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
                   <Button
-                    onClick={() => document.getElementById("file-input")?.click()}
+                    onClick={() =>
+                      document.getElementById("file-input")?.click()
+                    }
                     variant="default"
                     size="lg"
-                    disabled={fileProcessing.status === 'processing' || fileProcessing.status === 'uploading'}
+                    disabled={
+                      fileProcessing.status === "processing" ||
+                      fileProcessing.status === "uploading"
+                    }
                     className="flex-1 sm:flex-none"
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Choose File
                   </Button>
-                  
+
                   <Button
                     asChild
                     variant="outline"
@@ -371,7 +465,8 @@ const BulkUpload = () => {
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-4">
-                  Supported format: <strong>.xlsx</strong> • Max size: <strong>10MB</strong>
+                  Supported format: <strong>.xlsx</strong> • Max size:{" "}
+                  <strong>10MB</strong>
                 </p>
 
                 <input
@@ -401,27 +496,39 @@ const BulkUpload = () => {
                       {getStatusIcon()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate" title={uploadedFile.name}>
+                      <p
+                        className="font-medium truncate"
+                        title={uploadedFile.name}
+                      >
                         {uploadedFile.name}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB • {uploadedFile.lastModified ? new Date(uploadedFile.lastModified).toLocaleDateString() : ''}
+                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB •{" "}
+                        {uploadedFile.lastModified
+                          ? new Date(
+                              uploadedFile.lastModified,
+                            ).toLocaleDateString()
+                          : ""}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
-                    <Badge 
+                    <Badge
                       variant={
-                        fileProcessing.status === 'success' ? 'default' :
-                        fileProcessing.status === 'error' ? 'destructive' :
-                        'secondary'
+                        fileProcessing.status === "success"
+                          ? "default"
+                          : fileProcessing.status === "error"
+                            ? "destructive"
+                            : "secondary"
                       }
                       className="px-3 py-1 text-xs font-medium"
                     >
-                      {fileProcessing.status === 'uploading' ? 'Uploading...' : fileProcessing.status}
+                      {fileProcessing.status === "uploading"
+                        ? "Uploading..."
+                        : fileProcessing.status}
                     </Badge>
-                    
+
                     <Button
                       onClick={resetUpload}
                       variant="ghost"
@@ -440,22 +547,24 @@ const BulkUpload = () => {
                   </p>
                 )}
 
-                {(fileProcessing.status === 'processing' || fileProcessing.status === 'uploading') && (
+                {(fileProcessing.status === "processing" ||
+                  fileProcessing.status === "uploading") && (
                   <div className="space-y-2">
-                    <Progress 
-                      value={fileProcessing.progress} 
+                    <Progress
+                      value={fileProcessing.progress}
                       className="w-full h-2 bg-muted/30 rounded-full"
                       aria-label={`Progress: ${fileProcessing.progress}%`}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {fileProcessing.status === 'processing' 
-                        ? 'Analyzing and validating your data…' 
-                        : 'Uploading to server…'} ({fileProcessing.progress}%)
+                      {fileProcessing.status === "processing"
+                        ? "Analyzing and validating your data…"
+                        : "Uploading to server…"}{" "}
+                      ({fileProcessing.progress}%)
                     </p>
                   </div>
                 )}
 
-                {fileProcessing.status === 'success' && !showPreview && (
+                {fileProcessing.status === "success" && !showPreview && (
                   <div className="flex gap-3 pt-2">
                     <Button
                       onClick={() => setShowPreview(true)}
@@ -467,10 +576,9 @@ const BulkUpload = () => {
                     </Button>
                     <Button
                       onClick={handleUpload}
- 
                       className="flex-1 sm:flex-none"
                     >
-                      Upload to Server
+                      Upload
                     </Button>
                   </div>
                 )}
@@ -486,7 +594,9 @@ const BulkUpload = () => {
             <AlertDescription className="mt-1">
               <ul className="list-disc pl-5 space-y-1">
                 {validationErrors.map((error, index) => (
-                  <li key={index} className="text-sm">{error}</li>
+                  <li key={index} className="text-sm">
+                    {error}
+                  </li>
                 ))}
               </ul>
             </AlertDescription>
@@ -500,10 +610,11 @@ const BulkUpload = () => {
               <div>
                 <CardTitle>Data Preview</CardTitle>
                 <CardDescription>
-                  Showing first {previewData.length} of {previewData.length} total rows.
+                  Showing first {previewData.length} of {previewData.length}{" "}
+                  total rows.
                 </CardDescription>
               </div>
-              
+
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button
                   onClick={() => setShowPreview(false)}
@@ -515,31 +626,31 @@ const BulkUpload = () => {
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={fileProcessing.status === 'uploading'}
+                  disabled={fileProcessing.status === "uploading"}
                   className="flex-1 sm:flex-none"
                 >
-                  {fileProcessing.status === 'uploading' ? (
+                  {fileProcessing.status === "uploading" ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Uploading...
                     </>
                   ) : (
-                    'Upload Selected Rows'
+                    "Upload"
                   )}
                 </Button>
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-0">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-muted">
-                      <th className="text-left p-3 font-medium text-sm uppercase tracking-wide">Select</th>
+                       
                       {headers.map((header) => (
-                        <th 
-                          key={header} 
-                          scope="col" 
+                        <th
+                          key={header}
+                          scope="col"
                           className="text-left p-3 font-medium text-sm uppercase tracking-wide"
                         >
                           {header}
@@ -549,18 +660,19 @@ const BulkUpload = () => {
                   </thead>
                   <tbody>
                     {previewData.map((row) => (
-                      <tr 
-                        key={row.id} 
+                      <tr
+                        key={row.id}
                         className="border-b border-muted/20 hover:bg-muted/10 transition-colors"
                       >
-                         
                         {headers.map((key) => (
-                          <td 
-                            key={key} 
+                          <td
+                            key={key}
                             className="p-3 text-sm break-words max-w-xs"
-                            title={row[key]?.toString() || ''}
+                            title={row[key]?.toString() || ""}
                           >
-                            {row[key]?.toString() || <span className="text-muted-foreground">—</span>}
+                            {row[key]?.toString() || (
+                              <span className="text-muted-foreground">—</span>
+                            )}
                           </td>
                         ))}
                       </tr>
@@ -568,39 +680,44 @@ const BulkUpload = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm text-muted-foreground">
-                <p>
-                  <strong>{selectedCount}</strong> of <strong>{previewData.length}</strong> rows selected
-                </p>
-                <Button
+                {/* <p>
+                  <strong>{selectedCount}</strong> of{" "}
+                  <strong>{previewData.length}</strong> rows selected
+                </p> */}
+                {/* <Button
                   onClick={toggleAllSelection}
                   variant="ghost"
                   size="sm"
                   className="text-primary hover:text-primary/80"
                 >
-                  {previewData.every(item => item.selected) ? 'Deselect All' : 'Select All'}
-                </Button>
+                  {previewData.every((item) => item.selected)
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button> */}
               </div>
-              
+{/* 
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
                 <div className="flex items-start gap-2">
                   <Star className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-blue-800">
-                    <strong>Tip:</strong> You can uncheck rows you want to skip during upload. Only selected rows will be imported.
+                    <strong>Tip:</strong> You can uncheck rows you want to skip
+                    during upload. Only selected rows will be imported.
                   </p>
                 </div>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         )}
 
         {/* Success Confirmation (when upload completes) */}
-        {fileProcessing.status === 'success' && showPreview && (
+        {fileProcessing.status === "success" && showPreview && (
           <Alert className="mb-8" variant="default">
             <Check className="w-4 h-4" />
             <AlertDescription>
-              Your data is ready to upload. Click “Upload Selected Rows” to confirm.
+              Your data is ready to upload. Click “Upload Selected Rows” to
+              confirm.
             </AlertDescription>
           </Alert>
         )}
@@ -609,9 +726,12 @@ const BulkUpload = () => {
         {!uploadedFile && !validationErrors.length && (
           <div className="bg-muted/50 rounded-xl p-8 text-center my-8">
             <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">No file uploaded yet</h3>
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">
+              No file uploaded yet
+            </h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Begin by dragging your file into the upload area or clicking “Choose File” above.
+              Begin by dragging your file into the upload area or clicking
+              “Choose File” above.
             </p>
           </div>
         )}

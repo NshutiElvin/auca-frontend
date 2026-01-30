@@ -42,7 +42,11 @@ import BulkUpload from "./pages/uploads";
 import StudentExamScannerPage from "./pages/StudentScannerPage";
 import Profile from "./components/Profile";
 import { InstructorAllocationsPage } from "./pages/InstructorAllocations";
- import{ UsersPage} from "./pages/usersPage";
+import { UsersPage } from "./pages/usersPage";
+import { ClaimDetailPage } from "./pages/ClaimDetailPage";
+import { AdminClaimsPage } from "./pages/AdminClaimsPage";
+import { StudentClaims } from "./pages/StudentClaims";
+import { NewClaimPage } from "./pages/newClaim";
 
 const App = () => {
   return (
@@ -53,7 +57,6 @@ const App = () => {
           <AuthProvider>
             <ExamscheduleProvider>
               <NotificationProvider>
-                
                 <LocationProvider>
                   <SocketProvider>
                     <ServerLoader />
@@ -62,7 +65,10 @@ const App = () => {
                       <Route path="/" element={<HomePage />} />
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/logout" element={<Logout />} />
-                      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                      <Route
+                        path="/unauthorized"
+                        element={<UnauthorizedPage />}
+                      />
                       <Route path="*" element={<h1>Not Found</h1>} />
 
                       {/* Protected Routes */}
@@ -70,63 +76,153 @@ const App = () => {
                         <Route element={<LocationLayout />}>
                           <Route element={<LoginRequiredLayout />}>
                             <Route element={<NotificationLayout />}>
-
                               {/* Admin Routes */}
                               <Route element={<AdminRequiredLayout />}>
                                 <Route path="/admin" element={<AdminPage />}>
                                   <Route index element={<DashboardPage />} />
-                                  <Route path="dashboard" element={<DashboardPage />} />
-                                  <Route path="courses" element={<CoursesPage />} />
-                                  <Route path="departments" element={<DepartmentsPage />} />
-                                  <Route path="allocations" element={<AllocationsPage />} />
-                                  <Route path="users" element={<UsersPage/>} />
+                                  <Route
+                                    path="dashboard"
+                                    element={<DashboardPage />}
+                                  />
+                                  <Route
+                                    path="courses"
+                                    element={<CoursesPage />}
+                                  />
+                                  <Route
+                                    path="departments"
+                                    element={<DepartmentsPage />}
+                                  />
+                                  <Route
+                                    path="allocations"
+                                    element={<AllocationsPage />}
+                                  />
+                                  <Route path="users" element={<UsersPage />} />
+                                  <Route
+                                    path="claims"
+                                    element={<AdminClaimsPage />}
+                                  />
+                                  <Route
+                                    path="claims/:id"
+                                    element={<ClaimDetailPage />}
+                                  />
 
                                   <Route element={<ExamsScheduleLayout />}>
                                     <Route index element={<SchedulesPage />} />
-                                    <Route path="schedules" element={<SchedulesPage />} />
-                                    <Route path="manual" element={<ManualTimeTable />} />
+                                    <Route
+                                      path="schedules"
+                                      element={<SchedulesPage />}
+                                    />
+                                    <Route
+                                      path="manual"
+                                      element={<ManualTimeTable />}
+                                    />
                                   </Route>
 
                                   <Route path="exams" element={<ExamsPage />} />
-                                  <Route path="occupancies" element={<RoomsOccupancies />} />
-                                  <Route path="timetables" element={<TimeTablesPage />} />
-                                  <Route path="uploads" element={<BulkUpload />} />
-                                  <Route path="semesters" element={<SemestersPage />} />
-                                  <Route path="admins" element={<AdminsPage />} />
-                                  <Route path="students" element={<StudentsPage />} />
+                                  <Route
+                                    path="occupancies"
+                                    element={<RoomsOccupancies />}
+                                  />
+                                  <Route
+                                    path="timetables"
+                                    element={<TimeTablesPage />}
+                                  />
+                                  <Route
+                                    path="uploads"
+                                    element={<BulkUpload />}
+                                  />
+                                  <Route
+                                    path="semesters"
+                                    element={<SemestersPage />}
+                                  />
+                                  <Route
+                                    path="admins"
+                                    element={<AdminsPage />}
+                                  />
+                                  <Route
+                                    path="students"
+                                    element={<StudentsPage />}
+                                  />
                                   <Route path="profile" element={<Profile />} />
                                 </Route>
                               </Route>
 
                               {/* Student Routes */}
                               <Route element={<StudentRequiredLayout />}>
-                                <Route path="/student" element={<StudentPortal />}>
+                                <Route
+                                  path="/student"
+                                  element={<StudentPortal />}
+                                >
                                   <Route index element={<EnrollmentsPage />} />
-                                  <Route path="enrollments" element={<EnrollmentsPage />} />
-                                  <Route path="exam-verification" element={<StudentExamScannerPage />} />
-                                  <Route path="exams" element={<StudentExamsPage />} />
+                                  <Route
+                                    path="enrollments"
+                                    element={<EnrollmentsPage />}
+                                  />
+                                  <Route
+                                    path="exam-verification"
+                                    element={<StudentExamScannerPage />}
+                                  />
+                                  <Route
+                                    path="exams"
+                                    element={<StudentExamsPage />}
+                                  />
                                   <Route path="profile" element={<Profile />} />
-                                  <Route path="courses" element={<CoursesPage />} />
+                                  <Route
+                                    path="courses"
+                                    element={<CoursesPage />}
+                                  />
+                                  <Route
+                                    path="claims"
+                                    element={<StudentClaims />}
+                                  />
+                                  <Route
+                                    path="claims/new"
+                                    element={<NewClaimPage />}
+                                  />
+                                  <Route
+                                    path="claims/:id"
+                                    element={<ClaimDetailPage />}
+                                  />
                                   <Route element={<ExamsScheduleLayout />}>
                                     <Route index element={<SchedulesPage />} />
-                                    <Route path="schedules" element={<SchedulesPage />} />
-                                    <Route path="manual" element={<ManualTimeTable />} />
+                                    <Route
+                                      path="schedules"
+                                      element={<SchedulesPage />}
+                                    />
+                                    <Route
+                                      path="manual"
+                                      element={<ManualTimeTable />}
+                                    />
                                   </Route>
-                                  <Route path="all-exams" element={<ExamsPage />} />
+                                  <Route
+                                    path="all-exams"
+                                    element={<ExamsPage />}
+                                  />
                                 </Route>
                               </Route>
 
                               {/* Instructor Routes */}
                               <Route element={<InstructorRequiredLayout />}>
-                                <Route path="/instructor" element={<InstructorPortal />}>
-                                  <Route index element={<InstructorExamScannerPage />} />
-                                  <Route path="exam-verification" element={<InstructorExamScannerPage />} />
-                                  <Route path="allocations" element={<InstructorAllocationsPage />} />
+                                <Route
+                                  path="/instructor"
+                                  element={<InstructorPortal />}
+                                >
+                                  <Route
+                                    index
+                                    element={<InstructorExamScannerPage />}
+                                  />
+                                  <Route
+                                    path="exam-verification"
+                                    element={<InstructorExamScannerPage />}
+                                  />
+                                  <Route
+                                    path="allocations"
+                                    element={<InstructorAllocationsPage />}
+                                  />
                                   <Route path="exams" element={<ExamsPage />} />
                                   <Route path="profile" element={<Profile />} />
                                 </Route>
                               </Route>
-
                             </Route>
                           </Route>
                         </Route>

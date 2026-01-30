@@ -21,6 +21,7 @@ import {
   Calendar,
   CalendarClock,
   Camera,
+  FileQuestion,
   LayoutDashboard,
   ListCheck,
   LogOut,
@@ -124,6 +125,12 @@ export default function StudentMainPage() {
                 },
               ]
             : []),
+
+          {
+            title: "Claims",
+            url: "claims",
+            icon: FileQuestion,
+          },
         ],
       },
       {
@@ -159,7 +166,7 @@ export default function StudentMainPage() {
       await axios.post("/api/notifications/mark_all_as_read/");
       setUnreadCount(0);
       setNotifications(
-        notifications.map((n: NotificationData) => ({ ...n, is_read: true }))
+        notifications.map((n: NotificationData) => ({ ...n, is_read: true })),
       );
     } catch (error) {
       console.error("Error marking notifications as read:", error);
