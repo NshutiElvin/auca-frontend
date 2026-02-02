@@ -41,6 +41,7 @@ import { DialogFooter, DialogHeader } from "../../../ui/dialog";
 import { Label } from "../../../ui/label";
 import { Input } from "../../../ui/input";
 import { getTime } from "date-fns";
+import ConstraintsConfig from "../../../Config";
 
 // Animation settings for Framer Motion
 const animationConfig = {
@@ -78,6 +79,8 @@ export default function SchedulerViewFilteration({
     "configuration" | "confirmation" | null
   >(null);
 
+
+
   const getTimetables = async () => {
     try {
       const resp = await axios.get("/api/schedules/timetables/");
@@ -98,6 +101,7 @@ export default function SchedulerViewFilteration({
     term: "",
     academicYear: String(new Date().getFullYear()),
     location: "",
+    constraints: {},
   });
 
   const [defaultConfigurations, setDefaultConfigurations] = useState({
@@ -128,6 +132,7 @@ export default function SchedulerViewFilteration({
           term: data.semesters[0].id.toString(),
           academicYear: String(new Date().getFullYear()),
           location: data.locations[0].id.toString(),
+          constraints: {},
         });
       }
     } catch (error) {
@@ -295,7 +300,7 @@ export default function SchedulerViewFilteration({
 
   function handleCreateNewTimetable(configuration: any) {
     setOpen(
-      <CustomModal contentClass="max-w-md min-w-full min-h-[95vh] mx-4 sm:mx-auto rounded-2xl p-3 shadow-lg">
+      <CustomModal contentClass="max-w-md min-w-full mx-4 sm:mx-auto rounded-2xl p-3 shadow-lg">
         <CreateNewTimeTableModal configuration={configuration} />
       </CustomModal>
     );
@@ -558,18 +563,19 @@ export default function SchedulerViewFilteration({
 
       {/* Configuration Dialog */}
       {dialogType === "configuration" && (
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[70vw] ">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-xl font-semibold text-center">
               Timetable Configuration
             </DialogTitle>
             <DialogDescription className="text-center text-muted-foreground">
+              
               Enter the information for the desired timetable to generate.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 py-4">
-            <div className="space-y-4">
+          <div className="space-y-6 py-4 max-h-[90vh] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="academic_year" className="text-sm font-medium">
                   Academic Year
@@ -615,8 +621,18 @@ export default function SchedulerViewFilteration({
                   ))}
                 </select>
               </div>
+
+           
             </div>
+             <ConstraintsConfig onConfigChange={(config) => {
+                setConfiguration({
+                  ...configuration,
+                  constraints: config
+                });
+              }}  />
           </div>
+
+            
 
           <DialogFooter className="space-x-2">
             <Button
