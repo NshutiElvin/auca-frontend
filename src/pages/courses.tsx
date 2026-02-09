@@ -263,7 +263,7 @@ export function CoursesPage() {
           department: data.department.name,
           enrollments: data.students_enrolled,
           semester: data.semester.name,
-          campus: data.department.location.name,
+          campus: data.department?.location?.name || "Unknown Campus",
         }));
 
         setData(coursesData);
