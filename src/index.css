@@ -2,9 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+
+ 
 @font-face {
-  font-family: "Bookman Old Style";
-  /* src: url("/fonts/Syne-VariableFont_wght.ttf"); */
+  font-family: "Oswald";
+  src: url('https://fonts.googleapis.com');
+ 
 }
 
 @layer base {
