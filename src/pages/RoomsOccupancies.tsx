@@ -485,6 +485,7 @@ const OccupanciesPage = () => {
           date: occupancy.date,
           start_time: occupancy.start_time,
           end_time: occupancy.end_time,
+          
           courses: [],
           total_students: 0,
           room_capacity: occupancy.room_capacity,
@@ -496,7 +497,7 @@ const OccupanciesPage = () => {
         course_title: occupancy.course_title,
         course_semester: occupancy.course_semester,
         course_department: occupancy.course_department,
-        course_group: occupancy.course_group,
+       course_group: occupancy.course_group,
         exam_id: occupancy.exam_id,
         student_count: occupancy.student_count,
       });
@@ -798,7 +799,7 @@ const OccupanciesPage = () => {
                 >
                   {occupancies.length === 1
                     ? occupancies[0].course_code
-                    : `${occupancies.length} Courses`}
+                    : `${occupancies.length} Course groups`}
                 </div>
                 <div
                   className={`text-xs truncate flex items-center gap-1 ${
