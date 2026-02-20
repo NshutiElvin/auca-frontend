@@ -181,7 +181,7 @@ const ConstraintsConfig = ({ onConfigChange }: ConfigProps) => {
         </div>
 
         <Tabs defaultValue="time" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 h-auto gap-1 bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-3 h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger value="time" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Clock className="w-4 h-4" />
               <span className="hidden sm:inline">Time</span>
