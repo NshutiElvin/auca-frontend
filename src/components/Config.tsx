@@ -194,10 +194,10 @@ const ConstraintsConfig = ({ onConfigChange }: ConfigProps) => {
               <Building className="w-4 h-4" />
               <span className="hidden sm:inline">Rooms</span>
             </TabsTrigger>
-            <TabsTrigger value="groups" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            {/* <TabsTrigger value="groups" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Groups</span>
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           {/* ── TIME TAB ───────────────────────────────────────────────────── */}
