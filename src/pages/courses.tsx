@@ -570,7 +570,7 @@ export function CoursesPage() {
                             <DialogTitle>Manage Groups for {row.original.title}</DialogTitle>
                           </DialogHeader>
                           {/* display course groups*/}
-                          <div>
+                          <div className="mt-4">
                             {isGettingGroups ? (
                               <div className="flex items-center justify-center h-32">
                                 <span>Loading groups...</span>
@@ -578,12 +578,17 @@ export function CoursesPage() {
                             ) : null}
                             {selectedCourseGroups.length > 0 ? (
                               <ul className="space-y-2">
-                                {selectedCourseGroups.map((group) => (
+                                {selectedCourseGroups.map((group, idx) => (
                                   <li
                                     key={group.id}
                                     className="p-4 border rounded-md"
                                   >
                                     <div className="flex items-center justify-between">
+                                      <div>
+                                        <span className="text-sm text-muted-foreground">
+                                        Group #{idx + 1}
+                                        </span>
+                                      </div>
                                       <div>
                                         <h3 className="text-lg font-semibold">
                                           {group.group_name}
