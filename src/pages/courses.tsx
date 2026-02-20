@@ -291,6 +291,9 @@ export function CoursesPage() {
       );
     } catch {
       console.log("Error of updating time");
+    }finally {
+      setIsTimeUpdating(false);
+      getCourseGroups(selectedCourseId);
     }
   };
   const fetchCourses = () => {
@@ -338,6 +341,10 @@ export function CoursesPage() {
   React.useEffect(() => {
     if (isGroupsDialogOpen && selectedCourseId) {
       getCourseGroups(selectedCourseId);
+    }else{
+      setSelectedCourseGroups([]);
+      setSelectedCourseId(null);
+      setSelectedGroupId(null);
     }
   }, [isGroupsDialogOpen]);
 
