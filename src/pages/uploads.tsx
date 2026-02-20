@@ -40,10 +40,16 @@ import {
   SelectValue,
 } from "../components/ui/select";
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 interface FileProcessingState {
-  status: "idle" | "uploading" | "processing" | "success" | "error";
+  status: "idle" | "uploading" | "streaming" | "success" | "error";
   message: string;
   progress: number;
+}
+
+interface ImportStats {
+  [key: string]: number;
 }
 
 interface PreviewDataItem {
@@ -52,10 +58,36 @@ interface PreviewDataItem {
   selected?: boolean;
 }
 
+// ── SSE event types sent by the Django backend ────────────────────────────────
+interface SSEProgressEvent {
+  type: "progress";
+  step: number;
+  total_steps: number;
+  percent: number;
+  message: string;
+  stats?: ImportStats;
+}
+
+interface SSEDoneEvent {
+  type: "done";
+  message: string;
+  stats: ImportStats;
+  warnings: string[];
+}
+
+interface SSEErrorEvent {
+  type: "error";
+  message: string;
+}
+
+type SSEEvent = SSEProgressEvent | SSEDoneEvent | SSEErrorEvent;
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 const BulkUpload = () => {
-  const [dragActive, setDragActive] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [previewData, setPreviewData] = useState<PreviewDataItem[]>([]);
+  const [dragActive, setDragActive]       = useState(false);
+  const [uploadedFile, setUploadedFile]   = useState<File | null>(null);
+  const [previewData, setPreviewData]     = useState<PreviewDataItem[]>([]);
   const [fileProcessing, setFileProcessing] = useState<FileProcessingState>({
     status: "idle",
     message: "",
@@ -63,152 +95,114 @@ const BulkUpload = () => {
   });
   const { setToastMessage } = useToast();
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  const axios = useUserAxios();
-  //state for keeping the terms from dataset
-  const [terms, setTerms] = useState<string[]>([]);
-  const [selectedTerm, setSelectedTerm] = useState<string>("");
+  const [showPreview, setShowPreview]     = useState(false);
+  const [terms, setTerms]                 = useState<string[]>([]);
+  const [selectedTerm, setSelectedTerm]   = useState<string>("");
+  const axios = useUserAxios()
 
-  // Debounce file processing to avoid multiple triggers on rapid drag/drop
+  // Live import state (populated during SSE stream)
+  const [importStats,    setImportStats]    = useState<ImportStats | null>(null);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
+
+
+
+  // ── File reading ────────────────────────────────────────────────────────────
+
   const processFileDebounced = useCallback((file: File) => {
-    setFileProcessing((prev) => ({
-      ...prev,
-      status: "processing",
-      message: "Reading file...",
-      progress: 25,
-    }));
+    setFileProcessing({ status: "uploading", message: "Reading file...", progress: 25 });
 
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        setFileProcessing((prev) => ({
-          ...prev,
-          message: "Processing data...",
-          progress: 50,
-        }));
+        setFileProcessing((prev) => ({ ...prev, message: "Processing data...", progress: 50 }));
 
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const data     = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-        setFileProcessing((prev) => ({
-          ...prev,
-          message: "Validating data...",
-          progress: 75,
-        }));
+        setFileProcessing((prev) => ({ ...prev, message: "Validating data...", progress: 75 }));
 
         setTimeout(() => {
           if (jsonData.length < 2) {
-            setValidationErrors([
-              "File appears to be empty or has no data rows. Please check your file.",
-            ]);
-            setFileProcessing({
-              status: "error",
-              message: "Validation failed: No data found",
-              progress: 0,
-            });
+            setValidationErrors(["File appears to be empty or has no data rows."]);
+            setFileProcessing({ status: "error", message: "Validation failed: No data found", progress: 0 });
             return;
           }
 
           const headers = jsonData[0] as string[];
-          const rows = jsonData.slice(1) as any[][];
+          const rows    = jsonData.slice(1) as any[][];
 
-          // Only preview first 10 rows for performance
           const preview = rows.slice(0, 10).map((row, index) => {
             const item: PreviewDataItem = { id: index, selected: true };
-            headers.forEach((header, headerIndex) => {
-              item[header] =
-                row[headerIndex] !== undefined ? row[headerIndex] : "";
-            });
+            headers.forEach((header, i) => { item[header] = row[i] !== undefined ? row[i] : ""; });
             return item;
           });
 
           setPreviewData(preview);
-          // extract unique terms from preview (all non-empty cell values across headers)
+
+          // Extract unique TERM values
           const uniqueTerms = new Set<string>();
           preview.forEach((item) => {
-            headers.forEach((header) => {
-              const val = item["TERM"];
-              if (val !== undefined && val !== null) {
-                const s = String(val).trim();
-                if (s.length) uniqueTerms.add(s);
-              }
-            });
+            const val = item["TERM"];
+            if (val !== undefined && val !== null) {
+              const s = String(val).trim();
+              if (s.length) uniqueTerms.add(s);
+            }
           });
           setTerms(Array.from(uniqueTerms));
+
           setFileProcessing({
             status: "success",
             message: `Successfully processed ${rows.length} rows`,
             progress: 100,
           });
           setShowPreview(true);
-        }, 600); // Smooth UX delay
+        }, 600);
       } catch (err) {
         console.error("File parsing error:", err);
-        setValidationErrors([
-          "Error processing file. Ensure it’s a valid .xlsx file.",
-        ]);
-        setFileProcessing({
-          status: "error",
-          message: "Failed to parse file format",
-          progress: 0,
-        });
+        setValidationErrors(["Error processing file. Ensure it's a valid .xlsx file."]);
+        setFileProcessing({ status: "error", message: "Failed to parse file format", progress: 0 });
       }
     };
 
     reader.onerror = () => {
       setValidationErrors(["Error reading file. Try uploading again."]);
-      setFileProcessing({
-        status: "error",
-        message: "Failed to read file",
-        progress: 0,
-      });
+      setFileProcessing({ status: "error", message: "Failed to read file", progress: 0 });
     };
 
     reader.readAsArrayBuffer(file);
   }, []);
 
+  // ── Drag & drop ─────────────────────────────────────────────────────────────
+
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    setDragActive(e.type === "dragenter" || e.type === "dragover");
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
+    if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]);
   }, []);
 
   const handleFile = (file: File) => {
-    // Reset previous state
     setValidationErrors([]);
     setPreviewData([]);
     setShowPreview(false);
+    setImportStats(null);
+    setImportWarnings([]);
     setFileProcessing({ status: "idle", message: "", progress: 0 });
 
-    // Validate file type
-    const ext = file.name.toLowerCase().endsWith(".xlsx") ? "xlsx" : null;
-    if (!ext) {
+    if (!file.name.toLowerCase().endsWith(".xlsx")) {
       setValidationErrors(["Please upload a valid Excel (.xlsx) file."]);
       return;
     }
-
-    // Validate size
     if (file.size > 10 * 1024 * 1024) {
-      setValidationErrors([
-        "File size must not exceed 10MB. Compress or split your file.",
-      ]);
+      setValidationErrors(["File size must not exceed 10MB."]);
       return;
     }
 
@@ -216,113 +210,129 @@ const BulkUpload = () => {
     processFileDebounced(file);
   };
 
+  // ── SSE Upload (via axios) ───────────────────────────────────────────────────
+  // axios supports responseType:'stream' in Node but NOT in the browser.
+  // In the browser we use responseType:'text' with onDownloadProgress — axios
+  // fires onDownloadProgress each time a new chunk arrives, giving us the
+  // accumulated response text so far. We track what we've already parsed with
+  // an offset and only process the new bytes each time.
+
   const handleUpload = async () => {
-    if (!uploadedFile){
-       setToastMessage({
-        message: "Please select the file to upload",
-        variant: "danger",
-      });
+    if (!uploadedFile) {
+      setToastMessage({ message: "Please select a file to upload", variant: "danger" });
       return;
-      
-    };
+    }
     if (!selectedTerm) {
-      setToastMessage({
-        message: "Please select the semester",
-        variant: "danger",
-      });
+      setToastMessage({ message: "Please select the semester", variant: "danger" });
       return;
     }
 
-    setFileProcessing({
-      status: "uploading",
-      message: "Uploading to server...",
-      progress: 0,
-    });
+    setImportStats(null);
+    setImportWarnings([]);
+    setFileProcessing({ status: "streaming", message: "Connecting to server...", progress: 0 });
 
     const formData = new FormData();
     formData.append("myFile", uploadedFile);
     formData.append("selectedSemester", selectedTerm);
 
+    // Tracks how many characters of the response we have already parsed
+    let parsedOffset = 0;
+
+    const processChunk = (chunk: string) => {
+      // SSE events are separated by double newlines
+      const parts = chunk.split("\n\n");
+      // Last element may be an incomplete event — leave it for next chunk
+      const complete = chunk.endsWith("\n\n") ? parts : parts.slice(0, -1);
+
+      for (const part of complete) {
+        const line = part.trim();
+        if (!line.startsWith("data:")) continue;
+
+        let event: SSEEvent;
+        try {
+          event = JSON.parse(line.replace(/^data:\s*/, "")) as SSEEvent;
+        } catch {
+          continue; // malformed chunk — skip
+        }
+
+        if (event.type === "progress") {
+          setFileProcessing({
+            status:   "streaming",
+            message:  event.message,
+            progress: event.percent,
+          });
+          if (event.stats) setImportStats(event.stats);
+        }
+
+        if (event.type === "done") {
+          setFileProcessing({ status: "success", message: event.message, progress: 100 });
+          setImportStats(event.stats);
+          setImportWarnings(event.warnings ?? []);
+          setToastMessage({ message: "Import completed successfully!", variant: "success" });
+          setTimeout(() => setShowPreview(false), 1500);
+        }
+
+        if (event.type === "error") {
+          setFileProcessing({
+            status:   "error",
+            message:  event.message,
+            progress: 0,
+          });
+          setValidationErrors([event.message, "If the issue persists, contact support."]);
+          setToastMessage({ message: "Upload failed. Please try again.", variant: "danger" });
+        }
+      }
+    };
+
     try {
-      const resp = await axios.post("/api/uploads/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / (progressEvent.total || 1),
-          );
-          setFileProcessing((prev) => ({
-            ...prev,
-            progress: percentCompleted,
-          }));
+      await axios.post("/api/uploads/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        // responseType 'text' keeps the response as a growing string in the browser
+        responseType: "text",
+        // onDownloadProgress fires every time a new chunk arrives
+        onDownloadProgress: (progressEvent) => {
+          const fullText: string = (progressEvent.event?.target as XMLHttpRequest)?.responseText ?? "";
+          // Only process the newly arrived bytes
+          const newChunk = fullText.slice(parsedOffset);
+          if (newChunk) {
+            parsedOffset = fullText.length;
+            processChunk(newChunk);
+          }
         },
       });
-
-      if (resp.status === 200) {
-        setFileProcessing({
-          status: "success",
-          message: "Upload completed successfully!",
-          progress: 100,
-        });
-        setToastMessage({
-          message: "File uploaded successfully!",
-          variant: "success",
-        });
-        // Auto-hide preview after successful upload
-        setTimeout(() => setShowPreview(false), 1500);
-      } else {
-        throw new Error("Upload failed");
-      }
-    } catch (error) {
-      console.error("Error uploading file:", error);
+    } catch (err: any) {
+      console.error("Upload error:", err);
       setFileProcessing({
-        status: "error",
-        message: "Upload failed. Please check your connection and try again.",
+        status:   "error",
+        message:  "Upload failed. Please check your connection and try again.",
         progress: 0,
       });
       setValidationErrors([
-        "Upload failed. Please ensure you're connected to the internet and try again.",
+        err.message || "Upload failed. Please try again.",
         "If the issue persists, contact support.",
       ]);
-      setToastMessage({
-        message: "Upload failed. Please try again.",
-        variant: "danger",
-      });
+      setToastMessage({ message: "Upload failed. Please try again.", variant: "danger" });
     }
   };
+
+  // ── Reset ────────────────────────────────────────────────────────────────────
 
   const resetUpload = () => {
     setUploadedFile(null);
     setPreviewData([]);
     setValidationErrors([]);
     setShowPreview(false);
-    setFileProcessing({
-      status: "idle",
-      message: "",
-      progress: 0,
-    });
+    setImportStats(null);
+    setImportWarnings([]);
+    setFileProcessing({ status: "idle", message: "", progress: 0 });
   };
 
-  const toggleSelection = (id: number) => {
-    setPreviewData((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, selected: !item.selected } : item,
-      ),
-    );
-  };
-
-  const toggleAllSelection = () => {
-    const allSelected = previewData.every((item) => item.selected);
-    setPreviewData((prev) =>
-      prev.map((item) => ({ ...item, selected: !allSelected })),
-    );
-  };
+  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   const getStatusIcon = () => {
     switch (fileProcessing.status) {
-      case "processing":
       case "uploading":
+      case "streaming":
         return <Loader2 className="w-5 h-5 animate-spin" />;
       case "success":
         return <CheckCircle2 className="w-5 h-5 text-green-500" />;
@@ -333,54 +343,49 @@ const BulkUpload = () => {
     }
   };
 
-  // Memoize headers for performance
-  const headers = useMemo(() => {
-    return previewData.length > 0
-      ? Object.keys(previewData[0]).filter(
-          (key) => key !== "id" && key !== "selected",
-        )
-      : [];
-  }, [previewData]);
+  const isRunning = fileProcessing.status === "uploading" || fileProcessing.status === "streaming";
 
-  // Count selected rows
-  const selectedCount = useMemo(
-    () => previewData.filter((item) => item.selected).length,
+  const headers = useMemo(
+    () => previewData.length > 0
+      ? Object.keys(previewData[0]).filter((k) => k !== "id" && k !== "selected")
+      : [],
     [previewData],
   );
+
+  // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-6 py-8">
+
         {/* Header */}
         <div className="mb-10 space-y-2 flex justify-between items-center flex-wrap">
-         <div> <h1 className="text-3xl font-bold text-foreground">Bulk Upload</h1>
-          <p className="text-lg text-muted-foreground max-w-3xl">
-            Upload Excel (.xlsx) file to import large datasets quickly. Maximum
-            file size: <strong>10MB</strong>. Use our template for best results.
-          </p></div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Bulk Upload</h1>
+            <p className="text-lg text-muted-foreground max-w-3xl">
+              Upload Excel (.xlsx) file to import large datasets quickly. Maximum
+              file size: <strong>10MB</strong>. Use our template for best results.
+            </p>
+          </div>
+
           <div className="flex flex-col items-center justify-center">
             <h1>Select Semester</h1>
             <Select
               value={selectedTerm}
               disabled={terms.length === 0}
-              onValueChange={(value) => {
-                setSelectedTerm(value);
-              }}
+              onValueChange={setSelectedTerm}
             >
               <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={"Select Semester"} />
+                <SelectValue placeholder="Select Semester" />
               </SelectTrigger>
               <SelectContent side="top">
                 {terms.map((term) => (
-                  <SelectItem key={term} value={`${term}`}>
-                    {term}
-                  </SelectItem>
+                  <SelectItem key={term} value={`${term}`}>{term}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Template Link with Tooltip */}
           <div className="flex items-center gap-2 mt-4">
             <a
               href="/sample.xlsx"
@@ -391,18 +396,13 @@ const BulkUpload = () => {
               <Download className="w-4 h-4" />
               Download Sample Template
             </a>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 p-0"
-              aria-label="Learn how to format your file"
-            >
+            <Button variant="ghost" size="icon" className="h-6 w-6 p-0" aria-label="Help">
               <HelpCircle className="w-4 h-4 text-muted-foreground" />
             </Button>
           </div>
         </div>
 
-        {/* Upload Section */}
+        {/* Drop Zone */}
         <Card className="mb-8 overflow-hidden">
           <CardContent className="p-8">
             <div
@@ -423,69 +423,46 @@ const BulkUpload = () => {
                 <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
                   <Upload className="w-10 h-10 text-muted-foreground" />
                 </div>
-
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-foreground">
-                    Upload Your File
-                  </h3>
+                  <h3 className="text-xl font-semibold text-foreground">Upload Your File</h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
-                    Drag and drop your Excel (.xlsx) file here, or click below
-                    to browse.
+                    Drag and drop your Excel (.xlsx) file here, or click below to browse.
                   </p>
                 </div>
-
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
                   <Button
-                    onClick={() =>
-                      document.getElementById("file-input")?.click()
-                    }
+                    onClick={() => document.getElementById("file-input")?.click()}
                     variant="default"
                     size="lg"
-                    disabled={
-                      fileProcessing.status === "processing" ||
-                      fileProcessing.status === "uploading"
-                    }
+                    disabled={isRunning}
                     className="flex-1 sm:flex-none"
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Choose File
                   </Button>
-
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="flex-1 sm:flex-none"
-                  >
+                  <Button asChild variant="outline" size="lg" className="flex-1 sm:flex-none">
                     <a href="/sample.xlsx" download>
                       <Download className="w-4 h-4 mr-2" />
                       Download Template
                     </a>
                   </Button>
                 </div>
-
                 <p className="text-xs text-muted-foreground mt-4">
-                  Supported format: <strong>.xlsx</strong> • Max size:{" "}
-                  <strong>10MB</strong>
+                  Supported format: <strong>.xlsx</strong> • Max size: <strong>10MB</strong>
                 </p>
-
                 <input
                   id="file-input"
                   type="file"
                   accept=".xlsx"
                   className="hidden"
-                  onChange={(e) => {
-                    if (e.target?.files?.[0]) {
-                      handleFile(e.target.files[0]);
-                    }
-                  }}
+                  onChange={(e) => { if (e.target?.files?.[0]) handleFile(e.target.files[0]); }}
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* File Processing Status */}
+        {/* File Status Card */}
         {uploadedFile && (
           <Card className="mb-8">
             <CardContent className="p-6">
@@ -496,43 +473,35 @@ const BulkUpload = () => {
                       {getStatusIcon()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p
-                        className="font-medium truncate"
-                        title={uploadedFile.name}
-                      >
+                      <p className="font-medium truncate" title={uploadedFile.name}>
                         {uploadedFile.name}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB •{" "}
                         {uploadedFile.lastModified
-                          ? new Date(
-                              uploadedFile.lastModified,
-                            ).toLocaleDateString()
+                          ? new Date(uploadedFile.lastModified).toLocaleDateString()
                           : ""}
                       </p>
                     </div>
                   </div>
-
                   <div className="flex items-center space-x-2">
                     <Badge
                       variant={
-                        fileProcessing.status === "success"
-                          ? "default"
-                          : fileProcessing.status === "error"
-                            ? "destructive"
-                            : "secondary"
+                        fileProcessing.status === "success" ? "default"
+                        : fileProcessing.status === "error"  ? "destructive"
+                        : "secondary"
                       }
                       className="px-3 py-1 text-xs font-medium"
                     >
-                      {fileProcessing.status === "uploading"
-                        ? "Uploading..."
-                        : fileProcessing.status}
+                      {fileProcessing.status === "streaming" ? "Importing..."
+                       : fileProcessing.status === "uploading" ? "Uploading..."
+                       : fileProcessing.status}
                     </Badge>
-
                     <Button
                       onClick={resetUpload}
                       variant="ghost"
                       size="sm"
+                      disabled={isRunning}
                       className="text-muted-foreground hover:text-destructive hover:bg-destructive/5"
                       aria-label="Reset upload"
                     >
@@ -542,13 +511,11 @@ const BulkUpload = () => {
                 </div>
 
                 {fileProcessing.message && (
-                  <p className="text-sm text-muted-foreground">
-                    {fileProcessing.message}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{fileProcessing.message}</p>
                 )}
 
-                {(fileProcessing.status === "processing" ||
-                  fileProcessing.status === "uploading") && (
+                {/* Progress bar — shown while streaming OR uploading */}
+                {isRunning && (
                   <div className="space-y-2">
                     <Progress
                       value={fileProcessing.progress}
@@ -556,33 +523,94 @@ const BulkUpload = () => {
                       aria-label={`Progress: ${fileProcessing.progress}%`}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {fileProcessing.status === "processing"
-                        ? "Analyzing and validating your data…"
-                        : "Uploading to server…"}{" "}
+                      {fileProcessing.status === "streaming"
+                        ? "Importing data — please keep this window open..."
+                        : "Uploading to server..."}{" "}
                       ({fileProcessing.progress}%)
                     </p>
                   </div>
                 )}
 
+                {/* Live stats chips during streaming */}
+                {fileProcessing.status === "streaming" && importStats && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {Object.entries(importStats).map(([key, val]) => (
+                      <div
+                        key={key}
+                        className="flex flex-col items-center bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 min-w-[80px]"
+                      >
+                        <span className="text-base font-bold text-blue-700">
+                          {val.toLocaleString()}
+                        </span>
+                        <span className="text-[10px] text-blue-500 text-center mt-0.5">
+                          {key.replace(/_/g, " ")}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Action buttons when file is read but not yet uploading */}
                 {fileProcessing.status === "success" && !showPreview && (
                   <div className="flex gap-3 pt-2">
-                    <Button
-                      onClick={() => setShowPreview(true)}
-                      variant="outline"
-                      className="flex-1 sm:flex-none"
-                    >
+                    <Button onClick={() => setShowPreview(true)} variant="outline" className="flex-1 sm:flex-none">
                       <Eye className="w-4 h-4 mr-2" />
                       Preview Data
                     </Button>
-                    <Button
-                      onClick={handleUpload}
-                      className="flex-1 sm:flex-none"
-                    >
+                    <Button onClick={handleUpload} className="flex-1 sm:flex-none">
                       Upload
                     </Button>
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Final stats after successful import */}
+        {fileProcessing.status === "success" && importStats && (
+          <Card className="mb-8 border-green-200 bg-green-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-green-800 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                Import Complete
+              </CardTitle>
+              <CardDescription className="text-green-700">
+                All records have been saved to the database.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {Object.entries(importStats).map(([key, val]) => (
+                  <div
+                    key={key}
+                    className="bg-white rounded-xl border border-green-200 p-3 text-center"
+                  >
+                    <div className="text-2xl font-bold text-green-700">
+                      {val.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-green-600 mt-1">
+                      {key.replace(/_/g, " ")}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {importWarnings.length > 0 && (
+                <Alert className="mt-4" variant="default">
+                  <AlertCircle className="w-4 h-4 text-yellow-600" />
+                  <AlertDescription>
+                    <p className="font-medium text-yellow-800 mb-1">
+                      {importWarnings.length} warning{importWarnings.length > 1 ? "s" : ""}
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {importWarnings.map((w, i) => (
+                        <li key={i} className="text-sm text-yellow-700">{w}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         )}
@@ -594,27 +622,23 @@ const BulkUpload = () => {
             <AlertDescription className="mt-1">
               <ul className="list-disc pl-5 space-y-1">
                 {validationErrors.map((error, index) => (
-                  <li key={index} className="text-sm">
-                    {error}
-                  </li>
+                  <li key={index} className="text-sm">{error}</li>
                 ))}
               </ul>
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Data Preview */}
+        {/* Data Preview Table */}
         {showPreview && previewData.length > 0 && (
           <Card>
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <CardTitle>Data Preview</CardTitle>
                 <CardDescription>
-                  Showing first {previewData.length} of {previewData.length}{" "}
-                  total rows.
+                  Showing first {previewData.length} rows.
                 </CardDescription>
               </div>
-
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button
                   onClick={() => setShowPreview(false)}
@@ -626,13 +650,13 @@ const BulkUpload = () => {
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={fileProcessing.status === "uploading"}
+                  disabled={isRunning}
                   className="flex-1 sm:flex-none"
                 >
-                  {fileProcessing.status === "uploading" ? (
+                  {isRunning ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading...
+                      Importing...
                     </>
                   ) : (
                     "Upload"
@@ -646,7 +670,6 @@ const BulkUpload = () => {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-muted">
-                       
                       {headers.map((header) => (
                         <th
                           key={header}
@@ -680,58 +703,17 @@ const BulkUpload = () => {
                   </tbody>
                 </table>
               </div>
-
-              <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm text-muted-foreground">
-                {/* <p>
-                  <strong>{selectedCount}</strong> of{" "}
-                  <strong>{previewData.length}</strong> rows selected
-                </p> */}
-                {/* <Button
-                  onClick={toggleAllSelection}
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary hover:text-primary/80"
-                >
-                  {previewData.every((item) => item.selected)
-                    ? "Deselect All"
-                    : "Select All"}
-                </Button> */}
-              </div>
-{/* 
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                <div className="flex items-start gap-2">
-                  <Star className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-blue-800">
-                    <strong>Tip:</strong> You can uncheck rows you want to skip
-                    during upload. Only selected rows will be imported.
-                  </p>
-                </div>
-              </div> */}
             </CardContent>
           </Card>
         )}
 
-        {/* Success Confirmation (when upload completes) */}
-        {fileProcessing.status === "success" && showPreview && (
-          <Alert className="mb-8" variant="default">
-            <Check className="w-4 h-4" />
-            <AlertDescription>
-              Your data is ready to upload. Click “Upload Selected Rows” to
-              confirm.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Empty State After Reset */}
+        {/* Empty State */}
         {!uploadedFile && !validationErrors.length && (
           <div className="bg-muted/50 rounded-xl p-8 text-center my-8">
             <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">
-              No file uploaded yet
-            </h3>
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">No file uploaded yet</h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Begin by dragging your file into the upload area or clicking
-              “Choose File” above.
+              Begin by dragging your file into the upload area or clicking "Choose File" above.
             </p>
           </div>
         )}
