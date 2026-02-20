@@ -205,7 +205,7 @@ const ConstraintsConfig = ({ onConfigChange }: ConfigProps) => {
             {config === null ? <LoadingCard /> : (
               <>
                 {/* Time Slots */}
-                <Card className="border-2">
+                {/* <Card className="border-2">
                   <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
                     <CardTitle className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-primary" />
@@ -281,7 +281,7 @@ const ConstraintsConfig = ({ onConfigChange }: ConfigProps) => {
                       </AlertDescription>
                     </Alert>
                   </CardContent>
-                </Card>
+                </Card> */}
 
                 {/* Day Restrictions */}
                 <Card className="border-2">
