@@ -234,14 +234,14 @@ export const columns: ColumnDef<Course>[] = [
 ];
 
 export function CoursesPage() {
-  const navigate= useNavigate()
+  const navigate = useNavigate();
   // if(!hasPermission(Permissions.VIEW_COURSE)){
   //   navigate("/unauthorized")
   // }
   const axios = useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -271,17 +271,17 @@ export function CoursesPage() {
         // Extract unique values for filters
         const uniqueDepartments = [
           ...new Set(
-            coursesData.map((course: { department: any }) => course.department)
+            coursesData.map((course: { department: any }) => course.department),
           ),
         ].filter(Boolean) as string[];
         const uniqueCampuses = [
           ...new Set(
-            coursesData.map((course: { campus: any }) => course.campus)
+            coursesData.map((course: { campus: any }) => course.campus),
           ),
         ].filter(Boolean) as string[];
         const uniqueSemesters = [
           ...new Set(
-            coursesData.map((course: { semester: any }) => course.semester)
+            coursesData.map((course: { semester: any }) => course.semester),
           ),
         ].filter(Boolean) as string[];
 
@@ -470,7 +470,7 @@ export function CoursesPage() {
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   ))}
@@ -488,10 +488,24 @@ export function CoursesPage() {
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}
+
+                    <TableCell>
+                      {/* open dialog and for managing the selected course groups */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline">Manage Groups</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Manage Course Groups</DialogTitle>
+                          </DialogHeader>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
