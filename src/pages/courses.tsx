@@ -534,9 +534,9 @@ export function CoursesPage() {
 
                     <TableCell>
                       {/* open dialog and for managing the selected course groups */}
-                      <Dialog open={isGroupsDialogOpen} onOpenChange={setIsGroupsDialogOpen}>
+                      <Dialog  >
                         <DialogTrigger asChild >
-                          <Button variant="outline">Manage Groups</Button>
+                          <Button variant="outline" onClick={()=>setIsGroupsDialogOpen(!isGroupsDialogOpen)} className="ml-2">Manage Groups</Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
