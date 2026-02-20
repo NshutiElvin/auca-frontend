@@ -485,7 +485,6 @@ const OccupanciesPage = () => {
           date: occupancy.date,
           start_time: occupancy.start_time,
           end_time: occupancy.end_time,
-          
           courses: [],
           total_students: 0,
           room_capacity: occupancy.room_capacity,
@@ -497,7 +496,7 @@ const OccupanciesPage = () => {
         course_title: occupancy.course_title,
         course_semester: occupancy.course_semester,
         course_department: occupancy.course_department,
-       course_group: occupancy.course_group,
+        course_group: occupancy.course_group,
         exam_id: occupancy.exam_id,
         student_count: occupancy.student_count,
       });
@@ -1292,7 +1291,7 @@ const OccupanciesPage = () => {
                                             {course.course_code}
                                           </span>
                                           <span className="text-gray-600">
-                                            {course.course_title}
+                                            {course.course_title} {course.course_group}
                                           </span>
                                         </div>
                                         <div className="flex items-center space-x-4 mt-1 text-sm">
