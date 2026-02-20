@@ -258,6 +258,12 @@ export function CoursesPage() {
   const [selectedGroupId, setSelectedGroupId] = React.useState<number | null>(
     null,
   );
+
+  const timeMap={
+    "Morning": {start_time: "08:00", end_time: "11:00"},
+    "Afternoon": {start_time: "13:00", end_time: "16:00"},
+    "Evening": {start_time: "17:00", end_time: "20:00"},
+  }
   const [groupTime, setGroupTime] = React.useState<
     "Morning" | "Afternoon" | "Evening"
   >("Morning");
@@ -566,14 +572,11 @@ export function CoursesPage() {
                                         <h3 className="text-lg font-semibold">
                                           {group.group_name}
                                         </h3>
-                                        <p className="text-sm text-muted-foreground">
-                                          {group.current_member} /{" "}
-                                          {group.max_member} members
-                                        </p>
+                                        
                                       </div>
                                       <div>
                                         <Select
-                                          value={groupTime}
+                                          value={group.start_time ? Object.keys(timeMap).find(key => timeMap[key].start_time === group.start_time) : "Morning"}
                                           onValueChange={(value) => {
                                             setGroupTime(
                                               value as
