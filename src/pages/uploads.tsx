@@ -98,13 +98,11 @@ const BulkUpload = () => {
   const [showPreview, setShowPreview]     = useState(false);
   const [terms, setTerms]                 = useState<string[]>([]);
   const [selectedTerm, setSelectedTerm]   = useState<string>("");
-  const axios = useUserAxios()
+  const axios = useUserAxios();
 
   // Live import state (populated during SSE stream)
   const [importStats,    setImportStats]    = useState<ImportStats | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
-
-
 
   // ── File reading ────────────────────────────────────────────────────────────
 
@@ -211,11 +209,6 @@ const BulkUpload = () => {
   };
 
   // ── SSE Upload (via axios) ───────────────────────────────────────────────────
-  // axios supports responseType:'stream' in Node but NOT in the browser.
-  // In the browser we use responseType:'text' with onDownloadProgress — axios
-  // fires onDownloadProgress each time a new chunk arrives, giving us the
-  // accumulated response text so far. We track what we've already parsed with
-  // an offset and only process the new bytes each time.
 
   const handleUpload = async () => {
     if (!uploadedFile) {
@@ -235,68 +228,63 @@ const BulkUpload = () => {
     formData.append("myFile", uploadedFile);
     formData.append("selectedSemester", selectedTerm);
 
-    // Tracks how many characters of the response we have already parsed
     let parsedOffset = 0;
-
-    const processChunk = (chunk: string) => {
-      // SSE events are separated by double newlines
-      const parts = chunk.split("\n\n");
-      // Last element may be an incomplete event — leave it for next chunk
-      const complete = chunk.endsWith("\n\n") ? parts : parts.slice(0, -1);
-
-      for (const part of complete) {
-        const line = part.trim();
-        if (!line.startsWith("data:")) continue;
-
-        let event: SSEEvent;
-        try {
-          event = JSON.parse(line.replace(/^data:\s*/, "")) as SSEEvent;
-        } catch {
-          continue; // malformed chunk — skip
-        }
-
-        if (event.type === "progress") {
-          setFileProcessing({
-            status:   "streaming",
-            message:  event.message,
-            progress: event.percent,
-          });
-          if (event.stats) setImportStats(event.stats);
-        }
-
-        if (event.type === "done") {
-          setFileProcessing({ status: "success", message: event.message, progress: 100 });
-          setImportStats(event.stats);
-          setImportWarnings(event.warnings ?? []);
-          setToastMessage({ message: "Import completed successfully!", variant: "success" });
-          setTimeout(() => setShowPreview(false), 1500);
-        }
-
-        if (event.type === "error") {
-          setFileProcessing({
-            status:   "error",
-            message:  event.message,
-            progress: 0,
-          });
-          setValidationErrors([event.message, "If the issue persists, contact support."]);
-          setToastMessage({ message: "Upload failed. Please try again.", variant: "danger" });
-        }
-      }
-    };
 
     try {
       await axios.post("/api/uploads/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        // responseType 'text' keeps the response as a growing string in the browser
         responseType: "text",
-        // onDownloadProgress fires every time a new chunk arrives
         onDownloadProgress: (progressEvent) => {
           const fullText: string = (progressEvent.event?.target as XMLHttpRequest)?.responseText ?? "";
-          // Only process the newly arrived bytes
-          const newChunk = fullText.slice(parsedOffset);
-          if (newChunk) {
-            parsedOffset = fullText.length;
-            processChunk(newChunk);
+          
+          // Find the last complete double-newline boundary
+          const lastEventEnd = fullText.lastIndexOf("\n\n");
+
+          // Only process if we have new complete events
+          if (lastEventEnd !== -1 && lastEventEnd >= parsedOffset) {
+            // Extract only the fully formed chunks we haven't seen yet
+            const newCompleteData = fullText.slice(parsedOffset, lastEventEnd + 2);
+            parsedOffset = lastEventEnd + 2; // Advance offset to prevent reprocessing
+
+            const parts = newCompleteData.split("\n\n");
+
+            for (const part of parts) {
+              const line = part.trim();
+              if (!line.startsWith("data:")) continue;
+
+              try {
+                const event = JSON.parse(line.replace(/^data:\s*/, "")) as SSEEvent;
+
+                if (event.type === "progress") {
+                  setFileProcessing({
+                    status:   "streaming",
+                    message:  event.message,
+                    progress: event.percent,
+                  });
+                  if (event.stats) setImportStats(event.stats);
+                }
+
+                if (event.type === "done") {
+                  setFileProcessing({ status: "success", message: event.message, progress: 100 });
+                  setImportStats(event.stats);
+                  setImportWarnings(event.warnings ?? []);
+                  setToastMessage({ message: "Import completed successfully!", variant: "success" });
+                  setTimeout(() => setShowPreview(false), 1500);
+                }
+
+                if (event.type === "error") {
+                  setFileProcessing({
+                    status:   "error",
+                    message:  event.message,
+                    progress: 0,
+                  });
+                  setValidationErrors([event.message, "If the issue persists, contact support."]);
+                  setToastMessage({ message: "Upload failed. Please try again.", variant: "danger" });
+                }
+              } catch (e) {
+                console.warn("Skipped unparseable SSE line:", line);
+              }
+            }
           }
         },
       });
