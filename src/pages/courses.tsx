@@ -252,6 +252,7 @@ export function CoursesPage() {
   const [campuses, setCampuses] = React.useState<string[]>([]);
   const [semesters, setSemesters] = React.useState<string[]>([]);
   const [isGroupsDialogOpen, setIsGroupsDialogOpen] = React.useState(false);
+  const [isGettingGroups, setIsGettingGroups] = React.useState(false);
   const [selectedCourseId, setSelectedCourseId] = React.useState<number | null>(
     null,
   );
@@ -273,11 +274,14 @@ export function CoursesPage() {
   );
 
   const getCourseGroups = async (courseId: number) => {
+    setIsGettingGroups(true);
     try {
       const resp = await axios.get(`/api/courses/${courseId}/course-groups/`);
       setSelectedCourseGroups(resp.data.data);
     } catch (error) {
       console.error("Error fetching course groups:", error);
+    }finally {
+      setIsGettingGroups(false);
     }
   };
 
@@ -563,10 +567,15 @@ export function CoursesPage() {
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>Manage Course Groups</DialogTitle>
+                            <DialogTitle>Manage Groups for {row.original.title}</DialogTitle>
                           </DialogHeader>
                           {/* display course groups*/}
                           <div>
+                            {isGettingGroups ? (
+                              <div className="flex items-center justify-center h-32">
+                                <span>Loading groups...</span>
+                              </div>
+                            ) : null}
                             {selectedCourseGroups.length > 0 ? (
                               <ul className="space-y-2">
                                 {selectedCourseGroups.map((group) => (
