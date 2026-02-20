@@ -52,8 +52,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { Permissions } from "../lib/permissions";
-import { hasPermission } from "../hooks/hasPermission";
 import { useNavigate } from "react-router-dom";
 
 export type Course = {
@@ -252,7 +250,41 @@ export function CoursesPage() {
   const [departments, setDepartments] = React.useState<string[]>([]);
   const [campuses, setCampuses] = React.useState<string[]>([]);
   const [semesters, setSemesters] = React.useState<string[]>([]);
+  const [isGroupsDialogOpen, setIsGroupsDialogOpen] = React.useState(false);
+  const [selectedCourseId, setSelectedCourseId] = React.useState<number | null>(
+    null,
+  );
+  const [selectedGroupId, setSelectedGroupId] = React.useState<number | null>(
+    null,
+  );
+  const [groupTime, setGroupTime] = React.useState<
+    "Morning" | "Afternoon" | "Evening"
+  >("Morning");
+  const [isTimeUpdating, setIsTimeUpdating] = React.useState(false);
+  const [selectedCourseGroups, setSelectedCourseGroups] = React.useState<any[]>(
+    [],
+  );
 
+  const getCourseGroups = async (courseId: number) => {
+    try {
+      const resp = await axios.get(`/api/courses/${courseId}/course-groups/`);
+      setSelectedCourseGroups(resp.data.data);
+    } catch (error) {
+      console.error("Error fetching course groups:", error);
+    }
+  };
+
+  const updateCourseGroupTimes = async () => {
+    if (!selectedCourseId || !selectedGroupId) return;
+    setIsTimeUpdating(true);
+    try {
+      await axios.put(
+        `/api/courses/update-course-group-times/${selectedCourseId}/${selectedGroupId}/`,
+        {dayTime:groupTime})
+    }catch{
+      console.log("Error of updating time")
+    }
+  }
   const fetchCourses = () => {
     startTransition(async () => {
       setError(null);
@@ -294,6 +326,13 @@ export function CoursesPage() {
       }
     });
   };
+
+  React.useEffect(()=>{
+    if(isGroupsDialogOpen && selectedCourseId){
+      getCourseGroups(selectedCourseId)
+    }
+
+  },[isGroupsDialogOpen])
 
   React.useEffect(() => {
     fetchCourses();
