@@ -281,11 +281,12 @@ export function CoursesPage() {
     try {
       await axios.put(
         `/api/courses/update-course-group-times/${selectedCourseId}/${selectedGroupId}/`,
-        {dayTime:groupTime})
-    }catch{
-      console.log("Error of updating time")
+        { dayTime: groupTime },
+      );
+    } catch {
+      console.log("Error of updating time");
     }
-  }
+  };
   const fetchCourses = () => {
     startTransition(async () => {
       setError(null);
@@ -328,12 +329,11 @@ export function CoursesPage() {
     });
   };
 
-  React.useEffect(()=>{
-    if(isGroupsDialogOpen && selectedCourseId){
-      getCourseGroups(selectedCourseId)
+  React.useEffect(() => {
+    if (isGroupsDialogOpen && selectedCourseId) {
+      getCourseGroups(selectedCourseId);
     }
-
-  },[isGroupsDialogOpen])
+  }, [isGroupsDialogOpen]);
 
   React.useEffect(() => {
     fetchCourses();
@@ -535,17 +535,85 @@ export function CoursesPage() {
 
                     <TableCell>
                       {/* open dialog and for managing the selected course groups */}
-                      <Dialog  >
-                        <DialogTrigger asChild >
-                          <Button variant="outline" onClick={()=>{
-                            setIsGroupsDialogOpen(!isGroupsDialogOpen)
-                            setSelectedCourseId(Number(row.original.id))
-                          }} className="ml-2">Manage Groups</Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setIsGroupsDialogOpen(!isGroupsDialogOpen);
+                              setSelectedCourseId(Number(row.original.id));
+                            }}
+                            className="ml-2"
+                          >
+                            Manage Groups
+                          </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Manage Course Groups</DialogTitle>
                           </DialogHeader>
+                          {/* display course groups*/}
+                          <div>
+                            {selectedCourseGroups.length > 0 ? (
+                              <ul className="space-y-2">
+                                {selectedCourseGroups.map((group) => (
+                                  <li
+                                    key={group.id}
+                                    className="p-4 border rounded-md"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <h3 className="text-lg font-semibold">
+                                          {group.group_name}
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground">
+                                          {group.current_member} /{" "}
+                                          {group.max_member} members
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <Select
+                                          value={groupTime}
+                                          onValueChange={(value) => {
+                                            setGroupTime(
+                                              value as
+                                                | "Morning"
+                                                | "Afternoon"
+                                                | "Evening",
+                                            );
+                                            setSelectedGroupId(group.id);
+                                            updateCourseGroupTimes();
+                                          }}
+                                        >
+                                          <SelectTrigger className="w-32">
+                                            <SelectValue placeholder="Select time" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {[
+                                              "Morning",
+                                              "Afternoon",
+                                              "Evening",
+                                            ].map((time) => (
+                                              <SelectItem
+                                                key={time}
+                                                value={time}
+                                              >
+                                                {time}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div className="text-center text-muted-foreground">
+                                No groups found for this course.
+                              </div>
+                            )}
+                          </div>
                         </DialogContent>
                       </Dialog>
                     </TableCell>
