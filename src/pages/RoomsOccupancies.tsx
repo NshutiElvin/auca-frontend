@@ -1014,21 +1014,25 @@ const OccupanciesPage = () => {
                   </SelectContent>
                 </Select>
 
-                {/* Select element for selecting campus */}
-                <Select
-                  value={selectedLocation?.id.toString() || ""}
-                  onValueChange={(value) => {
-                    const location = locations?.find((loc) => loc.id === Number(value));
-                    setSelectedLocation(location || null);
-                  }}
-                >
-                  <SelectTrigger className="w-[250px]">Select Campus </SelectTrigger>
-                  {locations?.map((loc) => (
-                    <SelectContent key={loc.id}>
-                      <SelectItem value={loc.id.toString()}>{loc.name}</SelectItem>
-                    </SelectContent>
-                  ))}
-                  </Select>
+                          
+          <Select
+            value={selectedLocation?.id.toString() || ""}
+            onValueChange={(value) => {
+              const location = locations?.find((loc) => loc.id === Number(value));
+              setSelectedLocation(location || null);
+            }}
+          >
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder="Select Campus" />
+            </SelectTrigger>
+            <SelectContent>
+              {locations?.map((loc) => (
+                <SelectItem key={loc.id} value={loc.id.toString()}>
+                  {loc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
               </div>
             )}
           </div>
