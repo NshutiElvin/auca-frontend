@@ -55,6 +55,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export type Course = {
+  id?: number;
   code: string;
   title: string;
   description: string;
@@ -536,7 +537,10 @@ export function CoursesPage() {
                       {/* open dialog and for managing the selected course groups */}
                       <Dialog  >
                         <DialogTrigger asChild >
-                          <Button variant="outline" onClick={()=>setIsGroupsDialogOpen(!isGroupsDialogOpen)} className="ml-2">Manage Groups</Button>
+                          <Button variant="outline" onClick={()=>{
+                            setIsGroupsDialogOpen(!isGroupsDialogOpen)
+                            setSelectedCourseId(Number(row.original.id))
+                          }} className="ml-2">Manage Groups</Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
