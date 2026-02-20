@@ -94,7 +94,7 @@ const data = {
         },
 
         {
-          title: "Room Allocations",
+          title: "Sitting Plan",
           url: "occupancies",
           icon: Table2,
         },

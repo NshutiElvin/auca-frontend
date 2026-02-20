@@ -98,6 +98,11 @@ interface DraggedCourseGroup {
   courseGroup?: string;
   roomName?: string;
 }
+
+interface Location{
+  id:number;
+  name:string
+}
 import { useSidebar } from "../components/ui/sidebar";
 import QRCode from "react-qr-code";
 import LocationContext from "../contexts/LocationContext";
@@ -113,13 +118,14 @@ const OccupanciesPage = () => {
   const [examsDates, setExamsDates] = useState<Set<string>>(new Set());
   const [isGettingOccupancies, startTransition] = useTransition();
   const [selectedRoom, setSelectedRoom] = useState<SelectedRoom | null>(null);
-  const { selectedLocation } = useContext(LocationContext);
   const [draggedCourseGroup, setDraggedCourseGroup] =
     useState<DraggedCourseGroup | null>(null);
   const [courseStudents, setCourseStudents] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const { setServerLoadingMessage, setToastMessage, serverLoadingMessage } =
     useToast();
+  const[selectedLocation, setSelectedLocation]= useState<Location | null>(null);
+  const[locations, setLocations]= useState<Location[]|null>(null)
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toLocaleDateString("en-GB", {
@@ -156,8 +162,8 @@ const OccupanciesPage = () => {
   const [instructors, setInstructors] = useState<any[] | null>(null);
 
   const [dimensions, setDimensions] = useState({
-    width: 800, // Initial width
-    height: 600, // Initial height
+    width: 800,  
+    height: 600,  
   });
 
   const qrRef = useRef<HTMLDivElement>(null);
@@ -188,6 +194,19 @@ const OccupanciesPage = () => {
       alert("Failed to download QR code. Please try again.");
     }
   };
+
+
+  const getTimetableConfiguration= async()=>{
+    const resp = await axios.get("/api/rooms/configurations");
+      const data = resp.data.data;
+       
+
+      // Set the initial configuration based on the API response
+      if (data.semesters.length > 0 && data.locations.length > 0) {
+        setLocations(data.locations);
+        setSelectedLocation(data.locations[0]);
+      }
+  }
 
   // Extract unique values from data for filters
   const filterOptions = useMemo(() => {
@@ -812,6 +831,7 @@ const OccupanciesPage = () => {
   useEffect(() => {
     fetchOccupancies();
     getInstructors();
+    getTimetableConfiguration();
     setOpen(false);
   }, []);
   useEffect(() => {
@@ -993,6 +1013,22 @@ const OccupanciesPage = () => {
                     <SelectItem value="overcapacity">Overcapacity</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Select element for selecting campus */}
+                <Select
+                  value={selectedLocation?.id.toString() || ""}
+                  onValueChange={(value) => {
+                    const location = locations?.find((loc) => loc.id === Number(value));
+                    setSelectedLocation(location || null);
+                  }}
+                >
+                  <SelectTrigger className="w-[250px]">Select Campus </SelectTrigger>
+                  {locations?.map((loc) => (
+                    <SelectContent key={loc.id}>
+                      <SelectItem value={loc.id.toString()}>{loc.name}</SelectItem>
+                    </SelectContent>
+                  ))}
+                  </Select>
               </div>
             )}
           </div>
