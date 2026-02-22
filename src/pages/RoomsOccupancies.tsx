@@ -1121,7 +1121,7 @@ const OccupanciesPage = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full">
                 {/* Add Timetable Selector */}
                 <Select
                   value={selectedTimetable}
