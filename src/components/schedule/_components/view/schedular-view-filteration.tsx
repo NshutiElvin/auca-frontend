@@ -99,6 +99,7 @@ export default function SchedulerViewFilteration({
   const [configuration, setConfiguration] = useState({
     term: "",
     academicYear: String(new Date().getFullYear()),
+    category: "Provisional",
     location: "",
     constraints: {},
   });
@@ -130,6 +131,7 @@ export default function SchedulerViewFilteration({
         setConfiguration({
           term: data.semesters[0].id.toString(),
           academicYear: String(new Date().getFullYear()),
+          category: "",
           location: data.locations[0].id.toString(),
           constraints: {},
         });
@@ -574,7 +576,7 @@ export default function SchedulerViewFilteration({
           </DialogHeader>
 
           <div className="space-y-6 py-4 max-h-[90vh] overflow-y-auto">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="academic_year" className="text-sm font-medium">
                   Academic Year
@@ -593,7 +595,24 @@ export default function SchedulerViewFilteration({
                   value={configuration.academicYear}
                 />
               </div>
-
+                <div className="space-y-2">
+                <Label htmlFor="timetable_category" className="text-sm font-medium">
+                  Category
+                </Label>
+                <Input
+                  type="text"
+                  id="timetable_category"
+                  placeholder="e.g., 2024"
+                  className="h-10"
+                  onChange={(e) => {
+                    setConfiguration({
+                      ...configuration,
+                      category: e.target.value,
+                    });
+                  }}
+                  value={configuration.category || ""}
+                />
+              </div>
             
 
               <div className="space-y-2">

@@ -98,7 +98,6 @@ interface FormView {
   addDay: boolean;
 }
 export default function CreateNewTimeTableModal({configuration}:{configuration:any}) {
-  console.log(configuration)
   const { setServerLoadingMessage, setToastMessage, serverLoadingMessage } =
     useToast();
   const axios = useUserAxios();
