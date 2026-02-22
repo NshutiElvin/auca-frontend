@@ -222,7 +222,7 @@ export function TimeTablesPage() {
   });
 
   const exportToPdf = async () => {
-    const timetableId = searchParams.get("id");
+    const timetableId =  selectedTimetableId || searchParams.get("id");
     if (!timetableId) {
       setToastMessage({ message: "No timetable selected.", variant: "danger" });
       return;
@@ -493,7 +493,7 @@ export function TimeTablesPage() {
                           </DropdownMenuItem>
 
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem disabled={row.original.status.toLowerCase() !== "published"} onClick={()=>navigate(`/admin/manual?id=${row.getValue("id")}`)}>
+                          <DropdownMenuItem disabled={row.original.status.toLowerCase() == "published"} onClick={()=>navigate(`/admin/manual?id=${row.getValue("id")}`)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
                             </DropdownMenuItem>
