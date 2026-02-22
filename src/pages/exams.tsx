@@ -233,7 +233,6 @@ function GroupedView({
                           <th className="px-4 py-2 text-left font-medium w-[90px]">Code</th>
                           <th className="px-4 py-2 text-left font-medium">Course</th>
                           <th className="px-4 py-2 text-left font-medium w-[80px]">Group(s)</th>
-                          <th className="px-4 py-2 text-left font-medium w-[100px]">Room</th>
                           <th className="px-4 py-2 text-left font-medium w-[90px]">Status</th>
                           <th className="px-4 py-2 w-[50px]"></th>
                         </tr>
@@ -265,9 +264,7 @@ function GroupedView({
                                   {course.groups.join(", ")}
                                 </span>
                               </td>
-                              <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                                {course.room || "–"}
-                              </td>
+                             
                               <td className="px-4 py-2.5">
                                 <StatusButton status={course.status} />
                               </td>
