@@ -327,32 +327,40 @@ export function ExamsPage() {
   const [signInFilter, setSignInFilter] = React.useState("all");
   const [signOutFilter, setSignOutFilter] = React.useState("all");
 
-  // ── Data fetching ───────────────────────────────────────────────────────────
-  const getCourses = () => {
-    startTransition(async () => {
-      try {
-        const timetableId = searchParams.get("id");
-        const url = timetableId
-          ? `/api/exams/exams?id=${timetableId}`
-          : `/api/exams/exams`;
-        const resp = await axios.get(url);
+ const getCourses = () => {
+  startTransition(async () => {
+    try {
+      const timetableId = searchParams.get("id");
+      const url = timetableId
+        ? `/api/exams/exams?id=${timetableId}`
+        : `/api/exams/exams`;
+      const resp = await axios.get(url);
 
-        setData(
-          resp?.data.data.map((d: any) => ({
-            ...d,
-            id:         `${d.id}`,
-            code:       `${d.group?.course?.code ?? ""}`,
-            course:     `${d.group?.course?.title ?? ""}`,
-            group:      `${d.group?.group_name ?? ""}`,
-            department: `${d.group?.course?.department?.name ?? ""}`,
-            date:       d.date || d.end_date,
-          }))
-        );
-      } catch (error) {
-        setToastMessage({ message: String(error), variant: "danger" });
-      }
-    });
-  };
+      // Log the response to debug
+      console.log("Server response:", resp.data);
+
+      // Correctly map the nested data structure
+      const mappedData = resp?.data.data.map((d: any) => ({
+        id: d.id.toString(),
+        code: d.group?.course?.code ?? "",
+        course: d.group?.course?.title ?? "",
+        group: d.group?.group_name ?? "",
+        department: d.group?.course?.department?.name ?? "",
+        date: d.date || "",
+        start_time: d.start_time || "",
+        end_time: d.end_time || "",
+        room: d.room?.name || "",
+        status: d.status || "",
+      }));
+
+      console.log("Mapped data:", mappedData);
+      setData(mappedData);
+    } catch (error) {
+      console.error("Error fetching exams:", error);
+      setToastMessage({ message: String(error), variant: "danger" });
+    }
+  });
+};
 
   const getAttendance = (exam_id: string) => {
     setViewAttendance(true);
