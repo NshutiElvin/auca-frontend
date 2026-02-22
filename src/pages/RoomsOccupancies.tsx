@@ -99,13 +99,34 @@ interface DraggedCourseGroup {
   roomName?: string;
 }
 
-interface Location{
-  id:number;
-  name:string
+interface Location {
+  id: number;
+  name: string;
 }
 import { useSidebar } from "../components/ui/sidebar";
 import QRCode from "react-qr-code";
 import LocationContext from "../contexts/LocationContext";
+
+interface Timetable {
+  id: number;
+  academic_year: string;
+  start_date: string;
+  end_date: string;
+  generated_at: string;
+  status: string;
+  generated_by: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+    password_strength: null | string;
+  };
+  published_at?: string;
+  semester?: {
+    id: number;
+    name: string;
+  };
+}
 const OccupanciesPage = () => {
   const [data, setData] = useState<RoomOccupancy[]>([]);
   const axios = useUserAxios();
@@ -124,8 +145,30 @@ const OccupanciesPage = () => {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const { setServerLoadingMessage, setToastMessage, serverLoadingMessage } =
     useToast();
-  const[selectedLocation, setSelectedLocation]= useState<Location | null>(null);
-  const[locations, setLocations]= useState<Location[]|null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(
+    null,
+  );
+  const [locations, setLocations] = useState<Location[] | null>(null);
+  const [timetables, setTimetables] = useState<Timetable[] | null>(null);
+
+  const getTimetables = () => {
+    startTransition(async () => {
+      try {
+        const resp = await axios.get(`/api/schedules/timetables/`);
+        setData(
+          resp?.data.data.map((timetable: any) => ({
+            ...timetable,
+            campus: timetable.location.name,
+          })),
+        );
+      } catch (error) {
+        setToastMessage({
+          message: String(error),
+          variant: "danger",
+        });
+      }
+    });
+  };
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toLocaleDateString("en-GB", {
@@ -138,7 +181,7 @@ const OccupanciesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [dropAction, setDropAction] = useState<"group" | "students" | null>(
-    null
+    null,
   );
   const [filters, setFilters] = useState<FilterOptions>({
     department: "",
@@ -155,15 +198,17 @@ const OccupanciesPage = () => {
   const [dialogMessage, setDialogMessage] = useState<string | null>(null);
   const [showQrCode, setShowQrCode] = useState<boolean>(false);
   const [selectedRoomDetails, setSelectedRoomDetails] = useState<any | null>(
-    null
+    null,
   );
+  const [isGeneratingReport, startGeneratingReportTransition] = useTransition();
+  const [selectedTimetable, setSelectedTimetable] = useState<string>("");
   const [isAssigningInstructor, startAssigningInstructorTransition] =
     useTransition();
   const [instructors, setInstructors] = useState<any[] | null>(null);
 
   const [dimensions, setDimensions] = useState({
-    width: 800,  
-    height: 600,  
+    width: 800,
+    height: 600,
   });
 
   const qrRef = useRef<HTMLDivElement>(null);
@@ -173,9 +218,8 @@ const OccupanciesPage = () => {
 
     try {
       const canvas = await html2canvas(qrRef.current, {
-       scale:1,
+        scale: 1,
         useCORS: true,
-       
       });
 
       const imageDataUrl = canvas.toDataURL("image/png");
@@ -184,7 +228,7 @@ const OccupanciesPage = () => {
       link.href = imageDataUrl;
       link.download = `room-${selectedRoomDetails.name.replace(
         /\s+/g,
-        "-"
+        "-",
       )}-qr.png`;
       document.body.appendChild(link);
       link.click();
@@ -195,18 +239,87 @@ const OccupanciesPage = () => {
     }
   };
 
+  const generateSeatingReport = async (roomId?: number) => {
+    startGeneratingReportTransition(async () => {
+      setServerLoadingMessage({
+        message: roomId
+          ? "Generating room seating report with signatures..."
+          : "Generating full seating report...",
+        isServerLoading: true,
+      });
 
-  const getTimetableConfiguration= async()=>{
-    const resp = await axios.get("/api/rooms/configurations");
-      const data = resp.data.data;
-       
+      try {
+        // Get the latest timetable or use selected one
+        let timetableId = selectedTimetable;
+        if (!timetableId && timetables && timetables.length > 0) {
+          timetableId = timetables[0].id.toString();
+        }
 
-      // Set the initial configuration based on the API response
-      if (data.semesters.length > 0 && data.locations.length > 0) {
-        setLocations(data.locations);
-        setSelectedLocation(data.locations[0]);
+        if (!timetableId) {
+          setToastMessage({
+            message: "No timetable available. Please select a timetable.",
+            variant: "warning",
+          });
+          return;
+        }
+
+        // Build URL with parameters
+        let url = `/api/report/?id=${timetableId}&report=seating`;
+        if (roomId) {
+          url += `&room_id=${roomId}`;
+        }
+
+        const response = await axios.get(url, {
+          responseType: "blob", // Important for PDF download
+        });
+
+        // Create download link
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+
+        // Generate filename
+        const date = new Date().toISOString().split("T")[0];
+        const room = roomId ? `_room${roomId}` : "";
+        link.download = `seating_report${room}_${date}.pdf`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.URL.revokeObjectURL(downloadUrl);
+
+        setToastMessage({
+          message: roomId
+            ? "Room seating report generated successfully"
+            : "Full seating report generated successfully",
+          variant: "success",
+        });
+      } catch (error: any) {
+        setToastMessage({
+          message:
+            error.response?.data?.message ||
+            "Failed to generate report. Please try again.",
+          variant: "danger",
+        });
+      } finally {
+        setServerLoadingMessage({
+          isServerLoading: false,
+        });
       }
-  }
+    });
+  };
+  const getTimetableConfiguration = async () => {
+    const resp = await axios.get("/api/rooms/configurations");
+    const data = resp.data.data;
+
+    // Set the initial configuration based on the API response
+    if (data.semesters.length > 0 && data.locations.length > 0) {
+      setLocations(data.locations);
+      setSelectedLocation(data.locations[0]);
+    }
+  };
 
   // Extract unique values from data for filters
   const filterOptions = useMemo(() => {
@@ -258,7 +371,7 @@ const OccupanciesPage = () => {
         .filter(
           (d) =>
             d.room_name === occupancy.room_name &&
-            d.start_time === occupancy.start_time
+            d.start_time === occupancy.start_time,
         )
         .reduce((sum, d) => sum + d.student_count, 0);
 
@@ -332,7 +445,7 @@ const OccupanciesPage = () => {
   };
   const handleDroppedGroup = async (
     e: React.DragEvent,
-    selectedRoom: SelectedRoom
+    selectedRoom: SelectedRoom,
   ) => {
     e.preventDefault();
     setSelectedRoom(selectedRoom);
@@ -351,7 +464,7 @@ const OccupanciesPage = () => {
             {
               room: selectedRoom,
               courseGroup: draggedCourseGroup,
-            }
+            },
           );
 
           if (verifyResponse.status === 200) {
@@ -360,7 +473,7 @@ const OccupanciesPage = () => {
               {
                 room: selectedRoom,
                 courseGroup: draggedCourseGroup,
-              }
+              },
             );
 
             if (changeResponse.status === 201) {
@@ -371,19 +484,19 @@ const OccupanciesPage = () => {
               });
             } else {
               setDialogMessage(
-                changeResponse.data?.message || "Room change failed"
+                changeResponse.data?.message || "Room change failed",
               );
               setDialogOpen(true);
             }
           } else {
             setDialogMessage(
-              verifyResponse.data?.message || "Verification failed"
+              verifyResponse.data?.message || "Verification failed",
             );
             setDialogOpen(true);
           }
         } catch (error: any) {
           setDialogMessage(
-            error.response?.data?.message || "Verification error occurred"
+            error.response?.data?.message || "Verification error occurred",
           );
           setDialogOpen(true);
         }
@@ -399,7 +512,7 @@ const OccupanciesPage = () => {
             {
               room: selectedRoom,
               students: selectedStudents,
-            }
+            },
           );
 
           if (verifyResponse.status === 200) {
@@ -409,7 +522,7 @@ const OccupanciesPage = () => {
               {
                 room: selectedRoom,
                 students: selectedStudents,
-              }
+              },
             );
 
             if (changeResponse.status === 201) {
@@ -421,20 +534,20 @@ const OccupanciesPage = () => {
             } else {
               setDialogMessage(
                 changeResponse.data?.message ||
-                  "Student change failed after verification"
+                  "Student change failed after verification",
               );
               setDialogOpen(true);
             }
           } else {
             setDialogMessage(
               verifyResponse.data?.message ||
-                "Student change verification failed"
+                "Student change verification failed",
             );
             setDialogOpen(true);
           }
         } catch (error: any) {
           setDialogMessage(
-            error.response?.data?.message || "Error during student room change"
+            error.response?.data?.message || "Error during student room change",
           );
           setDialogOpen(true);
         }
@@ -459,7 +572,7 @@ const OccupanciesPage = () => {
 
   const handleCourseGroupDragStart = (
     e: React.DragEvent,
-    group: DraggedCourseGroup
+    group: DraggedCourseGroup,
   ) => {
     setDraggedCourseGroup({ ...group });
     setDropAction("group");
@@ -476,34 +589,37 @@ const OccupanciesPage = () => {
   const groupedOccupancies = useMemo(() => {
     if (selectedOccupancies.length === 0) return [];
 
-    const grouped = selectedOccupancies.reduce((acc, occupancy) => {
-      const slotKey = `${occupancy.room_name}_${occupancy.start_time}-${occupancy.end_time}`;
+    const grouped = selectedOccupancies.reduce(
+      (acc, occupancy) => {
+        const slotKey = `${occupancy.room_name}_${occupancy.start_time}-${occupancy.end_time}`;
 
-      if (!acc[slotKey]) {
-        acc[slotKey] = {
-          room_name: occupancy.room_name,
-          date: occupancy.date,
-          start_time: occupancy.start_time,
-          end_time: occupancy.end_time,
-          courses: [],
-          total_students: 0,
-          room_capacity: occupancy.room_capacity,
-        };
-      }
+        if (!acc[slotKey]) {
+          acc[slotKey] = {
+            room_name: occupancy.room_name,
+            date: occupancy.date,
+            start_time: occupancy.start_time,
+            end_time: occupancy.end_time,
+            courses: [],
+            total_students: 0,
+            room_capacity: occupancy.room_capacity,
+          };
+        }
 
-      acc[slotKey].courses.push({
-        course_code: occupancy.course_code,
-        course_title: occupancy.course_title,
-        course_semester: occupancy.course_semester,
-        course_department: occupancy.course_department,
-        course_group: occupancy.course_group,
-        exam_id: occupancy.exam_id,
-        student_count: occupancy.student_count,
-      });
+        acc[slotKey].courses.push({
+          course_code: occupancy.course_code,
+          course_title: occupancy.course_title,
+          course_semester: occupancy.course_semester,
+          course_department: occupancy.course_department,
+          course_group: occupancy.course_group,
+          exam_id: occupancy.exam_id,
+          student_count: occupancy.student_count,
+        });
 
-      acc[slotKey].total_students += occupancy.student_count;
-      return acc;
-    }, {} as Record<string, any>);
+        acc[slotKey].total_students += occupancy.student_count;
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     return Object.values(grouped)
       .map((slot: any) => {
@@ -512,7 +628,7 @@ const OccupanciesPage = () => {
         const durationMs = endTime.getTime() - startTime.getTime();
         const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
         const durationMinutes = Math.floor(
-          (durationMs % (1000 * 60 * 60)) / (1000 * 60)
+          (durationMs % (1000 * 60 * 60)) / (1000 * 60),
         );
 
         let durationText = "";
@@ -541,7 +657,7 @@ const OccupanciesPage = () => {
         let resp = null;
         if (selectedLocation)
           resp = await axios.get(
-            `/api/rooms/occupancies?location=${selectedLocation.id}`
+            `/api/rooms/occupancies?location=${selectedLocation.id}`,
           );
         else {
           resp = await axios.get("/api/rooms/occupancies/");
@@ -620,7 +736,7 @@ const OccupanciesPage = () => {
     return filteredData.filter(
       (occupancy) =>
         occupancy.room_name === roomName &&
-        occupancy.start_time.startsWith(timeSlot.split(":")[0])
+        occupancy.start_time.startsWith(timeSlot.split(":")[0]),
     );
   };
 
@@ -690,12 +806,13 @@ const OccupanciesPage = () => {
     const occupiedRooms = new Set(filteredData.map((d) => d.room_name)).size;
     const totalStudents = filteredData.reduce(
       (sum, d) => sum + d.student_count,
-      0
+      0,
     );
     const overcapacityRooms = filteredData.filter((d) => {
       const roomOccupancy = filteredData
         .filter(
-          (fd) => fd.room_name === d.room_name && fd.start_time === d.start_time
+          (fd) =>
+            fd.room_name === d.room_name && fd.start_time === d.start_time,
         )
         .reduce((sum, fd) => sum + fd.student_count, 0);
       return roomOccupancy > d.room_capacity;
@@ -709,7 +826,7 @@ const OccupanciesPage = () => {
   const OccupancyCard = ({ occupancies }: { occupancies: RoomOccupancy[] }) => {
     const totalStudents = occupancies.reduce(
       (sum, occ) => sum + occ.student_count,
-      0
+      0,
     );
     const capacity = occupancies[0]?.room_capacity || 0;
     const isOvercapacity = totalStudents > capacity;
@@ -744,7 +861,7 @@ const OccupanciesPage = () => {
                       date: room.date,
                       slot_name: room.slot_name,
                       room_id: room.room_id,
-                    }
+                    },
                   );
                   if (resp.data.success) {
                     fetchOccupancies();
@@ -783,8 +900,8 @@ const OccupanciesPage = () => {
             isOvercapacity
               ? "bg-red-800 border border-red-200 hover:bg-red-100"
               : totalStudents > capacity * 0.8
-              ? "bg-primary border border-primary hover:bg-primary text-white"
-              : "bg-blue-300 border border-blue-300 hover:bg-blue-200"
+                ? "bg-primary border border-primary hover:bg-primary text-white"
+                : "bg-blue-300 border border-blue-300 hover:bg-blue-200"
           }`}
           onClick={() => handleShowRoomOccupancies(occupancies)}
         >
@@ -832,6 +949,7 @@ const OccupanciesPage = () => {
     fetchOccupancies();
     getInstructors();
     getTimetableConfiguration();
+    getTimetables();
     setOpen(false);
   }, []);
   useEffect(() => {
@@ -889,6 +1007,60 @@ const OccupanciesPage = () => {
                     </span>
                   </div>
                 )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Add Timetable Selector */}
+                <Select
+                  value={selectedTimetable}
+                  onValueChange={setSelectedTimetable}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select Timetable" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timetables?.map((tt) => (
+                      <SelectItem key={tt.id} value={tt.id.toString()}>
+                        {tt.academic_year} - Semester{" "}
+                        {tt.semester?.name || tt.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Grouped Buttons - Add Report Buttons */}
+                <div className="flex rounded-full border overflow-hidden">
+                  <Button
+                    onClick={() => generateSeatingReport()}
+                    variant="default"
+                    disabled={isGeneratingReport}
+                  >
+                    {isGeneratingReport ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <DownloadCloudIcon className="w-4 h-4 mr-2" />
+                    )}
+                    <span>Full Report</span>
+                  </Button>
+
+                  <Button onClick={exportData} variant="default">
+                    <Download className="w-4 h-4" />
+                    <span>Export CSV</span>
+                  </Button>
+
+                  <Button
+                    onClick={fetchOccupancies}
+                    className="flex items-center space-x-2 px-3 py-1 rounded-none last:rounded-r-full text-sm"
+                    variant="outline"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${
+                        isGettingOccupancies ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span>Refresh</span>
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {/* Grouped Buttons */}
@@ -1014,25 +1186,26 @@ const OccupanciesPage = () => {
                   </SelectContent>
                 </Select>
 
-                          
-          <Select
-            value={selectedLocation?.id.toString() || ""}
-            onValueChange={(value) => {
-              const location = locations?.find((loc) => loc.id === Number(value));
-              setSelectedLocation(location || null);
-            }}
-          >
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Select Campus" />
-            </SelectTrigger>
-            <SelectContent>
-              {locations?.map((loc) => (
-                <SelectItem key={loc.id} value={loc.id.toString()}>
-                  {loc.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                <Select
+                  value={selectedLocation?.id.toString() || ""}
+                  onValueChange={(value) => {
+                    const location = locations?.find(
+                      (loc) => loc.id === Number(value),
+                    );
+                    setSelectedLocation(location || null);
+                  }}
+                >
+                  <SelectTrigger className="w-[250px]">
+                    <SelectValue placeholder="Select Campus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations?.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.id.toString()}>
+                        {loc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>
@@ -1100,11 +1273,39 @@ const OccupanciesPage = () => {
                         <span className="text-sm font-medium ">{room}</span>
                         <QrCodeIcon className="w-4 h-4" />
                       </Button>
+
+                      <Button
+                        className="flex items-center space-x-2"
+                        onClick={() => {
+                          // Find the room ID from the data
+                          const roomData = data.find(
+                            (d) => d.room_name === room,
+                          );
+                          if (roomData) {
+                            generateSeatingReport(roomData.room_id);
+                          } else {
+                            setToastMessage({
+                              message: "Room ID not found",
+                              variant: "warning",
+                            });
+                          }
+                        }}
+                        variant="outline"
+                        size="sm"
+                        disabled={isGeneratingReport}
+                      >
+                        {isGeneratingReport ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <DownloadCloudIcon className="w-3 h-3" />
+                        )}
+                        <span className="text-xs">Report</span>
+                      </Button>
                     </div>
                     {timeSlots.map((_, timeIndex) => {
                       const occupancies = getOccupancyForSlot(
                         room,
-                        timeSlots[timeIndex]
+                        timeSlots[timeIndex],
                       );
                       return (
                         <div
@@ -1291,7 +1492,8 @@ const OccupanciesPage = () => {
                                             {course.course_code}
                                           </span>
                                           <span className="text-gray-600">
-                                            {course.course_title} {course.course_group}
+                                            {course.course_title}{" "}
+                                            {course.course_group}
                                           </span>
                                         </div>
                                         <div className="flex items-center space-x-4 mt-1 text-sm">
@@ -1324,7 +1526,7 @@ const OccupanciesPage = () => {
                                       </div>
                                     </div>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
 
@@ -1469,12 +1671,12 @@ const OccupanciesPage = () => {
                                   className="flex items-center justify-between hover:opacity-50 border-foreground"
                                   onClick={() => {
                                     const selected = selectedStudents?.some(
-                                      (s) => s.id == student.id
+                                      (s) => s.id == student.id,
                                     );
                                     selected
                                       ? setSelectedStudents([
                                           ...selectedStudents?.filter(
-                                            (s: any) => s.id != student.id
+                                            (s: any) => s.id != student.id,
                                           ),
                                         ])
                                       : setSelectedStudents((prev: any) => [
@@ -1487,7 +1689,7 @@ const OccupanciesPage = () => {
                                     className="h-4 w-4 m-2 border shadow-md border-foreground"
                                     id={student.id}
                                     checked={selectedStudents?.some(
-                                      (s) => s.id == student.id
+                                      (s) => s.id == student.id,
                                     )}
                                     onCheckedChange={(checked) => {
                                       return checked
@@ -1497,7 +1699,7 @@ const OccupanciesPage = () => {
                                           ])
                                         : setSelectedStudents([
                                             ...selectedStudents?.filter(
-                                              (s: any) => s.id != student.id
+                                              (s: any) => s.id != student.id,
                                             ),
                                           ]);
                                     }}
@@ -1583,28 +1785,25 @@ const OccupanciesPage = () => {
                 className="relative bg-white rounded-lg shadow-md"
                 ref={qrRef}
                 style={{ width: "360px", height: "360px" }}
-                
               >
                 <QRCode
                   size={360}
-         
                   value={JSON.stringify(selectedRoomDetails)}
                   viewBox={`0 0 256 256`}
                   level="M"
                   className="rounded-lg bg-white"
                 />
-              
               </div>
-                {/* Download Button */}
-                <Button
-                  onClick={handleDownloadQR}
-                  variant={"default"}
-                  className="w-full mt-5"
-                  aria-label="Download QR Code as PNG"
-                >
-                <DownloadCloudIcon/>
-                  Download
-                </Button>
+              {/* Download Button */}
+              <Button
+                onClick={handleDownloadQR}
+                variant={"default"}
+                className="w-full mt-5"
+                aria-label="Download QR Code as PNG"
+              >
+                <DownloadCloudIcon />
+                Download
+              </Button>
             </DialogDescription>
           </DialogHeader>
 
