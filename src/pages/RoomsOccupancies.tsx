@@ -1464,7 +1464,10 @@ const generateSlotReport = async (roomId: number, date: string, startTime: strin
                             (d) => d.room_name === room,
                           );
                           if (roomData) {
-                            generateSeatingReport(roomData.room_id);
+                            generateSeatingReport(roomData.room_id, selectedDate
+
+
+                            );
                           } else {
                             setToastMessage({
                               message: "Room ID not found",
