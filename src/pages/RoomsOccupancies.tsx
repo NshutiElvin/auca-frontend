@@ -1137,7 +1137,7 @@ const OccupanciesPage = () => {
                 </Select>
 
                 {/* Grouped Buttons - Add Report Buttons */}
-                <div className="flex rounded-full border overflow-hidden">
+                <div className="flex rounded-full border overflow-hidden space-x-2">
                   <Button
                     onClick={generateFullTimetableReport}
                     variant="default"
