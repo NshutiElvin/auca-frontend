@@ -1133,7 +1133,7 @@ const OccupanciesPage = () => {
                   <SelectContent>
                     {timetables?.map((tt) => (
                       <SelectItem key={tt.id} value={tt.id.toString()}>
-                        {tt.academic_year} - Semester{" "}
+                        {tt.academic_year}-
                         {tt.semester?.name || tt.id} ({tt.location?.name || "No campus"})
                       </SelectItem>
                     ))}
