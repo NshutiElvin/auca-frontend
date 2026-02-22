@@ -121,6 +121,10 @@ interface Timetable {
     last_name: string;
     password_strength: null | string;
   };
+  location: {
+    id: number;
+    name: string;
+  };
   published_at?: string;
   semester?: {
     id: number;
@@ -1130,7 +1134,7 @@ const OccupanciesPage = () => {
                     {timetables?.map((tt) => (
                       <SelectItem key={tt.id} value={tt.id.toString()}>
                         {tt.academic_year} - Semester{" "}
-                        {tt.semester?.name || tt.id}
+                        {tt.semester?.name || tt.id} ({tt.location?.name || "No campus"})
                       </SelectItem>
                     ))}
                   </SelectContent>
