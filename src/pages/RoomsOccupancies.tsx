@@ -150,6 +150,14 @@ const OccupanciesPage = () => {
   );
   const [locations, setLocations] = useState<Location[] | null>(null);
   const [timetables, setTimetables] = useState<Timetable[] | null>(null);
+  const [showReportOptions, setShowReportOptions] = useState<boolean>(false);
+  const [selectedRoomForReport, setSelectedRoomForReport] = useState<{
+    roomId: number;
+    roomName: string;
+    date: string;
+    startTime?: string;
+    endTime?: string;
+  } | null>(null);
 
   const getTimetables = () => {
     startTransition(async () => {
@@ -240,12 +248,18 @@ const OccupanciesPage = () => {
     }
   };
 
-  const generateSeatingReport = async (roomId?: number) => {
+  const generateSeatingReport = async (
+    roomId: number,
+    date?: string,
+    startTime?: string,
+    endTime?: string,
+  ) => {
     startGeneratingReportTransition(async () => {
       setServerLoadingMessage({
-        message: roomId
-          ? "Generating room seating report with signatures..."
-          : "Generating full seating report...",
+        message:
+          startTime && endTime
+            ? "Generating slot report with signatures..."
+            : "Generating full day report...",
         isServerLoading: true,
       });
 
@@ -265,13 +279,20 @@ const OccupanciesPage = () => {
         }
 
         // Build URL with parameters
-        let url = `/api/report/?id=${timetableId}&report=seating`;
-        if (roomId) {
-          url += `&room_id=${roomId}`;
+        let url = `/api/report/?id=${timetableId}&report=seating&room_id=${roomId}`;
+
+        if (date) {
+          url += `&date=${encodeURIComponent(date)}`;
+        }
+        if (startTime) {
+          url += `&start_time=${encodeURIComponent(startTime)}`;
+        }
+        if (endTime) {
+          url += `&end_time=${encodeURIComponent(endTime)}`;
         }
 
         const response = await axios.get(url, {
-          responseType: "blob", // Important for PDF download
+          responseType: "blob",
         });
 
         // Create download link
@@ -281,9 +302,17 @@ const OccupanciesPage = () => {
         link.href = downloadUrl;
 
         // Generate filename
-        const date = new Date().toISOString().split("T")[0];
-        const room = roomId ? `_room${roomId}` : "";
-        link.download = `seating_report${room}_${date}.pdf`;
+        const dateStr = date
+          ? new Date(date).toISOString().split("T")[0]
+          : "all";
+        const timeStr =
+          startTime && endTime
+            ? `_slot_${startTime.replace(":", "")}-${endTime.replace(":", "")}`
+            : date && !startTime
+              ? "_fullday"
+              : "";
+
+        link.download = `room${roomId}_report${timeStr}_${dateStr}.pdf`;
 
         document.body.appendChild(link);
         link.click();
@@ -292,16 +321,12 @@ const OccupanciesPage = () => {
         window.URL.revokeObjectURL(downloadUrl);
 
         setToastMessage({
-          message: roomId
-            ? "Room seating report generated successfully"
-            : "Full seating report generated successfully",
+          message: "Report generated successfully",
           variant: "success",
         });
       } catch (error: any) {
         setToastMessage({
-          message:
-            error.response?.data?.message ||
-            "Failed to generate report. Please try again.",
+          message: error.response?.data?.message || "Failed to generate report",
           variant: "danger",
         });
       } finally {
@@ -311,6 +336,146 @@ const OccupanciesPage = () => {
       }
     });
   };
+
+
+  // Full Timetable Report - NO ARGUMENTS
+const generateFullTimetableReport = async () => {
+  startGeneratingReportTransition(async () => {
+    setServerLoadingMessage({
+      message: "Generating full timetable seating report...",
+      isServerLoading: true,
+    });
+
+    try {
+      let timetableId = selectedTimetable;
+      if (!timetableId && timetables && timetables.length > 0) {
+        timetableId = timetables[0].id.toString();
+      }
+
+      if (!timetableId) {
+        setToastMessage({
+          message: "No timetable available. Please select a timetable.",
+          variant: "warning",
+        });
+        return;
+      }
+
+      const response = await axios.get(
+        `/api/report/?id=${timetableId}&report=seating`,
+        { responseType: 'blob' }
+      );
+
+      // Download PDF
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `full_seating_report_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      setToastMessage({
+        message: "Full timetable report generated successfully",
+        variant: "success",
+      });
+    } catch (error: any) {
+      setToastMessage({
+        message: error.response?.data?.message || "Failed to generate report",
+        variant: "danger",
+      });
+    } finally {
+      setServerLoadingMessage({ isServerLoading: false });
+    }
+  });
+};
+
+// Room Full Day Report - Takes roomId and date
+const generateRoomFullDayReport = async (roomId: number, date: string) => {
+  startGeneratingReportTransition(async () => {
+    setServerLoadingMessage({
+      message: "Generating room full day report...",
+      isServerLoading: true,
+    });
+
+    try {
+      let timetableId = selectedTimetable;
+      if (!timetableId && timetables && timetables.length > 0) {
+        timetableId = timetables[0].id.toString();
+      }
+
+      const response = await axios.get(
+        `/api/report/?id=${timetableId}&report=seating&room_id=${roomId}&date=${encodeURIComponent(date)}`,
+        { responseType: 'blob' }
+      );
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `room_${roomId}_fullday_${new Date(date).toISOString().split('T')[0]}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      setToastMessage({
+        message: "Room full day report generated successfully",
+        variant: "success",
+      });
+    } catch (error: any) {
+      setToastMessage({
+        message: error.response?.data?.message || "Failed to generate report",
+        variant: "danger",
+      });
+    } finally {
+      setServerLoadingMessage({ isServerLoading: false });
+    }
+  });
+};
+
+// Slot Report - Takes roomId, date, startTime, endTime
+const generateSlotReport = async (roomId: number, date: string, startTime: string, endTime: string) => {
+  startGeneratingReportTransition(async () => {
+    setServerLoadingMessage({
+      message: "Generating slot report with signatures...",
+      isServerLoading: true,
+    });
+
+    try {
+      let timetableId = selectedTimetable;
+      if (!timetableId && timetables && timetables.length > 0) {
+        timetableId = timetables[0].id.toString();
+      }
+
+      const response = await axios.get(
+        `/api/report/?id=${timetableId}&report=seating&room_id=${roomId}&date=${encodeURIComponent(date)}&start_time=${encodeURIComponent(startTime)}&end_time=${encodeURIComponent(endTime)}`,
+        { responseType: 'blob' }
+      );
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const timeStr = `${startTime.replace(':', '')}-${endTime.replace(':', '')}`;
+      link.download = `room_${roomId}_slot_${timeStr}_${new Date(date).toISOString().split('T')[0]}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      setToastMessage({
+        message: "Slot report generated successfully",
+        variant: "success",
+      });
+    } catch (error: any) {
+      setToastMessage({
+        message: error.response?.data?.message || "Failed to generate report",
+        variant: "danger",
+      });
+    } finally {
+      setServerLoadingMessage({ isServerLoading: false });
+    }
+  });
+};
+
+
+
   const getTimetableConfiguration = async () => {
     const resp = await axios.get("/api/rooms/configurations");
     const data = resp.data.data;
@@ -824,7 +989,20 @@ const OccupanciesPage = () => {
 
   const stats = getOccupancyStats();
 
-  const OccupancyCard = ({ occupancies }: { occupancies: RoomOccupancy[] }) => {
+  const OccupancyCard = ({
+    occupancies,
+    onGenerateSlotReport,
+    isGeneratingReport,
+  }: {
+    occupancies: RoomOccupancy[];
+    onGenerateSlotReport: (
+      roomId: number,
+      date: string,
+      startTime: string,
+      endTime: string,
+    ) => void;
+    isGeneratingReport: boolean;
+  }) => {
     const totalStudents = occupancies.reduce(
       (sum, occ) => sum + occ.student_count,
       0,
@@ -895,6 +1073,28 @@ const OccupanciesPage = () => {
               );
             })}
           </select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={() =>
+              onGenerateSlotReport(
+                occupancies[0].room_id,
+                occupancies[0].date,
+                occupancies[0].start_time,
+                occupancies[0].end_time,
+              )
+            }
+            disabled={isGeneratingReport}
+            title="Generate seating report for this time slot"
+          >
+            {isGeneratingReport ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <DownloadCloudIcon className="w-3 h-3" />
+            )}
+            <span className="text-xs">Slot Report</span>
+          </Button>
         </div>
         <div
           className={`relative h-16 rounded-md p-2 text-xs cursor-move hover:shadow-md   text-black hover:scale-105 ${
@@ -1032,14 +1232,15 @@ const OccupanciesPage = () => {
                 {/* Grouped Buttons - Add Report Buttons */}
                 <div className="flex rounded-full border overflow-hidden">
                   <Button
-                    onClick={() => generateSeatingReport()}
+                    onClick={generateFullTimetableReport}
                     variant="default"
                     disabled={isGeneratingReport}
+                    className="flex items-center gap-1"
                   >
                     {isGeneratingReport ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <DownloadCloudIcon className="w-4 h-4 mr-2" />
+                      <DownloadCloudIcon className="w-4 h-4" />
                     )}
                     <span>Full Report</span>
                   </Button>
@@ -1049,26 +1250,9 @@ const OccupanciesPage = () => {
                     <span>Export CSV</span>
                   </Button>
 
-                  <Button
-                    onClick={fetchOccupancies}
-                    className="flex items-center space-x-2 px-3 py-1 rounded-none last:rounded-r-full text-sm"
-                    variant="outline"
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 ${
-                        isGettingOccupancies ? "animate-spin" : ""
-                      }`}
-                    />
-                    <span>Refresh</span>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {/* Grouped Buttons */}
-                <div className="flex rounded-full border overflow-hidden">
                   <Button onClick={exportData} variant="default">
                     <Download className="w-4 h-4" />
-                    <span>Export</span>
+                    <span>Export CSV</span>
                   </Button>
 
                   <Button
@@ -1350,7 +1534,23 @@ const OccupanciesPage = () => {
                                 });
                               }}
                             >
-                              <OccupancyCard occupancies={occupancies} />
+                              <OccupancyCard
+                                occupancies={occupancies}
+                                onGenerateSlotReport={(
+                                  roomId,
+                                  date,
+                                  startTime,
+                                  endTime,
+                                ) =>
+                                  generateSeatingReport(
+                                    roomId,
+                                    date,
+                                    startTime,
+                                    endTime,
+                                  )
+                                }
+                                isGeneratingReport={isGeneratingReport}
+                              />
                             </div>
                           )}
                         </div>
