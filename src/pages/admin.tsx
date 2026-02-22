@@ -82,11 +82,7 @@ const data = {
           icon: BookOpen,
         },
 
-        {
-          title: "Scheduled Exams",
-          url: "exams",
-          icon: ClipboardList,
-        },
+       
         {
           title: "Students Exams",
           url: "allocations",
