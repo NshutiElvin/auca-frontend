@@ -1121,13 +1121,13 @@ const OccupanciesPage = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 w-full">
+              <div className="flex items-center gap-2">
                 {/* Add Timetable Selector */}
                 <Select
                   value={selectedTimetable}
                   onValueChange={setSelectedTimetable}
                 >
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger >
                     <SelectValue placeholder="Select Timetable" />
                   </SelectTrigger>
                   <SelectContent>
