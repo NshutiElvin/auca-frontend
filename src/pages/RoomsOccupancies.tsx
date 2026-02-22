@@ -1250,10 +1250,7 @@ const generateSlotReport = async (roomId: number, date: string, startTime: strin
                     <span>Export CSV</span>
                   </Button>
 
-                  <Button onClick={exportData} variant="default">
-                    <Download className="w-4 h-4" />
-                    <span>Export CSV</span>
-                  </Button>
+                  
 
                   <Button
                     onClick={fetchOccupancies}
