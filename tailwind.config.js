@@ -12,7 +12,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Syne', ...fontFamily.sans],
+        sans: ['CenturyGothic', ...fontFamily.sans],
       },
       borderRadius: {
         lg: 'var(--radius)',

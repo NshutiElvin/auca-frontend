@@ -5,13 +5,13 @@ const AdminRequiredLayout: React.FC = () => {
   const user = useUser()
   const location = useLocation();
 
-  return   <>
+  return   <div className="w-full">
       {user.role === "admin" ? (
         <Outlet />
       ) : (
         <Navigate to="/unauthorized" state={{ from: location }} replace />
       )}
-    </>
+    </div>
 };
 
 export default AdminRequiredLayout;

@@ -5,11 +5,13 @@ const InstructorRequiredLayout: React.FC = () => {
   const user = useUser()
   const location = useLocation();
 
-  return user.role=="instructor" ? (
-    <Outlet />
-  ) : (
-    <Navigate to="/unauthorized" state={{ from: location }} replace />
-  );
+  return   <div className="w-full">
+      {user.role === "instructor" ? (
+        <Outlet />
+      ) : (
+        <Navigate to="/unauthorized" state={{ from: location }} replace />
+      )}
+    </div>
 };
 
 export default InstructorRequiredLayout;

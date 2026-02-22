@@ -5,9 +5,15 @@
 
  
 @font-face {
-  font-family: "Oswald";
-  src: url('https://fonts.googleapis.com');
- 
+  font-family: 'CenturyGothic';
+  src: url('/fonts/century/centurygothic.ttf') format('truetype');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'CenturyGothic';
+  src: url('/fonts/century/centurygothic_bold.ttf') format('truetype');
+  font-weight: bold;
 }
 
 @layer base {
