@@ -155,12 +155,13 @@ const OccupanciesPage = () => {
     startTransition(async () => {
       try {
         const resp = await axios.get(`/api/schedules/timetables/`);
-        setData(
+        setTimetables(
           resp?.data.data.map((timetable: any) => ({
             ...timetable,
             campus: timetable.location.name,
           })),
         );
+        // setSelectedTimetable(sel)
       } catch (error) {
         setToastMessage({
           message: String(error),
