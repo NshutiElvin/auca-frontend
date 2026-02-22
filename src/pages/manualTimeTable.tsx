@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import useUserAxios from "../hooks/useUserAxios";
 import { Input } from "../components/ui/input";
-import { Exam, MyExam } from "./exams";
+import { Exam } from "./exams";
 import { Badge } from "../components/ui/badge";
 import {
   CourseGroup,
@@ -56,6 +56,7 @@ import {
   TableRow,
 } from "../components/ui/table";
 import AllSuggestionsDialog from "./AllSuggestions";
+import { useSearchParams } from "react-router-dom";
 
 interface Slot {
   id: string;
@@ -97,6 +98,8 @@ interface BestSuggestion {
   slot: string;
 }
 function ManualTimeTable() {
+  const [searchParams] = useSearchParams();
+  const timetableId = searchParams.get("id");
   const [searchTerm, setSearchTerm] = useState("");
   const [assignedCourses, setAssignedCourses] = useState<AssignedCourse[]>([]);
   const [draggedCourse, setDraggedCourse] = useState<any>(null);
@@ -120,7 +123,7 @@ function ManualTimeTable() {
   >([]);
   const [moreExams, setMoreExams] = useState<any[]>([]);
   const [existingDraggedExamGroup, setExistingDraggedExamGroup] =
-    useState<MyExam | null>(null);
+    useState<Exam | null>(null);
   const [scheduledExams, setScheduledExams] = useState<DailyExam[]>([]);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [dialogOption, setDialogOption] = useState<DialogOption | null>(null);
@@ -173,9 +176,9 @@ function ManualTimeTable() {
     try {
       setIsLoadingUnscheduled(true);
       let resp = null;
-      if (selectedLocation)
+      if (timetableId)
         resp = await axios.get(
-          `api/exams/exams/unscheduled_exams?location=${selectedLocation.id}`
+          `api/exams/exams/unscheduled_exams?id=${timetableId}`
         );
       else {
         resp = await axios.get("api/exams/exams/unscheduled_exams");
@@ -213,7 +216,7 @@ function ManualTimeTable() {
   const getExams = async () => {
     try {
       setIsLoadingExams(true);
-      const resp = await axios.get("/api/exams/exams");
+      const resp = await axios.get(`/api/exams/exams?id=${timetableId}`);
 
       let exams: DailyExam[] = [];
       resp.data.data.map((ex: any) => {
