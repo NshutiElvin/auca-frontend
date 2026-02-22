@@ -26,6 +26,7 @@ import {
   ChevronDown,
   Loader,
   MoreHorizontal,
+  Pencil,
   PlusCircle,
   PrinterCheckIcon,
   TrashIcon,
@@ -57,7 +58,7 @@ import useUserAxios from "../hooks/useUserAxios";
 import TableSkeleton from "../components/TableSkeleton";
 import useToast from "../hooks/useToast";
 import { StatusButton } from "../components/ui/status-button";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { isAxiosError } from "axios";
 import useExamsSchedule from "../hooks/useExamShedule";
@@ -128,13 +129,23 @@ export const columns: ColumnDef<Timetable>[] = [
     ),
   },
   {
+    accessorKey: "category",
+    header: "Category",
+    cell: ({ row }) => <div>{row.getValue("category")}</div>,
+  },
+  {
+    accessorKey: "campus",
+    header: "Campus",
+    cell: ({ row }) => <div>{row.getValue("campus")}</div>,
+  },
+  {
     accessorKey: "generated_at",
     header: "Generated On",
     cell: ({ row }) => (
       <div>
         {format(
           new Date(row.getValue("generated_at")),
-          "MMMM d, yyyy · h:mm a"
+          "MMMM d, yyyy · h:mm a",
         )}
       </div>
     ),
@@ -162,8 +173,9 @@ export function TimeTablesPage() {
   const axios = useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
+  const navigate = useNavigate();
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
@@ -176,6 +188,7 @@ export function TimeTablesPage() {
   const [dialogType, setShowDialogType] = React.useState<
     "configuration" | "confirmation" | null
   >(null);
+  const [isExportingPdf, setIsExportingPdf] = React.useState(false);
   const [selectedTimetableId, setSelectedTimetableId] = React.useState<
     null | number | string
   >(null);
@@ -208,11 +221,47 @@ export function TimeTablesPage() {
     },
   });
 
+  const exportToPdf = async () => {
+    const timetableId = searchParams.get("id");
+    if (!timetableId) {
+      setToastMessage({ message: "No timetable selected.", variant: "danger" });
+      return;
+    }
+    setIsExportingPdf(true);
+    try {
+      const resp = await axios.get(
+        `/api/report/?id=${timetableId}&report=timetable`,
+        { responseType: "blob" },
+      );
+      const url = URL.createObjectURL(
+        new Blob([resp.data], { type: "application/pdf" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `exam_timetable_${timetableId}_${format(new Date(), "yyyyMMdd")}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setToastMessage({
+        message: "PDF downloaded successfully.",
+        variant: "success",
+      });
+    } catch {
+      setToastMessage({ message: "Failed to export PDF.", variant: "danger" });
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   const getTimetables = () => {
     startTransition(async () => {
       try {
         const resp = await axios.get(`/api/schedules/timetables/`);
-        setData(resp?.data.data);
+        setData(
+          resp?.data.data.map((timetable: any) => ({
+            ...timetable,
+            campus: timetable.location.name,
+          })),
+        );
       } catch (error) {
         setToastMessage({
           message: String(error),
@@ -246,8 +295,8 @@ export function TimeTablesPage() {
                 ...timetable,
                 status: timetable.status === "DRAFT" ? "PUBLISHED" : "DRAFT",
               }
-            : timetable
-        )
+            : timetable,
+        ),
       );
     } catch (error) {
       if (isAxiosError(error)) {
@@ -282,7 +331,7 @@ export function TimeTablesPage() {
           variant: "success",
         });
         setData((prevData) =>
-          prevData.filter((timetable) => timetable.id !== selectedTimetableId)
+          prevData.filter((timetable) => timetable.id !== selectedTimetableId),
         );
       } catch (error) {
         if (isAxiosError(error)) {
@@ -375,7 +424,7 @@ export function TimeTablesPage() {
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
-                              header.getContext()
+                              header.getContext(),
                             )}
                       </TableHead>
                     );
@@ -394,7 +443,7 @@ export function TimeTablesPage() {
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}
@@ -434,6 +483,20 @@ export function TimeTablesPage() {
                                 : "Publish"}
                             </span>
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedTimetableId(row.getValue("id"));
+                              exportToPdf();
+                            }}
+                          >
+                            <PrinterCheckIcon className="w-4 h-4" /> Export
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem disabled={row.original.status.toLowerCase() !== "published"} onClick={()=>navigate(`/admin/manual?id=${row.getValue("id")}`)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
