@@ -54,6 +54,7 @@ import {
 } from "../components/ui/select";
 import { useNavigate } from "react-router-dom";
 import useToast from "../hooks/useToast";
+import { Badge } from "../components/ui/badge";
 
 export type Course = {
   id?: number;
@@ -385,7 +386,8 @@ export function CoursesPage() {
 
   React.useEffect(() => {
     if (selectedGroupId) {
-      updateCourseGroupTimes(selectedGroupId);}
+      updateCourseGroupTimes(selectedGroupId);
+    }
   }, [groupTime, selectedInstructor]);
 
   const table = useReactTable({
@@ -606,11 +608,11 @@ export function CoursesPage() {
                           </DialogHeader>
                           {/* display course groups*/}
                           <div className="mt-4">
-                            {isGettingGroups ? (
+                            {/* {isGettingGroups ? (
                               <div className="flex items-center justify-center h-32">
                                 <span>Loading groups...</span>
                               </div>
-                            ) : null}
+                            ) : null} */}
                             {selectedCourseGroups.length > 0 ? (
                               <ul className="space-y-2">
                                 {selectedCourseGroups.map((group, idx) => (
@@ -627,17 +629,17 @@ export function CoursesPage() {
                                           Group #{idx + 1}
                                         </span>
                                       </div>
-                                      <div>
+                                      <div className="flex flex-col items-end justify-center">
                                         <h3 className="text-lg font-semibold">
                                           {group.group_name}
                                         </h3>
                                         {group.instructor && (
-                                          <span className="lead">
+                                          <Badge>
                                             {group.instructor?.first_name +
                                               " " +
                                               group.instructor?.last_name ||
                                               "No Instructor Assigned"}
-                                          </span>
+                                          </Badge>
                                         )}
                                       </div>
                                       <div className="flex flex-col justify-center">
@@ -660,8 +662,7 @@ export function CoursesPage() {
                                                   value={instructor.id}
                                                   key={idx}
                                                 >
-                                                  {instructor
-                                                    ?.first_name +
+                                                  {instructor?.first_name +
                                                     " " +
                                                     instructor?.last_name}
                                                 </option>
@@ -671,7 +672,7 @@ export function CoursesPage() {
                                         </select>
                                       </div>
                                       <div>
-                                        <Select
+                                        <select
                                           value={
                                             group.start_time
                                               ? Object.keys(timeMap).find(
@@ -681,35 +682,37 @@ export function CoursesPage() {
                                                 )
                                               : "Morning"
                                           }
-                                          onValueChange={(value) => {
+                                          onChange={(e) => {
                                             setGroupTime(
-                                              value as
+                                              e.target.value as
                                                 | "Morning"
                                                 | "Afternoon"
                                                 | "Evening",
                                             );
-
-                                             
                                           }}
                                         >
-                                          <SelectTrigger className="w-32" defaultChecked>
+                                          <option
+                                            className="w-32"
+                                            selected
+                                            disabled
+                                          >
                                             <SelectValue placeholder="Select time" />
-                                          </SelectTrigger>
-                                          <SelectContent>
+                                          </option>
+                                          <optgroup>
                                             {[
                                               "Morning",
                                               "Afternoon",
                                               "Evening",
                                             ].map((time) => (
-                                              <SelectItem
+                                              <option
                                                 key={time}
                                                 value={time}
                                               >
                                                 {time}
-                                              </SelectItem>
+                                              </option>
                                             ))}
-                                          </SelectContent>
-                                        </Select>
+                                          </optgroup>
+                                        </select>
                                       </div>
                                     </div>
                                   </li>
