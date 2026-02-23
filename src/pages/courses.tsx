@@ -655,10 +655,10 @@ export function CoursesPage() {
                                                   value={instructor.id}
                                                   key={idx}
                                                 >
-                                                  {group.instructor
+                                                  {instructor
                                                     ?.first_name +
                                                     " " +
-                                                    group.instructor?.last_name}
+                                                    instructor?.last_name}
                                                 </option>
                                               );
                                             },
