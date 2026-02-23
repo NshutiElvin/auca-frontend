@@ -259,7 +259,7 @@ function GroupedView({
                               </td>
                               <td className="px-4 py-2.5 font-medium ">{course.courseTitle}</td>
                               <td className="px-4 py-2.5">
-                                <span className="text-xs font-medium px-2 py-0.5 rounded-full border"
+                                <span className="text-xs font-medium px-2 py-0.5 "
                                       style={{ borderColor: "#004594", color: "#004594" }}>
                                   {course.groups.join(", ")}
                                 </span>
