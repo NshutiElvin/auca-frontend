@@ -926,7 +926,7 @@ const OccupanciesPage = () => {
     return (
       <div className="flex flex-col justify-center p-2">
         <div className="flex flex-wrap justify-center gap-2 py-2">
-          {/* {occupancies[0].room_instructor && (
+          {occupancies[0].room_instructor && (
             <Badge variant={"default"}>
               {isAssigningInstructor ? (
                 <Loader2 className="animate-spin" />
@@ -937,9 +937,53 @@ const OccupanciesPage = () => {
                 <X className="w-2 h-2 text-red" />
               </div>
             </Badge>
-          )} */}
+          )}
 
-          
+          <select
+            onChange={(e) => {
+              startAssigningInstructorTransition(async () => {
+                try {
+                  const room = occupancies[0];
+                  const resp = await axios.post(
+                    "/api/rooms/assign_instructor/",
+                    {
+                      instructor_id: e.target.value,
+                      date: room.date,
+                      slot_name: room.slot_name,
+                      room_id: room.room_id,
+                    },
+                  );
+                  if (resp.data.success) {
+                    fetchOccupancies();
+                    setToastMessage({
+                      message: "Instructor assigned successfull",
+                      variant: "success",
+                    });
+                  }
+                } catch (error) {
+                  setToastMessage({
+                    message:
+                      "Failed to assign instructor to this room please try again",
+                    variant: "danger",
+                  });
+                }
+              });
+            }}
+            className="p-2 border rounded-md bg-background"
+          >
+            <option value="" selected>
+              Select Instructor
+            </option>
+            {instructors?.map((instructor, idx) => {
+              return (
+                <option value={instructor.id} key={idx}>
+                  {instructor.first_name ||
+                    instructor.last_name ||
+                    instructor.email}
+                </option>
+              );
+            })}
+          </select>
           {/* <Button
             variant="outline"
             size="sm"
