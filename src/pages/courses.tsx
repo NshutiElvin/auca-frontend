@@ -19,13 +19,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../components/ui/dialog";
 import { ArrowUpDown, ChevronDown, Loader2 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
-
 import { Label } from "../components/ui/label";
 import {
   DropdownMenu,
@@ -117,135 +115,75 @@ export const columns: ColumnDef<Course>[] = [
   },
   {
     accessorKey: "code",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Code
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Code <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => <div className="capitalize">{row.getValue("code")}</div>,
   },
   {
     accessorKey: "title",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Title
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("title")}</div>
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Title <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
     ),
+    cell: ({ row }) => <div className="capitalize">{row.getValue("title")}</div>,
   },
   {
     accessorKey: "credits",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Credits
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("credits")}</div>
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Credits <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
     ),
+    cell: ({ row }) => <div>{row.getValue("credits")}</div>,
   },
   {
     accessorKey: "department",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Department
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("department")}</div>
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Department <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
     ),
+    cell: ({ row }) => <div>{row.getValue("department")}</div>,
   },
   {
     accessorKey: "campus",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Campus
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("campus")}</div>
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Campus <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
     ),
+    cell: ({ row }) => <div>{row.getValue("campus")}</div>,
   },
   {
     accessorKey: "semester",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Semester
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("semester")}</div>
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Semester <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
     ),
+    cell: ({ row }) => <div>{row.getValue("semester")}</div>,
   },
   {
     accessorKey: "enrollments",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Enrollments
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("enrollments")}</div>
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Enrollments <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
     ),
+    cell: ({ row }) => <div>{row.getValue("enrollments")}</div>,
   },
 ];
 
 export function CoursesPage() {
   const navigate = useNavigate();
-  // if(!hasPermission(Permissions.VIEW_COURSE)){
-  //   navigate("/unauthorized")
-  // }
   const axios = useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [isLoading, startTransition] = React.useTransition();
   const [error, setError] = React.useState<string | null>(null);
@@ -253,32 +191,25 @@ export function CoursesPage() {
   const [departments, setDepartments] = React.useState<string[]>([]);
   const [campuses, setCampuses] = React.useState<string[]>([]);
   const [semesters, setSemesters] = React.useState<string[]>([]);
+
+  // Single dialog state — no longer one Dialog per row
   const [isGroupsDialogOpen, setIsGroupsDialogOpen] = React.useState(false);
   const [isGettingGroups, setIsGettingGroups] = React.useState(false);
-  const [selectedCourseId, setSelectedCourseId] = React.useState<number | null>(
-    null,
-  );
+  const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null);
+  const [selectedCourseGroups, setSelectedCourseGroups] = React.useState<any[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = React.useState<number | null>(null);
+
   const { setToastMessage } = useToast();
-  const [selectedGroupId, setSelectedGroupId] = React.useState<number | null>(
-    null,
-  );
   const [instructors, setInstructors] = React.useState<any[] | null>(null);
 
-  const timeMap = {
+  const timeMap: Record<string, { start_time: string; end_time: string }> = {
     Morning: { start_time: "08:00:00", end_time: "11:00:00" },
     Afternoon: { start_time: "13:00:00", end_time: "16:00:00" },
     Evening: { start_time: "17:00:00", end_time: "20:00:00" },
   };
-  const [groupTime, setGroupTime] = React.useState<
-    "Morning" | "Afternoon" | "Evening"
-  >("Morning");
-  const [selectedInstructor, setSelectedInstructor] = React.useState<
-    any | null
-  >(null);
+  const [groupTime, setGroupTime] = React.useState<"Morning" | "Afternoon" | "Evening">("Morning");
+  const [selectedInstructor, setSelectedInstructor] = React.useState<any | null>(null);
   const [isTimeUpdating, setIsTimeUpdating] = React.useState(false);
-  const [selectedCourseGroups, setSelectedCourseGroups] = React.useState<any[]>(
-    [],
-  );
 
   const getInstructors = async () => {
     try {
@@ -289,6 +220,7 @@ export function CoursesPage() {
     } catch (error) {}
   };
 
+  // Accept courseId directly — no stale state dependency
   const getCourseGroups = async (courseId: number) => {
     setIsGettingGroups(true);
     try {
@@ -301,22 +233,25 @@ export function CoursesPage() {
     }
   };
 
-  const updateCourseGroupTimes = async (groupId: number) => {
-    if (!selectedCourseId || !groupId) return;
+  // Accept groupId and courseId directly — no stale state dependency
+  const updateCourseGroupTimes = async (
+    groupId: number,
+    courseId: number,
+    time: "Morning" | "Afternoon" | "Evening",
+    instructor: any
+  ) => {
     setIsTimeUpdating(true);
     try {
       await axios.put(
-        `/api/courses/update-course-group-times/${selectedCourseId}/${groupId}/`,
-        { dayTime: groupTime, instructor: selectedInstructor },
+        `/api/courses/update-course-group-times/${courseId}/${groupId}/`,
+        { dayTime: time, instructor },
       );
       setGroupTime("Morning");
       setSelectedGroupId(null);
       setSelectedInstructor(null);
-
-      setToastMessage({
-        variant: "success",
-        message: "Course information updated successfully.",
-      });
+      setToastMessage({ variant: "success", message: "Course information updated successfully." });
+      // Refresh groups after update
+      await getCourseGroups(courseId);
     } catch {
       setToastMessage({
         message: "Failed to update the course information. Please try again.",
@@ -324,9 +259,27 @@ export function CoursesPage() {
       });
     } finally {
       setIsTimeUpdating(false);
-      getCourseGroups(selectedCourseId);
     }
   };
+
+  const handleOpenManageDialog = (course: Course) => {
+    setSelectedCourse(course);
+    setSelectedCourseGroups([]);
+    setSelectedGroupId(null);
+    setIsGroupsDialogOpen(true);
+    // Pass id directly — no race condition
+    getCourseGroups(Number(course.id));
+  };
+
+  const handleCloseManageDialog = () => {
+    setIsGroupsDialogOpen(false);
+    setSelectedCourse(null);
+    setSelectedCourseGroups([]);
+    setSelectedGroupId(null);
+    setSelectedInstructor(null);
+    setGroupTime("Morning");
+  };
+
   const fetchCourses = () => {
     startTransition(async () => {
       setError(null);
@@ -342,21 +295,14 @@ export function CoursesPage() {
 
         setData(coursesData);
 
-        // Extract unique values for filters
         const uniqueDepartments = [
-          ...new Set(
-            coursesData.map((course: { department: any }) => course.department),
-          ),
+          ...new Set(coursesData.map((course: { department: any }) => course.department)),
         ].filter(Boolean) as string[];
         const uniqueCampuses = [
-          ...new Set(
-            coursesData.map((course: { campus: any }) => course.campus),
-          ),
+          ...new Set(coursesData.map((course: { campus: any }) => course.campus)),
         ].filter(Boolean) as string[];
         const uniqueSemesters = [
-          ...new Set(
-            coursesData.map((course: { semester: any }) => course.semester),
-          ),
+          ...new Set(coursesData.map((course: { semester: any }) => course.semester)),
         ].filter(Boolean) as string[];
 
         setDepartments(uniqueDepartments);
@@ -370,25 +316,12 @@ export function CoursesPage() {
   };
 
   React.useEffect(() => {
-    if (isGroupsDialogOpen && selectedCourseId) {
-      getCourseGroups(selectedCourseId);
-    } else {
-      setSelectedCourseGroups([]);
-      setSelectedCourseId(null);
-      setSelectedGroupId(null);
-    }
-  }, [isGroupsDialogOpen]);
-
-  React.useEffect(() => {
     fetchCourses();
     getInstructors();
   }, []);
 
-  React.useEffect(() => {
-    if (selectedGroupId) {
-      updateCourseGroupTimes(selectedGroupId);
-    }
-  }, [groupTime, selectedInstructor]);
+  // Removed the problematic useEffect that watched isGroupsDialogOpen + selectedCourseId
+  // Removed the useEffect that called updateCourseGroupTimes on groupTime/selectedInstructor change
 
   const table = useReactTable({
     data,
@@ -401,15 +334,9 @@ export function CoursesPage() {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
+    state: { sorting, columnFilters, columnVisibility, rowSelection },
   });
 
-  // Fix for Select component - ensure all values are non-empty strings
   const departmentFilterValue =
     (table.getColumn("department")?.getFilterValue() as string) || "all";
   const campusFilterValue =
@@ -420,493 +347,267 @@ export function CoursesPage() {
   ) : error ? (
     <div className="flex flex-col items-center justify-center h-64 w-full">
       <div className="text-red-500 mb-4">{error}</div>
-      <Button variant="outline" onClick={() => fetchCourses()}>
-        Retry
-      </Button>
+      <Button variant="outline" onClick={() => fetchCourses()}>Retry</Button>
     </div>
   ) : (
-    <Dialog>
-      <div className="w-full p-4">
-        {/* Filters Section */}
-        <div className="flex flex-col md:flex-row gap-4 mb-4 p-4   rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="title-filter">Title</Label>
-              <Input
-                id="title-filter"
-                placeholder="Filter titles..."
-                value={
-                  (table.getColumn("title")?.getFilterValue() as string) ?? ""
-                }
-                onChange={(event) =>
-                  table.getColumn("title")?.setFilterValue(event.target.value)
-                }
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="code-filter">Code</Label>
-              <Input
-                id="code-filter"
-                placeholder="Filter codes..."
-                value={
-                  (table.getColumn("code")?.getFilterValue() as string) ?? ""
-                }
-                onChange={(event) =>
-                  table.getColumn("code")?.setFilterValue(event.target.value)
-                }
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="department-filter">Department</Label>
-              <Select
-                value={departmentFilterValue}
-                onValueChange={(value) =>
-                  table
-                    .getColumn("department")
-                    ?.setFilterValue(value === "all" ? "" : value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Departments</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="campus-filter">Campus</Label>
-              <Select
-                value={campusFilterValue}
-                onValueChange={(value) =>
-                  table
-                    .getColumn("campus")
-                    ?.setFilterValue(value === "all" ? "" : value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select campus" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Campuses</SelectItem>
-                  {campuses.map((campus) => (
-                    <SelectItem key={campus} value={campus}>
-                      {campus}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    <div className="w-full p-4">
+      {/* Manage Groups Dialog — single instance outside the table */}
+      <Dialog open={isGroupsDialogOpen} onOpenChange={(open) => { if (!open) handleCloseManageDialog(); }}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Manage Groups & Instructors for {selectedCourse?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {isGettingGroups ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 className="animate-spin" />
+              </div>
+            ) : selectedCourseGroups.length > 0 ? (
+              <ul className="space-y-2">
+                {selectedCourseGroups.map((group, idx) => (
+                  <li key={group.id} className="p-4 border rounded-md">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm text-muted-foreground">Group #{idx + 1}</span>
+                      </div>
+                      <div className="flex flex-col items-end justify-center">
+                        <h3 className="text-lg font-semibold">{group.group_name}</h3>
+                        {group.instructor && (
+                          <Badge>
+                            {group.instructor?.first_name + " " + group.instructor?.last_name || "No Instructor Assigned"}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <span>Instructor</span>
+                        <select
+                          onChange={(e) => setSelectedInstructor(e.target.value)}
+                          className="p-2 border rounded-md bg-background"
+                        >
+                          <option value="" disabled>Select Instructor</option>
+                          {instructors?.map((instructor, idx) => (
+                            <option value={instructor.id} key={idx}>
+                              {instructor?.first_name + " " + instructor?.last_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <select
+                          value={
+                            group.start_time
+                              ? Object.keys(timeMap).find(
+                                  (key) => timeMap[key].start_time === group.start_time,
+                                ) ?? "Morning"
+                              : "Morning"
+                          }
+                          onChange={(e) => {
+                            const time = e.target.value as "Morning" | "Afternoon" | "Evening";
+                            setGroupTime(time);
+                            // Call directly with all needed values — no stale state
+                            updateCourseGroupTimes(
+                              group.id,
+                              Number(selectedCourse?.id),
+                              time,
+                              selectedInstructor,
+                            );
+                          }}
+                        >
+                          <option disabled>Select Time</option>
+                          <optgroup>
+                            {["Morning", "Afternoon", "Evening"].map((time) => (
+                              <option key={time} value={time}>{time}</option>
+                            ))}
+                          </optgroup>
+                        </select>
+                      </div>
+                      {isTimeUpdating && selectedGroupId === group.id && (
+                        <Loader2 className="animate-spin w-4 h-4" />
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-center text-muted-foreground">
+                No groups found for this course.
+              </div>
+            )}
           </div>
-        </div>
+        </DialogContent>
+      </Dialog>
 
-        {/* Table Controls */}
-        <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-          <div className="flex-1">
+      {/* Filters Section */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4 p-4 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="title-filter">Title</Label>
             <Input
-              placeholder="Search all columns..."
-              value={
-                (table.getColumn("global")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event) => table.setGlobalFilter(event.target.value)}
-              className="max-w-sm"
+              id="title-filter"
+              placeholder="Filter titles..."
+              value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+              onChange={(event) => table.getColumn("title")?.setFilterValue(event.target.value)}
             />
           </div>
-
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  Columns <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="code-filter">Code</Label>
+            <Input
+              id="code-filter"
+              placeholder="Filter codes..."
+              value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
+              onChange={(event) => table.getColumn("code")?.setFilterValue(event.target.value)}
+            />
           </div>
-        </div>
-
-        {/* Table */}
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-
-                    <TableCell>
-                      {/* open dialog and for managing the selected course groups */}
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setIsGroupsDialogOpen(!isGroupsDialogOpen);
-                              setSelectedCourseId(Number(row.original.id));
-                            }}
-                            className="ml-2"
-                          >
-                            Manage
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>
-                              Manage Groups & instructors for{" "}
-                              {row.original.title}
-                            </DialogTitle>
-                          </DialogHeader>
-                          {/* display course groups*/}
-                          <div className="mt-4">
-                            {isGettingGroups ? (
-                              <div className="flex items-center justify-center h-32">
-                                 <Loader2 className="animate-spin" />
-                              </div>
-                            ) : null}
-                            {selectedCourseGroups.length > 0 ? (
-                              <ul className="space-y-2">
-                                {selectedCourseGroups.map((group, idx) => (
-                                  <li
-                                    key={group.id}
-                                    className="p-4 border rounded-md"
-                                    onMouseEnter={() =>
-                                      setSelectedGroupId(group.id)
-                                    }
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <div>
-                                        <span className="text-sm text-muted-foreground">
-                                          Group #{idx + 1}
-                                        </span>
-                                      </div>
-                                      <div className="flex flex-col items-end justify-center">
-                                        <h3 className="text-lg font-semibold">
-                                          {group.group_name}
-                                        </h3>
-                                        {group.instructor && (
-                                          <Badge>
-                                            {group.instructor?.first_name +
-                                              " " +
-                                              group.instructor?.last_name ||
-                                              "No Instructor Assigned"}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <div className="flex flex-col justify-center">
-                                        <span>Instructor</span>
-                                        <select
-                                          onChange={(e) => {
-                                            setSelectedInstructor(
-                                              e.target.value,
-                                            );
-                                          }}
-                                          className="p-2 border rounded-md bg-background"
-                                        >
-                                          <option value="" disabled selected>
-                                            Select Instructor
-                                          </option>
-                                          {instructors?.map(
-                                            (instructor, idx) => {
-                                              return (
-                                                <option
-                                                  value={instructor.id}
-                                                  key={idx}
-                                                >
-                                                  {instructor?.first_name +
-                                                    " " +
-                                                    instructor?.last_name}
-                                                </option>
-                                              );
-                                            },
-                                          )}
-                                        </select>
-                                      </div>
-                                      <div>
-                                        <select
-                                          value={
-                                            group.start_time
-                                              ? Object.keys(timeMap).find(
-                                                  (key) =>
-                                                    timeMap[key].start_time ===
-                                                    group.start_time,
-                                                )
-                                              : "Morning"
-                                          }
-                                          onChange={(e) => {
-                                            setGroupTime(
-                                              e.target.value as
-                                                | "Morning"
-                                                | "Afternoon"
-                                                | "Evening",
-                                            );
-                                          }}
-                                        >
-                                          <option
-                                            className="w-32"
-                                            selected
-                                            disabled
-                                          >
-                                             Select Time
-                                          </option>
-                                          <optgroup>
-                                            {[
-                                              "Morning",
-                                              "Afternoon",
-                                              "Evening",
-                                            ].map((time) => (
-                                              <option
-                                                key={time}
-                                                value={time}
-                                              >
-                                                {time}
-                                              </option>
-                                            ))}
-                                          </optgroup>
-                                        </select>
-                                      </div>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <div className="text-center text-muted-foreground">
-                                No groups found for this course.
-                              </div>
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <div className="text-sm text-muted-foreground">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-            >
-              First
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-            >
-              Last
-            </Button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <span className="text-sm">Rows per page:</span>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="department-filter">Department</Label>
             <Select
-              value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => {
-                table.setPageSize(Number(value));
-              }}
+              value={departmentFilterValue}
+              onValueChange={(value) =>
+                table.getColumn("department")?.setFilterValue(value === "all" ? "" : value)
+              }
             >
-              <SelectTrigger className="w-20">
-                <SelectValue
-                  placeholder={table.getState().pagination.pageSize}
-                />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
               <SelectContent>
-                {[10, 20, 30, 40, 50].map((pageSize) => (
-                  <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
-                  </SelectItem>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="campus-filter">Campus</Label>
+            <Select
+              value={campusFilterValue}
+              onValueChange={(value) =>
+                table.getColumn("campus")?.setFilterValue(value === "all" ? "" : value)
+              }
+            >
+              <SelectTrigger><SelectValue placeholder="Select campus" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Campuses</SelectItem>
+                {campuses.map((campus) => (
+                  <SelectItem key={campus} value={campus}>{campus}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
-
-        {/* Create Course Dialog */}
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Course</DialogTitle>
-            <DialogDescription>
-              Fill in the details to create a new course.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-              <div>
-                <Label htmlFor="code">Module Code</Label>
-                <Input id="code" name="code" placeholder="e.g. CS101" />
-              </div>
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" name="title" placeholder="e.g. Intro to CS" />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  placeholder="Course description..."
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="credits">Credits</Label>
-                <Input
-                  id="credits"
-                  name="credits"
-                  type="number"
-                  placeholder="e.g. 3"
-                />
-              </div>
-              <div>
-                <Label htmlFor="instructor">Instructor ID</Label>
-                <Input
-                  id="instructor"
-                  name="instructor"
-                  type="number"
-                  placeholder="e.g. 1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="department">Department ID</Label>
-                <Input
-                  id="department"
-                  name="department"
-                  type="number"
-                  placeholder="e.g. 2"
-                />
-              </div>
-              <div>
-                <Label htmlFor="semester">Semester</Label>
-                <Input
-                  id="semester"
-                  name="semester"
-                  type="number"
-                  placeholder="e.g. 1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="start_date">Start Date</Label>
-                <Input id="start_date" name="start_date" type="date" />
-              </div>
-              <div>
-                <Label htmlFor="end_date">End Date</Label>
-                <Input id="end_date" name="end_date" type="date" />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="enrollment_limit">Enrollment Limit</Label>
-                <Input
-                  id="enrollment_limit"
-                  name="enrollment_limit"
-                  type="number"
-                  placeholder="e.g. 50"
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button type="submit">Create Course</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
       </div>
-    </Dialog>
+
+      {/* Table Controls */}
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
+        <div className="flex-1">
+          <Input
+            placeholder="Search all columns..."
+            onChange={(event) => table.setGlobalFilter(event.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table.getAllColumns().filter((column) => column.getCanHide()).map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  className="capitalize"
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                >
+                  {column.id}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleOpenManageDialog(row.original)}
+                      className="ml-2"
+                    >
+                      Manage
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No results found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 py-4">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="text-sm text-muted-foreground">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>First</Button>
+          <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button>
+          <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
+          <Button variant="outline" size="sm" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>Last</Button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm">Rows per page:</span>
+          <Select
+            value={`${table.getState().pagination.pageSize}`}
+            onValueChange={(value) => table.setPageSize(Number(value))}
+          >
+            <SelectTrigger className="w-20">
+              <SelectValue placeholder={table.getState().pagination.pageSize} />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 30, 40, 50].map((pageSize) => (
+                <SelectItem key={pageSize} value={`${pageSize}`}>{pageSize}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
   );
 }
