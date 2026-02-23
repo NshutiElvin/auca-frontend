@@ -5,7 +5,7 @@ const AdminRequiredLayout: React.FC = () => {
   const user = useUser()
   const location = useLocation();
 
-  return   <div className="w-full">
+  return   <div >
       {user.role === "admin" ? (
         <Outlet />
       ) : (

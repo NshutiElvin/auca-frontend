@@ -212,7 +212,7 @@ export function OccupanciesPage() {
           transition={{ duration: 0.5 }}
           className="text-3xl my-5 tracking-tighter font-bold"
         >
-          Room Occupancies Plan
+          Sitting Plan
         </motion.h2>
       </div>
       <AnimatePresence initial={false} mode="wait">
