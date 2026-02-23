@@ -35,7 +35,6 @@ import {
   MoreVertical, 
   Search, 
   Download,
-  FileSpreadsheet,
   List
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -64,25 +63,42 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
-  const [grouping, setGrouping] = useState<GroupingState>(['student_name']);
+  const [grouping, setGrouping] = useState<GroupingState>([]); // Fixed: Changed from ['student_name'] to empty array
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [isViewAllOpen, setIsViewAllOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Fixed: Helper function to get student name consistently
+  const getStudentName = (claim: StudentClaim): string => {
+    return claim.student_name || 
+      (claim.student?.user ? `${claim.student.user.first_name} ${claim.student.user.last_name}` : 'Unknown Student');
+  };
 
   const columns: ColumnDef<StudentClaim>[] = [
     {
       accessorKey: 'id',
       header: 'ID',
       cell: ({ row }) => <div className="font-medium">#{row.getValue('id')}</div>,
+      // Fixed: Added aggregation for grouped rows
+      aggregationFn: 'count',
+      aggregatedCell: () => <span>Count</span>,
     },
     {
       accessorKey: 'subject',
       header: 'Subject',
       cell: ({ row }) => (
-        <div className="max-w-[200px] truncate">
+        <div className="max-w-[200px] truncate" title={row.getValue('subject')}>
           {row.getValue('subject')}
         </div>
       ),
+      // Fixed: Added aggregation for grouped rows
+      aggregationFn: (columnId, leafRows) => {
+        return `${leafRows.length} subjects`;
+      },
+      aggregatedCell: ({ getValue }) => {
+        const value = getValue() as string;
+        return <span className="text-muted-foreground">{value}</span>;
+      },
     },
     {
       accessorKey: 'claim_type',
@@ -92,18 +108,35 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
           {row.getValue('claim_type')}
         </Badge>
       ),
+      // Fixed: Proper aggregation for claim_type
+      aggregationFn: (columnId, leafRows) => {
+        const types = leafRows.map(row => row.getValue(columnId));
+        const uniqueTypes = [...new Set(types)];
+        return uniqueTypes.join(', ');
+      },
       aggregatedCell: ({ getValue }) => {
         const value = getValue() as string;
-        return <Badge variant="outline">{value}</Badge>;
+        return <Badge variant="secondary">{value}</Badge>;
       },
     },
     {
-      accessorKey: 'student_name',
+      // Fixed: Using accessorFn for computed student name
+      id: 'student_name',
+      accessorFn: (row) => getStudentName(row),
       header: 'Student',
-      cell: ({ row }) => {
-        const claim = row.original;
-        return claim.student_name || 
-          (claim.student?.user ? `${claim.student.user.first_name} ${claim.student.user.last_name}` : 'N/A');
+      cell: ({ getValue }) => {
+        const studentName = getValue() as string;
+        return <div className="font-medium">{studentName}</div>;
+      },
+      // Fixed: Added aggregation for grouped rows
+      aggregationFn: 'count',
+      aggregatedCell: ({ row }) => {
+        return (
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">{row.groupingValue as string}</span>
+            <Badge variant="secondary">{row.subRows.length}</Badge>
+          </div>
+        );
       },
     },
     {
@@ -119,13 +152,23 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
         };
         
         return (
-          <Badge className={`${colors[status]} text-white`}>
-            {status.replace('_', ' ').toUpperCase()}
+          <Badge className={`${colors[status]} text-white hover:${colors[status]}`}>
+            {status.replace(/_/g, ' ').toUpperCase()}
           </Badge>
         );
       },
+      // Fixed: Proper aggregation for status
+      aggregationFn: (columnId, leafRows) => {
+        const statuses = leafRows.map(row => row.getValue(columnId));
+        const uniqueStatuses = [...new Set(statuses)];
+        if (uniqueStatuses.length === 1) return uniqueStatuses[0];
+        return 'mixed';
+      },
       aggregatedCell: ({ getValue }) => {
-        const status = getValue() as ClaimStatus;
+        const status = getValue() as string;
+        if (status === 'mixed') {
+          return <Badge variant="secondary">Mixed Status</Badge>;
+        }
         const colors = {
           [ClaimStatus.PENDING]: 'bg-yellow-500',
           [ClaimStatus.IN_REVIEW]: 'bg-blue-500',
@@ -133,8 +176,8 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
           [ClaimStatus.REJECTED]: 'bg-red-500',
         };
         return (
-          <Badge className={`${colors[status]} text-white`}>
-            {status }
+          <Badge className={`${colors[status as ClaimStatus]} text-white`}>
+            {status.replace(/_/g, ' ').toUpperCase()}
           </Badge>
         );
       },
@@ -142,7 +185,21 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
     {
       accessorKey: 'submitted_at',
       header: 'Submitted',
-      cell: ({ row }) => format(new Date(row.getValue('submitted_at')), 'PP'),
+      cell: ({ row }) => {
+        const date = row.getValue('submitted_at');
+        return date ? format(new Date(date as string), 'PP') : 'N/A';
+      },
+      // Fixed: Added aggregation for dates
+      aggregationFn: (columnId, leafRows) => {
+        const dates = leafRows.map(row => row.getValue(columnId)).filter(Boolean);
+        if (dates.length === 0) return 'No dates';
+        const latestDate = new Date(Math.max(...dates.map(d => new Date(d as string).getTime())));
+        return `Latest: ${format(latestDate, 'PP')}`;
+      },
+      aggregatedCell: ({ getValue }) => {
+        const value = getValue() as string;
+        return <span className="text-muted-foreground">{value}</span>;
+      },
     },
     {
       id: 'actions',
@@ -181,6 +238,9 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
           </DropdownMenu>
         );
       },
+      // Fixed: Added aggregation for actions column (returns null for grouped rows)
+      aggregationFn: () => null,
+      aggregatedCell: () => null,
     },
   ];
 
@@ -198,6 +258,10 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
     getFilteredRowModel: getFilteredRowModel(),
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
+    // Fixed: Added default column settings
+    defaultColumn: {
+      aggregationFn: 'count', // Default aggregation function
+    },
     state: {
       sorting,
       columnFilters,
@@ -208,24 +272,21 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
   });
 
   const exportToExcel = () => {
-    // Prepare data for export
+    // Fixed: Use consistent student name function
     const exportData = claims.map(claim => ({
       ID: claim.id,
       Subject: claim.subject,
       Type: claim.claim_type,
-      Student: claim.student_name || 
-        (claim.student?.user ? `${claim.student.user.first_name} ${claim.student.user.last_name}` : 'N/A'),
+      Student: getStudentName(claim),
       'Registration Number': claim.student?.reg_no || 'N/A',
       Department: claim.student?.department?.name || 'N/A',
-      Status: claim.status.replace('_', ' ').toUpperCase(),
+      Status: claim.status.replace(/_/g, ' ').toUpperCase(),
       Submitted: claim.submitted_at ? format(new Date(claim.submitted_at), 'PP') : 'N/A',
       Description: claim.description || '',
     }));
 
-    // Create worksheet
     const ws = XLSX.utils.json_to_sheet(exportData);
     
-    // Set column widths
     ws['!cols'] = [
       { wch: 8 },  // ID
       { wch: 30 }, // Subject
@@ -238,11 +299,8 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
       { wch: 50 }, // Description
     ];
 
-    // Create workbook
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Claims');
-
-    // Generate file
     XLSX.writeFile(wb, `claims_export_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   };
 
@@ -257,7 +315,7 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center space-x-2 flex-1">
+        <div className="flex items-center space-x-2 flex-1 min-w-[200px]">
           <Search className="h-4 w-4 text-gray-500" />
           <Input
             placeholder="Search claims..."
@@ -268,24 +326,30 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Select
-            value={table.getColumn('status')?.getFilterValue() as string || 'All'}
-            onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'All' ? undefined : value)}
+            value={table.getColumn('status')?.getFilterValue() as string || 'all'}
+            onValueChange={(value) => {
+              if (value === 'all') {
+                table.getColumn('status')?.setFilterValue(undefined);
+              } else {
+                table.getColumn('status')?.setFilterValue(value);
+              }
+            }}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               {Object.values(ClaimStatus).map((status) => (
                 <SelectItem key={status} value={status}>
-                  {status.replace('_', ' ').toUpperCase()}
+                  {status.replace(/_/g, ' ').toUpperCase()}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <Select
-            value={grouping[0] || 'student_name'}
+            value={grouping.length > 0 ? grouping[0] : 'none'}
             onValueChange={(value) => setGrouping(value === 'none' ? [] : [value])}
           >
             <SelectTrigger className="w-[180px]">
@@ -331,13 +395,14 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                       claims.map((claim) => (
                         <TableRow key={claim.id}>
                           <TableCell className="font-medium">#{claim.id}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{claim.subject}</TableCell>
+                          <TableCell className="max-w-[200px] truncate" title={claim.subject}>
+                            {claim.subject}
+                          </TableCell>
                           <TableCell>
                             <Badge variant="outline">{claim.claim_type}</Badge>
                           </TableCell>
                           <TableCell>
-                            {claim.student_name || 
-                              (claim.student?.user ? `${claim.student.user.first_name} ${claim.student.user.last_name}` : 'N/A')}
+                            {getStudentName(claim)}
                           </TableCell>
                           <TableCell>
                             <Badge className={`${
@@ -346,7 +411,7 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                               claim.status === ClaimStatus.RESOLVED ? 'bg-green-500' :
                               'bg-red-500'
                             } text-white`}>
-                              {claim.status.replace('_', ' ').toUpperCase()}
+                              {claim.status.replace(/_/g, ' ').toUpperCase()}
                             </Badge>
                           </TableCell>
                           <TableCell>{claim.submitted_at ? format(new Date(claim.submitted_at), 'PP') : 'N/A'}</TableCell>
@@ -405,7 +470,10 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow 
+                  key={row.id}
+                  className={row.getIsGrouped() ? 'bg-muted/50' : ''}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {cell.getIsGrouped() ? (
@@ -422,15 +490,10 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                               <ChevronRight className="h-4 w-4" />
                             )}
                           </Button>
-                          <span className="font-semibold">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </span>
-                          <Badge variant="secondary" className="ml-2">
-                            {row.subRows.length}
-                          </Badge>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
                         </div>
                       ) : cell.getIsAggregated() ? (
                         flexRender(
@@ -461,6 +524,7 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-500">
           Showing {table.getRowModel().rows.length} of {claims.length} claims
+          {grouping.length > 0 && ` (grouped by ${grouping[0].replace('_', ' ')})`}
         </div>
         <div className="flex items-center space-x-2">
           <Button
