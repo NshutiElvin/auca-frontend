@@ -926,7 +926,7 @@ const OccupanciesPage = () => {
     return (
       <div className="flex flex-col justify-center p-2">
         <div className="flex flex-wrap justify-center gap-2 py-2">
-          {occupancies[0].room_instructor && (
+          {/* {occupancies[0].room_instructor && (
             <Badge variant={"default"}>
               {isAssigningInstructor ? (
                 <Loader2 className="animate-spin" />
@@ -937,54 +937,10 @@ const OccupanciesPage = () => {
                 <X className="w-2 h-2 text-red" />
               </div>
             </Badge>
-          )}
+          )} */}
 
-          <select
-            onChange={(e) => {
-              startAssigningInstructorTransition(async () => {
-                try {
-                  const room = occupancies[0];
-                  const resp = await axios.post(
-                    "/api/rooms/assign_instructor/",
-                    {
-                      instructor_id: e.target.value,
-                      date: room.date,
-                      slot_name: room.slot_name,
-                      room_id: room.room_id,
-                    },
-                  );
-                  if (resp.data.success) {
-                    fetchOccupancies();
-                    setToastMessage({
-                      message: "Instructor assigned successfull",
-                      variant: "success",
-                    });
-                  }
-                } catch (error) {
-                  setToastMessage({
-                    message:
-                      "Failed to assign instructor to this room please try again",
-                    variant: "danger",
-                  });
-                }
-              });
-            }}
-            className="p-2 border rounded-md bg-background"
-          >
-            <option value="" selected>
-              Select Instructor
-            </option>
-            {instructors?.map((instructor, idx) => {
-              return (
-                <option value={instructor.id} key={idx}>
-                  {instructor.first_name ||
-                    instructor.last_name ||
-                    instructor.email}
-                </option>
-              );
-            })}
-          </select>
-          <Button
+          
+          {/* <Button
             variant="outline"
             size="sm"
             className="flex items-center gap-1"
@@ -1001,7 +957,7 @@ const OccupanciesPage = () => {
           >
               <DownloadCloudIcon className="w-3 h-3" />
             <span className="text-xs">Slot Report</span>
-          </Button>
+          </Button> */}
         </div>
         <div
           className={`relative h-16 rounded-md p-2 text-xs cursor-move hover:shadow-md   text-black hover:scale-105 ${
@@ -1362,7 +1318,7 @@ const OccupanciesPage = () => {
                         <QrCodeIcon className="w-4 h-4" />
                       </Button>
 
-                      <Button
+                      {/* <Button
                         className="flex items-center space-x-2"
                         onClick={() => {
                           // Find the room ID from the data
@@ -1388,7 +1344,7 @@ const OccupanciesPage = () => {
                          
                           <DownloadCloudIcon className="w-3 h-3" />
                         <span className="text-xs">Report</span>
-                      </Button>
+                      </Button> */}
                     </div>
                     {timeSlots.map((_, timeIndex) => {
                       const occupancies = getOccupancyForSlot(

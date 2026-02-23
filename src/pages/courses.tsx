@@ -53,6 +53,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { useNavigate } from "react-router-dom";
+import useToast from "../hooks/useToast";
 
 export type Course = {
   id?: number;
@@ -256,22 +257,36 @@ export function CoursesPage() {
   const [selectedCourseId, setSelectedCourseId] = React.useState<number | null>(
     null,
   );
+  const { setToastMessage } = useToast();
   const [selectedGroupId, setSelectedGroupId] = React.useState<number | null>(
     null,
   );
+  const [instructors, setInstructors] = React.useState<any[] | null>(null);
 
-  const timeMap={
-    "Morning": {start_time: "08:00:00", end_time: "11:00:00"},
-    "Afternoon": {start_time: "13:00:00", end_time: "16:00:00"},
-    "Evening": {start_time: "17:00:00", end_time: "20:00:00"},
-  }
+  const timeMap = {
+    Morning: { start_time: "08:00:00", end_time: "11:00:00" },
+    Afternoon: { start_time: "13:00:00", end_time: "16:00:00" },
+    Evening: { start_time: "17:00:00", end_time: "20:00:00" },
+  };
   const [groupTime, setGroupTime] = React.useState<
     "Morning" | "Afternoon" | "Evening"
   >("Morning");
+  const [selectedInstructor, setSelectedInstructor] = React.useState<
+    any | null
+  >(null);
   const [isTimeUpdating, setIsTimeUpdating] = React.useState(false);
   const [selectedCourseGroups, setSelectedCourseGroups] = React.useState<any[]>(
     [],
   );
+
+  const getInstructors = async () => {
+    try {
+      const resp = await axios.get("/api/users/instructors");
+      if (resp.data.success) {
+        setInstructors(resp.data.data);
+      }
+    } catch (error) {}
+  };
 
   const getCourseGroups = async (courseId: number) => {
     setIsGettingGroups(true);
@@ -280,22 +295,33 @@ export function CoursesPage() {
       setSelectedCourseGroups(resp.data.data);
     } catch (error) {
       console.error("Error fetching course groups:", error);
-    }finally {
+    } finally {
       setIsGettingGroups(false);
     }
   };
 
-  const updateCourseGroupTimes = async () => {
-    if (!selectedCourseId || !selectedGroupId) return;
+  const updateCourseGroupTimes = async (groupId: number) => {
+    if (!selectedCourseId || !groupId ) return;
     setIsTimeUpdating(true);
     try {
       await axios.put(
-        `/api/courses/update-course-group-times/${selectedCourseId}/${selectedGroupId}/`,
-        { dayTime: groupTime },
+        `/api/courses/update-course-group-times/${selectedCourseId}/${groupId}/`,
+        { dayTime: groupTime, instructor: selectedInstructor },
       );
+      setGroupTime("Morning")
+      setSelectedGroupId(null)
+      setSelectedInstructor(null)
+
+      setToastMessage({
+        variant: "success",
+        message: "Course information updated successfully.",
+      });
     } catch {
-      console.log("Error of updating time");
-    }finally {
+      setToastMessage({
+        message: "Failed to update the course information. Please try again.",
+        variant: "danger",
+      });
+    } finally {
       setIsTimeUpdating(false);
       getCourseGroups(selectedCourseId);
     }
@@ -345,7 +371,7 @@ export function CoursesPage() {
   React.useEffect(() => {
     if (isGroupsDialogOpen && selectedCourseId) {
       getCourseGroups(selectedCourseId);
-    }else{
+    } else {
       setSelectedCourseGroups([]);
       setSelectedCourseId(null);
       setSelectedGroupId(null);
@@ -354,6 +380,7 @@ export function CoursesPage() {
 
   React.useEffect(() => {
     fetchCourses();
+    getInstructors();
   }, []);
 
   const table = useReactTable({
@@ -562,12 +589,15 @@ export function CoursesPage() {
                             }}
                             className="ml-2"
                           >
-                            Manage Groups
+                            Manage
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>Manage Groups for {row.original.title}</DialogTitle>
+                            <DialogTitle>
+                              Manage Groups & instructors for{" "}
+                              {row.original.title}
+                            </DialogTitle>
                           </DialogHeader>
                           {/* display course groups*/}
                           <div className="mt-4">
@@ -586,18 +616,60 @@ export function CoursesPage() {
                                     <div className="flex items-center justify-between">
                                       <div>
                                         <span className="text-sm text-muted-foreground">
-                                        Group #{idx + 1}
+                                          Group #{idx + 1}
                                         </span>
                                       </div>
                                       <div>
                                         <h3 className="text-lg font-semibold">
                                           {group.group_name}
                                         </h3>
-                                        
+                                        <span className="lead">
+                                          {group.instructor?.first_name +
+                                            " " +
+                                            group.instructor?.last_name ||
+                                            "No Instructor Assigned"}
+                                        </span>
+                                      </div>
+                                      <div className="flex flex-col justify-center">
+                                        <span>Instructor</span>
+                                        <select
+                                          onChange={(e) => {
+                                            setSelectedInstructor(
+                                              e.target.value,
+                                            );
+                                          }}
+                                          className="p-2 border rounded-md bg-background"
+                                        >
+                                          <option value="" selected>
+                                            Select Instructor
+                                          </option>
+                                          {instructors?.map(
+                                            (instructor, idx) => {
+                                              return (
+                                                <option
+                                                  value={instructor.id}
+                                                  key={idx}
+                                                >
+                                                  {instructor.first_name ||
+                                                    instructor.last_name ||
+                                                    instructor.email}
+                                                </option>
+                                              );
+                                            },
+                                          )}
+                                        </select>
                                       </div>
                                       <div>
                                         <Select
-                                          value={group.start_time ? Object.keys(timeMap).find(key => timeMap[key].start_time === group.start_time) : "Morning"}
+                                          value={
+                                            group.start_time
+                                              ? Object.keys(timeMap).find(
+                                                  (key) =>
+                                                    timeMap[key].start_time ===
+                                                    group.start_time,
+                                                )
+                                              : "Morning"
+                                          }
                                           onValueChange={(value) => {
                                             setGroupTime(
                                               value as
@@ -606,7 +678,7 @@ export function CoursesPage() {
                                                 | "Evening",
                                             );
                                             setSelectedGroupId(group.id);
-                                            updateCourseGroupTimes();
+                                            updateCourseGroupTimes(group.id);
                                           }}
                                         >
                                           <SelectTrigger className="w-32">
