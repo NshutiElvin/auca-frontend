@@ -383,6 +383,11 @@ export function CoursesPage() {
     getInstructors();
   }, []);
 
+  React.useEffect(() => {
+    if (selectedGroupId) {
+      updateCourseGroupTimes(selectedGroupId);}
+  }, [groupTime, selectedInstructor]);
+
   const table = useReactTable({
     data,
     columns,
@@ -645,7 +650,7 @@ export function CoursesPage() {
                                           }}
                                           className="p-2 border rounded-md bg-background"
                                         >
-                                          <option value="" selected>
+                                          <option value="" disabled selected>
                                             Select Instructor
                                           </option>
                                           {instructors?.map(
@@ -684,7 +689,7 @@ export function CoursesPage() {
                                                 | "Evening",
                                             );
 
-                                            updateCourseGroupTimes(group.id);
+                                             
                                           }}
                                         >
                                           <SelectTrigger className="w-32">
