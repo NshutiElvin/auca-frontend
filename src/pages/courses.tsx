@@ -692,7 +692,7 @@ export function CoursesPage() {
                                              
                                           }}
                                         >
-                                          <SelectTrigger className="w-32">
+                                          <SelectTrigger className="w-32" defaultChecked>
                                             <SelectValue placeholder="Select time" />
                                           </SelectTrigger>
                                           <SelectContent>
