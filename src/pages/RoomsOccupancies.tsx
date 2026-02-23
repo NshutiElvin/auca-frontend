@@ -106,6 +106,7 @@ interface Location {
 import { useSidebar } from "../components/ui/sidebar";
 import QRCode from "react-qr-code";
 import LocationContext from "../contexts/LocationContext";
+import { isAxiosError } from "axios";
 
 interface Timetable {
   id: number;
@@ -753,13 +754,11 @@ const OccupanciesPage = () => {
               flatData.push({
                 room_id: room.room_id,
                 room_name: room.room_name,
-                room_instructor: room?.instructor
-                  ? room.instructor.first_name || room.instructor.email
+                room_instructor: schedule?.instructor
+                  ? schedule.instructor.first_name + " "+schedule.instructor.last_name  || schedule.instructor.email
                   : null,
-                room_instructor_id: room.instructor
-                  ? room?.instructor?.id
-                  : null,
-                slot_name: room.slot_name,
+                room_instructor_id: schedule?.instructor?.id ?? null,
+                slot_name: schedule.slot_name,
                 date: schedule.date,
                 start_time: schedule.start_time,
                 end_time: schedule.end_time,
@@ -905,6 +904,7 @@ const OccupanciesPage = () => {
     onGenerateSlotReport,
     isGeneratingReport,
   }: {
+
     occupancies: RoomOccupancy[];
     onGenerateSlotReport: (
       roomId: number,
@@ -914,6 +914,7 @@ const OccupanciesPage = () => {
     ) => void;
     isGeneratingReport: boolean;
   }) => {
+     
     const totalStudents = occupancies.reduce(
       (sum, occ) => sum + occ.student_count,
       0,
@@ -961,11 +962,19 @@ const OccupanciesPage = () => {
                     });
                   }
                 } catch (error) {
-                  setToastMessage({
+                 if(isAxiosError(error)){
+                   setToastMessage({
+                    message:
+                       error.response?.data?.message || "Failed to assign instructor. Please try again.",
+                    variant: "danger",
+                  });
+                 }else{
+                   setToastMessage({
                     message:
                       "Failed to assign instructor to this room please try again",
                     variant: "danger",
                   });
+                 }
                 }
               });
             }}
@@ -977,7 +986,7 @@ const OccupanciesPage = () => {
             {instructors?.map((instructor, idx) => {
               return (
                 <option value={instructor.id} key={idx}>
-                  {instructor.first_name ||
+                  {instructor.first_name + " "+
                     instructor.last_name ||
                     instructor.email}
                 </option>
