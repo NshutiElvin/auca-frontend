@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../components/ui/dialog";
-import { ArrowUpDown, ChevronDown } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Loader2 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
@@ -608,11 +608,11 @@ export function CoursesPage() {
                           </DialogHeader>
                           {/* display course groups*/}
                           <div className="mt-4">
-                            {/* {isGettingGroups ? (
+                            {isGettingGroups ? (
                               <div className="flex items-center justify-center h-32">
-                                <span>Loading groups...</span>
+                                 <Loader2 className="animate-spin" />
                               </div>
-                            ) : null} */}
+                            ) : null}
                             {selectedCourseGroups.length > 0 ? (
                               <ul className="space-y-2">
                                 {selectedCourseGroups.map((group, idx) => (
@@ -696,7 +696,7 @@ export function CoursesPage() {
                                             selected
                                             disabled
                                           >
-                                            <SelectValue placeholder="Select time" />
+                                             Select Time
                                           </option>
                                           <optgroup>
                                             {[
