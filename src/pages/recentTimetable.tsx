@@ -19,7 +19,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../components/ui/dialog";
 import {
   ArrowUpDown,
@@ -34,7 +33,6 @@ import {
 
 import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
-
 import { Label } from "../components/ui/label";
 import {
   DropdownMenu,
@@ -62,7 +60,6 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { isAxiosError } from "axios";
 import useExamsSchedule from "../hooks/useExamShedule";
-import { get } from "http";
 
 interface Timetable {
   id: number;
@@ -143,10 +140,7 @@ export const columns: ColumnDef<Timetable>[] = [
     header: "Generated On",
     cell: ({ row }) => (
       <div>
-        {format(
-          new Date(row.getValue("generated_at")),
-          "MMMM d, yyyy · h:mm a",
-        )}
+        {format(new Date(row.getValue("generated_at")), "MMMM d, yyyy · h:mm a")}
       </div>
     ),
   },
@@ -172,28 +166,17 @@ export const columns: ColumnDef<Timetable>[] = [
 export function TimeTablesPage() {
   const axios = useUserAxios();
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const navigate = useNavigate();
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [isGettingExams, startTransition] = React.useTransition();
-  const { setToastMessage, setServerLoadingMessage, serverLoadingMessage } =
-    useToast();
-  const [searchParams] = useSearchParams();
+  const { setToastMessage, setServerLoadingMessage } = useToast();
   const [isDeletingTimeTables, startDeletingTransition] = React.useTransition();
   const [showDialog, setShowDialog] = React.useState(false);
-  const [dialogType, setShowDialogType] = React.useState<
-    "configuration" | "confirmation" | null
-  >(null);
   const [isExportingPdf, setIsExportingPdf] = React.useState(false);
-  const [selectedTimetableId, setSelectedTimetableId] = React.useState<
-    null | number | string
-  >(null);
-  const { setExams, unScheduled, setStatus, status, masterTimetable } =
-    useExamsSchedule();
+  const [selectedTimetableId, setSelectedTimetableId] = React.useState<null | number | string>(null);
+  const { setExams, setStatus } = useExamsSchedule();
 
   const [data, setData] = React.useState<Timetable[]>([]);
 
@@ -221,8 +204,7 @@ export function TimeTablesPage() {
     },
   });
 
-  const exportToPdf = async () => {
-    const timetableId =  selectedTimetableId || searchParams.get("id");
+  const exportToPdf = async (timetableId: number | string) => {
     if (!timetableId) {
       setToastMessage({ message: "No timetable selected.", variant: "danger" });
       return;
@@ -241,10 +223,7 @@ export function TimeTablesPage() {
       link.download = `exam_timetable_${timetableId}_${format(new Date(), "yyyyMMdd")}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
-      setToastMessage({
-        message: "PDF downloaded successfully.",
-        variant: "success",
-      });
+      setToastMessage({ message: "PDF downloaded successfully.", variant: "success" });
     } catch {
       setToastMessage({ message: "Failed to export PDF.", variant: "danger" });
     } finally {
@@ -263,88 +242,53 @@ export function TimeTablesPage() {
           })),
         );
       } catch (error) {
-        setToastMessage({
-          message: String(error),
-          variant: "danger",
-        });
+        setToastMessage({ message: String(error), variant: "danger" });
       }
     });
   };
 
-  const publishTimeTable = async () => {
-    setServerLoadingMessage({
-      message: `Publishing timetable ...`,
-      isServerLoading: true,
-    });
-
+  const publishTimeTable = async (timetableId: number) => {
+    setServerLoadingMessage({ message: `Publishing timetable ...`, isServerLoading: true });
     try {
       const resp = await axios.put("/api/exams/exams/publish/", {
-        masterTimetable: selectedTimetableId,
+        masterTimetable: timetableId,
       });
-
-      setToastMessage({
-        message: "Timetable published successfully",
-        variant: "success",
-      });
+      setToastMessage({ message: "Timetable published successfully", variant: "success" });
       setStatus(resp.data.status);
-      // Update the local data without refetching
       setData((prevData) =>
         prevData.map((timetable) =>
-          timetable.id === selectedTimetableId
-            ? {
-                ...timetable,
-                status: timetable.status === "DRAFT" ? "PUBLISHED" : "DRAFT",
-              }
+          timetable.id === timetableId
+            ? { ...timetable, status: timetable.status === "DRAFT" ? "PUBLISHED" : "DRAFT" }
             : timetable,
         ),
       );
     } catch (error) {
       if (isAxiosError(error)) {
-        const message = error.response?.data?.message;
-        setToastMessage({
-          message: String(message),
-          variant: "danger",
-        });
+        setToastMessage({ message: String(error.response?.data?.message), variant: "danger" });
       } else {
-        setToastMessage({
-          message: "Something went wrong",
-          variant: "danger",
-        });
+        setToastMessage({ message: "Something went wrong", variant: "danger" });
       }
     } finally {
       setServerLoadingMessage({ isServerLoading: false });
     }
   };
 
-  const deleteAllTimeTables = () => {
-    setServerLoadingMessage({
-      message: `Deleting timetables`,
-      isServerLoading: true,
-    });
+  const deleteAllTimeTables = (timetableId: number | string) => {
+    setServerLoadingMessage({ message: `Deleting timetables`, isServerLoading: true });
     startDeletingTransition(async () => {
       try {
         await axios.delete("/api/exams/exams/truncate-mastertimetable/", {
-          data: { id: selectedTimetableId },
+          data: { id: timetableId },
         });
-        setToastMessage({
-          message: "Timetable deleted successfully",
-          variant: "success",
-        });
+        setToastMessage({ message: "Timetable deleted successfully", variant: "success" });
         setData((prevData) =>
-          prevData.filter((timetable) => timetable.id !== selectedTimetableId),
+          prevData.filter((timetable) => timetable.id !== timetableId),
         );
       } catch (error) {
         if (isAxiosError(error)) {
-          const message = error.response?.data?.message;
-          setToastMessage({
-            message: String(message),
-            variant: "danger",
-          });
+          setToastMessage({ message: String(error.response?.data?.message), variant: "danger" });
         } else {
-          setToastMessage({
-            message: "Something went wrong",
-            variant: "danger",
-          });
+          setToastMessage({ message: "Something went wrong", variant: "danger" });
         }
       } finally {
         setServerLoadingMessage({ isServerLoading: false });
@@ -364,21 +308,16 @@ export function TimeTablesPage() {
       open={showDialog}
       onOpenChange={() => {
         setShowDialog(false);
-        setShowDialogType(null);
+        setSelectedTimetableId(null);
       }}
     >
       <div className="w-full">
         <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <Input
             placeholder="Filter timetables..."
-            value={
-              (table.getColumn("academic_year")?.getFilterValue() as string) ??
-              ""
-            }
+            value={(table.getColumn("academic_year")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-              table
-                .getColumn("academic_year")
-                ?.setFilterValue(event.target.value)
+              table.getColumn("academic_year")?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
           />
@@ -394,20 +333,16 @@ export function TimeTablesPage() {
                 {table
                   .getAllColumns()
                   .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -417,37 +352,25 @@ export function TimeTablesPage() {
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
-                    );
-                  })}
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
                 </TableRow>
               ))}
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
+                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
-                    {/* Separate Delete Button */}
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -459,44 +382,33 @@ export function TimeTablesPage() {
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem
                             onClick={() => {
-                              setShowDialogType("confirmation");
-                              setShowDialog(true);
                               setSelectedTimetableId(row.getValue("id"));
+                              setShowDialog(true);
                             }}
                             className="text-red-600"
                           >
                             <TrashIcon className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedTimetableId(row.getValue("id"));
-                              publishTimeTable();
-                            }}
-                          >
+                          <DropdownMenuItem onClick={() => publishTimeTable(row.getValue("id"))}>
                             <PrinterCheckIcon className="w-4 h-4" />
                             <span>
-                              {(
-                                row.getValue("status") as string
-                              )?.toLowerCase() === "published"
+                              {(row.getValue("status") as string)?.toLowerCase() === "published"
                                 ? "DRAFT"
                                 : "Publish"}
                             </span>
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedTimetableId(row.getValue("id"));
-                              exportToPdf();
-                            }}
-                          >
+                          <DropdownMenuItem onClick={() => exportToPdf(row.getValue("id"))}>
                             <PrinterCheckIcon className="w-4 h-4" /> Export
                           </DropdownMenuItem>
-
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem disabled={row.original.status.toLowerCase() == "published"} onClick={()=>navigate(`/admin/manual?id=${row.getValue("id")}`)}>
+                          <DropdownMenuItem
+                            disabled={row.original.status.toLowerCase() === "published"}
+                            onClick={() => navigate(`/admin/manual?id=${row.getValue("id")}`)}
+                          >
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
-                            </DropdownMenuItem>
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -504,10 +416,7 @@ export function TimeTablesPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
                     No results.
                   </TableCell>
                 </TableRow>
@@ -541,24 +450,23 @@ export function TimeTablesPage() {
         </div>
       </div>
 
-      <DialogContent className="sm:max-w-[425px] md:max-w-[500px] max-h-[90vh] overflow-y-auto ">
+      <DialogContent className="sm:max-w-[425px] md:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center space-y-4 pb-2 flex items-center justify-center">
-          <DialogTitle className="text-l font-bold  leading-tight">
-            Confirm Delete
-          </DialogTitle>
-
-          <DialogDescription className="text-sm  max-w-md mx-auto leading-relaxed  text-center">
+          <DialogTitle className="text-l font-bold leading-tight">Confirm Delete</DialogTitle>
+          <DialogDescription className="text-sm max-w-md mx-auto leading-relaxed text-center">
             Do you really want to perform this action?
           </DialogDescription>
         </DialogHeader>
         <div className="relative p-4">
-          This will delete the timetable and all associated exams. This action
-          cannot be undone.
+          This will delete the timetable and all associated exams. This action cannot be undone.
         </div>
-
         <DialogFooter>
-          <Button variant={"default"} onClick={() => deleteAllTimeTables()}>
-            Yes
+          <Button
+            variant={"default"}
+            disabled={isDeletingTimeTables}
+            onClick={() => selectedTimetableId && deleteAllTimeTables(selectedTimetableId)}
+          >
+            {isDeletingTimeTables ? <Loader className="animate-spin w-4 h-4" /> : "Yes"}
           </Button>
           <Button variant={"secondary"} onClick={() => setShowDialog(false)}>
             No
