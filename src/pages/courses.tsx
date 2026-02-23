@@ -301,16 +301,16 @@ export function CoursesPage() {
   };
 
   const updateCourseGroupTimes = async (groupId: number) => {
-    if (!selectedCourseId || !groupId ) return;
+    if (!selectedCourseId || !groupId) return;
     setIsTimeUpdating(true);
     try {
       await axios.put(
         `/api/courses/update-course-group-times/${selectedCourseId}/${groupId}/`,
         { dayTime: groupTime, instructor: selectedInstructor },
       );
-      setGroupTime("Morning")
-      setSelectedGroupId(null)
-      setSelectedInstructor(null)
+      setGroupTime("Morning");
+      setSelectedGroupId(null);
+      setSelectedInstructor(null);
 
       setToastMessage({
         variant: "success",
@@ -612,6 +612,9 @@ export function CoursesPage() {
                                   <li
                                     key={group.id}
                                     className="p-4 border rounded-md"
+                                    onMouseEnter={() =>
+                                      setSelectedGroupId(group.id)
+                                    }
                                   >
                                     <div className="flex items-center justify-between">
                                       <div>
@@ -623,12 +626,14 @@ export function CoursesPage() {
                                         <h3 className="text-lg font-semibold">
                                           {group.group_name}
                                         </h3>
-                                        <span className="lead">
-                                          {group.instructor?.first_name +
-                                            " " +
-                                            group.instructor?.last_name ||
-                                            "No Instructor Assigned"}
-                                        </span>
+                                        {group.instructor && (
+                                          <span className="lead">
+                                            {group.instructor?.first_name +
+                                              " " +
+                                              group.instructor?.last_name ||
+                                              "No Instructor Assigned"}
+                                          </span>
+                                        )}
                                       </div>
                                       <div className="flex flex-col justify-center">
                                         <span>Instructor</span>
@@ -650,9 +655,10 @@ export function CoursesPage() {
                                                   value={instructor.id}
                                                   key={idx}
                                                 >
-                                                  {instructor.first_name ||
-                                                    instructor.last_name ||
-                                                    instructor.email}
+                                                  {group.instructor
+                                                    ?.first_name +
+                                                    " " +
+                                                    group.instructor?.last_name}
                                                 </option>
                                               );
                                             },
@@ -677,7 +683,7 @@ export function CoursesPage() {
                                                 | "Afternoon"
                                                 | "Evening",
                                             );
-                                            setSelectedGroupId(group.id);
+
                                             updateCourseGroupTimes(group.id);
                                           }}
                                         >
