@@ -1072,7 +1072,9 @@ const OccupanciesPage = () => {
   useEffect(() => {
     fetchOccupancies();
   }, [selectedTimetable, selectedLocation]);
-   
+  useEffect(() => {
+    fetchOccupancies();
+  }, [selectedLocation]);
   useEffect(() => {
     if (availableDates.length > 0) {
       setSelectedDate(availableDates[0]);
@@ -1133,7 +1135,15 @@ const OccupanciesPage = () => {
                   value={selectedTimetable}
                   onValueChange={(value) => {
                     setSelectedTimetable(value);
-                    
+                    const timetable = timetables?.find(
+                      (tt) => tt.id.toString() === value,
+                    );
+                    if (timetable && locations) {
+                      const matchedLocation = locations.find(
+                        (loc) => loc.id === timetable.location.id,
+                      );
+                      setSelectedLocation(matchedLocation || null);
+                    }
                   }}
                 >
                   <SelectTrigger>
@@ -1282,7 +1292,7 @@ const OccupanciesPage = () => {
                   </SelectContent>
                 </Select>
 
-                {/* <Select
+                <Select
                   value={selectedLocation?.id.toString() || ""}
                   onValueChange={(value) => {
                     const location = locations?.find(
@@ -1301,7 +1311,7 @@ const OccupanciesPage = () => {
                       </SelectItem>
                     ))}
                   </SelectContent>
-                </Select> */}
+                </Select>
               </div>
             )}
           </div>
