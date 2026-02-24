@@ -148,7 +148,7 @@ export const Navbar = () => {
                 to="/"
                 className="ml-2 font-bold text-xl flex"
               >
-                <img src="/logo.png" alt="logo" className="h-[75px] mb-5 mt-5"/>
+                <img src="/logo.png" alt="logo" className="h-[55px] mb-5 mt-5"/>
               </Link>
             </NavigationMenuItem>
 

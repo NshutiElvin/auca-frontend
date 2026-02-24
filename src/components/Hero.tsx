@@ -9,7 +9,7 @@ export const Hero = () => {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center overflow-hidden mt-6 px-2"
+      className="relative min-h-screen flex items-center overflow-hidden mt-[60px] px-2 rounded-2xl w-full"
     >
       {/* Background with Blur Effect */}
       <div className="absolute inset-0 z-1">

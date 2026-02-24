@@ -13,7 +13,7 @@ import DotGrid from "../dotgrid";
 
 function HomePage() {
   return (
-    <div className="w-full">
+    <div className="">
   
       <Navbar />
       <Hero />
