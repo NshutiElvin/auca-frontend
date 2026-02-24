@@ -155,7 +155,6 @@ const OccupanciesPage = () => {
   );
   const [locations, setLocations] = useState<Location[] | null>(null);
   const [timetables, setTimetables] = useState<Timetable[] | null>(null);
-   
 
   const getTimetables = () => {
     startTransition(async () => {
@@ -755,7 +754,9 @@ const OccupanciesPage = () => {
                 room_id: room.room_id,
                 room_name: room.room_name,
                 room_instructor: schedule?.instructor
-                  ? schedule.instructor.first_name + " "+schedule.instructor.last_name  || schedule.instructor.email
+                  ? schedule.instructor.first_name +
+                      " " +
+                      schedule.instructor.last_name || schedule.instructor.email
                   : null,
                 room_instructor_id: schedule?.instructor?.id ?? null,
                 slot_name: schedule.slot_name,
@@ -904,7 +905,6 @@ const OccupanciesPage = () => {
     onGenerateSlotReport,
     isGeneratingReport,
   }: {
-
     occupancies: RoomOccupancy[];
     onGenerateSlotReport: (
       roomId: number,
@@ -914,7 +914,6 @@ const OccupanciesPage = () => {
     ) => void;
     isGeneratingReport: boolean;
   }) => {
-     
     const totalStudents = occupancies.reduce(
       (sum, occ) => sum + occ.student_count,
       0,
@@ -962,19 +961,20 @@ const OccupanciesPage = () => {
                     });
                   }
                 } catch (error) {
-                 if(isAxiosError(error)){
-                   setToastMessage({
-                    message:
-                       error.response?.data?.message || "Failed to assign instructor. Please try again.",
-                    variant: "danger",
-                  });
-                 }else{
-                   setToastMessage({
-                    message:
-                      "Failed to assign instructor to this room please try again",
-                    variant: "danger",
-                  });
-                 }
+                  if (isAxiosError(error)) {
+                    setToastMessage({
+                      message:
+                        error.response?.data?.message ||
+                        "Failed to assign instructor. Please try again.",
+                      variant: "danger",
+                    });
+                  } else {
+                    setToastMessage({
+                      message:
+                        "Failed to assign instructor to this room please try again",
+                      variant: "danger",
+                    });
+                  }
                 }
               });
             }}
@@ -986,8 +986,7 @@ const OccupanciesPage = () => {
             {instructors?.map((instructor, idx) => {
               return (
                 <option value={instructor.id} key={idx}>
-                  {instructor.first_name + " "+
-                    instructor.last_name ||
+                  {instructor.first_name + " " + instructor.last_name ||
                     instructor.email}
                 </option>
               );
@@ -1070,14 +1069,10 @@ const OccupanciesPage = () => {
     setOpen(false);
   }, []);
 
-  
-
   useEffect(() => {
     fetchOccupancies();
   }, [selectedTimetable, selectedLocation]);
-  useEffect(() => {
-    fetchOccupancies();
-  }, [selectedLocation]);
+  
   useEffect(() => {
     if (availableDates.length > 0) {
       setSelectedDate(availableDates[0]);
@@ -1136,16 +1131,27 @@ const OccupanciesPage = () => {
                 {/* Add Timetable Selector */}
                 <Select
                   value={selectedTimetable}
-                  onValueChange={setSelectedTimetable}
+                  onValueChange={(value) => {
+                    setSelectedTimetable(value);
+                    const timetable = timetables?.find(
+                      (tt) => tt.id.toString() === value,
+                    );
+                    if (timetable && locations) {
+                      const matchedLocation = locations.find(
+                        (loc) => loc.id === timetable.location.id,
+                      );
+                      setSelectedLocation(matchedLocation || null);
+                    }
+                  }}
                 >
-                  <SelectTrigger >
+                  <SelectTrigger>
                     <SelectValue placeholder="Select Timetable" />
                   </SelectTrigger>
                   <SelectContent>
                     {timetables?.map((tt) => (
                       <SelectItem key={tt.id} value={tt.id.toString()}>
-                        {tt.academic_year}-
-                        {tt.semester?.name || tt.id} ({tt.location?.name || "No campus"})
+                        {tt.academic_year}-{tt.semester?.name || tt.id} (
+                        {tt.location?.name || "No campus"})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1159,8 +1165,7 @@ const OccupanciesPage = () => {
                     disabled={isGeneratingReport}
                     className="flex items-center gap-1"
                   >
-                     
-                      <DownloadCloudIcon className="w-4 h-4" />
+                    <DownloadCloudIcon className="w-4 h-4" />
                     <span>Full Report</span>
                   </Button>
 
