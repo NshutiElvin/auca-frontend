@@ -266,9 +266,7 @@ export default function AdminMainPage() {
             <ModeToggle />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
           <Outlet />
-        </div>
       </SidebarInset>
     </>
   );
