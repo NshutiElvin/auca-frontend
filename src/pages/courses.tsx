@@ -291,7 +291,7 @@ export function CoursesPage() {
       <Button variant="outline" onClick={fetchCourses}>Retry</Button>
     </div>
   ) : (
-    <div className="w-full p-4">
+    <div className="p-4">
 
       {/* Single manage dialog — outside the table, no scroll conflict */}
       <Dialog open={isGroupsDialogOpen} onOpenChange={(open) => { if (!open) handleCloseManageDialog(); }}>
