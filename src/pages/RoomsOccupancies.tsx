@@ -188,7 +188,7 @@ const OccupanciesPage = () => {
     });
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [dropAction, setDropAction] = useState<"group" | "students" | null>(
     null,
   );
@@ -1070,9 +1070,16 @@ const OccupanciesPage = () => {
     setOpen(false);
   }, []);
 
+
+  useEffect(()=>{
+    const timetable = timetables?.find(t=>t.id.toString()===selectedTimetable)
+    setSelectedLocation(timetable?.location || null)
+  },[selectedTimetable])
+  
+
   useEffect(() => {
     fetchOccupancies();
-  }, [selectedTimetable]);
+  }, [selectedTimetable, selectedLocation]);
   useEffect(() => {
     fetchOccupancies();
   }, [selectedLocation]);
@@ -1290,6 +1297,7 @@ const OccupanciesPage = () => {
                       (loc) => loc.id === Number(value),
                     );
                     setSelectedLocation(location || null);
+                    
                   }}
                 >
                   <SelectTrigger className="w-[250px]">
