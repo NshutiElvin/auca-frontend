@@ -1072,7 +1072,9 @@ const OccupanciesPage = () => {
   useEffect(() => {
     fetchOccupancies();
   }, [selectedTimetable, selectedLocation]);
-  
+  useEffect(() => {
+    fetchOccupancies();
+  }, [selectedLocation]);
   useEffect(() => {
     if (availableDates.length > 0) {
       setSelectedDate(availableDates[0]);
