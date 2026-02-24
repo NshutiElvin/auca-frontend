@@ -1070,11 +1070,6 @@ const OccupanciesPage = () => {
     setOpen(false);
   }, []);
 
-
-  useEffect(()=>{
-    const timetable = timetables?.find(t=>t.id.toString()===selectedTimetable)
-    setSelectedLocation(timetable?.location || null)
-  },[selectedTimetable])
   
 
   useEffect(() => {
@@ -1297,7 +1292,6 @@ const OccupanciesPage = () => {
                       (loc) => loc.id === Number(value),
                     );
                     setSelectedLocation(location || null);
-                    
                   }}
                 >
                   <SelectTrigger className="w-[250px]">
