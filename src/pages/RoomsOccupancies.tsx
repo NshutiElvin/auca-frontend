@@ -1222,15 +1222,21 @@ const OccupanciesPage = () => {
                 {/* Departments (already styled) */}
                 <Select
                   value={filters.department}
-                  onValueChange={(value) =>
-                    setFilters({ ...filters, department: value })
+                  onValueChange={(value) =>{
+                    if(value=="All"){
+                      setFilters({ ...filters, department: "" })
+                    }else{
+                      setFilters({ ...filters, department: value })
+                    }
+                  }
+                   
                   }
                 >
                   <SelectTrigger className="w-[250px]">
                     <SelectValue placeholder="All Departments" />
                   </SelectTrigger>
                   <SelectContent>
-                  <SelectItem value="">All Departments</SelectItem>
+                  <SelectItem value="All">All Departments</SelectItem>
                     {filterOptions.departments.map((dept) => (
                       <SelectItem key={dept} value={dept ? dept : ""}>
                         {dept}
