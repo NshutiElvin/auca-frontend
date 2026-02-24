@@ -97,7 +97,7 @@ export default function SchedulerViewFilteration({
   const [configuration, setConfiguration] = useState({
     term: "",
     academicYear: String(new Date().getFullYear()),
-    category: "Provisional",
+    category: "Mid-Term" ,
     location: "",
     constraints: {},
   });
@@ -613,7 +613,7 @@ export default function SchedulerViewFilteration({
 
                 <select
                   title="Select Category"
-                  id="location"
+                  id="category"
                   className="w-full h-10 px-3 py-2 text-sm rounded-md bg-background border border-input focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   onChange={(e) => {
                     setConfiguration({
