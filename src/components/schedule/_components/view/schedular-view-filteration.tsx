@@ -72,19 +72,17 @@ export default function SchedulerViewFilteration({
   const [data, setData] = useState<any[] | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedTimetableId, setSelectedTimetableId] = useState<number | null>(
-    null
+    null,
   );
   const [dialogType, setShowDialogType] = useState<
     "configuration" | "confirmation" | null
   >(null);
 
-
-
   const getTimetables = async () => {
     try {
       const resp = await axios.get("/api/schedules/timetables/");
       setSelectedTimetableId(
-        resp.data.data.length > 0 ? resp.data.data[0].id : null
+        resp.data.data.length > 0 ? resp.data.data[0].id : null,
       );
       setData(resp.data.data);
     } catch (error) {
@@ -194,9 +192,16 @@ export default function SchedulerViewFilteration({
           variant: "success",
         });
         const deletedId = selectedTimetableId;
-        const remainingTimetables = exams?.filter(
-          (timetable) => deletedId !== null && Number.parseInt(timetable.id) !== deletedId) || [];
-        setSelectedTimetableId(remainingTimetables[0]?.id ? Number.parseInt(remainingTimetables[0]?.id) : null);
+        const remainingTimetables =
+          exams?.filter(
+            (timetable) =>
+              deletedId !== null && Number.parseInt(timetable.id) !== deletedId,
+          ) || [];
+        setSelectedTimetableId(
+          remainingTimetables[0]?.id
+            ? Number.parseInt(remainingTimetables[0]?.id)
+            : null,
+        );
         setExams(remainingTimetables);
       } catch (error) {
         if (isAxiosError(error)) {
@@ -228,7 +233,7 @@ export default function SchedulerViewFilteration({
         });
         try {
           const resp = await axios.get(
-            `/api/exams/exams?id=${selectedTimetableId}`
+            `/api/exams/exams?id=${selectedTimetableId}`,
           );
           const respTyped = resp as { data: any };
           const datas: any[] = respTyped.data.data.map((ex: any) => {
@@ -270,7 +275,7 @@ export default function SchedulerViewFilteration({
   }, []);
 
   const [isMobile, setIsMobile] = useState(
-    clientSide ? window.innerWidth <= 768 : false
+    clientSide ? window.innerWidth <= 768 : false,
   );
 
   useEffect(() => {
@@ -294,7 +299,7 @@ export default function SchedulerViewFilteration({
       setOpen(
         <CustomModal contentClass="max-w-md w-full mx-4 sm:mx-auto rounded-2xl p-6 shadow-lg">
           <UnscheduledModel />
-        </CustomModal>
+        </CustomModal>,
       );
     }
   }, [unScheduled]);
@@ -303,7 +308,7 @@ export default function SchedulerViewFilteration({
     setOpen(
       <CustomModal contentClass="max-w-md min-w-full mx-4 sm:mx-auto rounded-2xl p-3 shadow-lg">
         <CreateNewTimeTableModal configuration={configuration} />
-      </CustomModal>
+      </CustomModal>,
     );
   }
 
@@ -341,7 +346,8 @@ export default function SchedulerViewFilteration({
       <div
         className={cn(
           "flex w-full flex-col space-y-6 p-6",
-          serverLoadingMessage?.isServerLoading && "pointer-events-none opacity-50"
+          serverLoadingMessage?.isServerLoading &&
+            "pointer-events-none opacity-50",
         )}
       >
         {/* Header Section */}
@@ -399,18 +405,21 @@ export default function SchedulerViewFilteration({
           {/* Right Section - Actions and Controls */}
           <div className="flex flex-col space-y-3 lg:space-y-0 lg:flex-row lg:items-center lg:space-x-4">
             {/* Status Badge */}
-          
 
             {/* Timetable Selector */}
             <div className="flex flex-col space-y-1 min-w-0 lg:min-w-[200px] mx-3 items-center">
-              <Label htmlFor="timetable-selector" className="text-xs font-medium text-muted-foreground">
-                Select Timetable   {status && (
-              <div className="flex items-center">
-                <span className="text-sm font-medium px-3 py-1 rounded-full border bg-muted/50">
-                  {status}
-                </span>
-              </div>
-            )}
+              <Label
+                htmlFor="timetable-selector"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Select Timetable{" "}
+                {status && (
+                  <div className="flex items-center">
+                    <span className="text-sm font-medium px-3 py-1 rounded-full border bg-muted/50">
+                      {status}
+                    </span>
+                  </div>
+                )}
               </Label>
               <select
                 title="Select Timetable"
@@ -419,7 +428,7 @@ export default function SchedulerViewFilteration({
                 onChange={async (e) => {
                   const timetableId = e.target.value;
                   setSelectedTimetableId(
-                    timetableId ? parseInt(timetableId) : null
+                    timetableId ? parseInt(timetableId) : null,
                   );
                 }}
                 value={masterTimetable || ""}
@@ -444,7 +453,7 @@ export default function SchedulerViewFilteration({
                   }}
                   className={cn(
                     "rounded-none border-0 px-4 h-9",
-                    classNames?.buttons?.addEvent
+                    classNames?.buttons?.addEvent,
                   )}
                   variant="default"
                   size="sm"
@@ -570,7 +579,6 @@ export default function SchedulerViewFilteration({
               Timetable Configuration
             </DialogTitle>
             <DialogDescription className="text-center text-muted-foreground">
-              
               Enter the information for the desired timetable to generate.
             </DialogDescription>
           </DialogHeader>
@@ -595,15 +603,18 @@ export default function SchedulerViewFilteration({
                   value={configuration.academicYear}
                 />
               </div>
-                <div className="space-y-2">
-                <Label htmlFor="timetable_category" className="text-sm font-medium">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="timetable_category"
+                  className="text-sm font-medium"
+                >
                   Category
                 </Label>
-                <Input
-                  type="text"
-                  id="timetable_category"
-                  placeholder="e.g., 2024"
-                  className="h-10"
+
+                <select
+                  title="Select Category"
+                  id="location"
+                  className="w-full h-10 px-3 py-2 text-sm rounded-md bg-background border border-input focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   onChange={(e) => {
                     setConfiguration({
                       ...configuration,
@@ -611,9 +622,19 @@ export default function SchedulerViewFilteration({
                     });
                   }}
                   value={configuration.category || ""}
-                />
+                >
+                  <option value="" selected disabled>
+                    Select a location
+                  </option>
+                  <option value="Mid-Term" selected disabled>
+                    Mid Term
+                  </option>
+                  <option value="Final" selected disabled>
+                    Final
+                  </option>
+                </select>
+             
               </div>
-            
 
               <div className="space-y-2">
                 <Label htmlFor="location" className="text-sm font-medium">
@@ -632,25 +653,25 @@ export default function SchedulerViewFilteration({
                   value={configuration.location}
                 >
                   <option value="">Select a location</option>
-                  {defaultConfigurations.locations.map((location: any, index) => (
-                    <option value={location.id} key={index}>
-                      {location.name}
-                    </option>
-                  ))}
+                  {defaultConfigurations.locations.map(
+                    (location: any, index) => (
+                      <option value={location.id} key={index}>
+                        {location.name}
+                      </option>
+                    ),
+                  )}
                 </select>
               </div>
-
-           
             </div>
-             <ConstraintsConfig onConfigChange={(config) => {
+            <ConstraintsConfig
+              onConfigChange={(config) => {
                 setConfiguration({
                   ...configuration,
-                  constraints: config
+                  constraints: config,
                 });
-              }}  />
+              }}
+            />
           </div>
-
-            
 
           <DialogFooter className="space-x-2">
             <Button
@@ -706,15 +727,15 @@ export default function SchedulerViewFilteration({
           <div className="py-4">
             <div className="rounded-md border border-destructive/20 bg-destructive/10 p-4">
               <p className="text-sm text-muted-foreground">
-                This will permanently delete the timetable and all associated exams. 
-                This action cannot be undone.
+                This will permanently delete the timetable and all associated
+                exams. This action cannot be undone.
               </p>
             </div>
           </div>
 
           <DialogFooter className="space-x-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowDialogType(null);
                 setShowDialog(false);
@@ -722,8 +743,8 @@ export default function SchedulerViewFilteration({
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => deleteAllTimeTables()}
               disabled={isDeletingTimeTables}
             >

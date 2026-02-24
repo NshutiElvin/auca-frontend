@@ -135,6 +135,11 @@ export const columns: ColumnDef<Timetable>[] = [
     header: "Campus",
     cell: ({ row }) => <div>{row.getValue("campus")}</div>,
   },
+   {
+    accessorKey: "category",
+    header: "Category",
+    cell: ({ row }) => <div>{row.getValue("category")}</div>,
+  },
   {
     accessorKey: "generated_at",
     header: "Generated On",

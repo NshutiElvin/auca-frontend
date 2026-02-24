@@ -1230,6 +1230,7 @@ const OccupanciesPage = () => {
                     <SelectValue placeholder="All Departments" />
                   </SelectTrigger>
                   <SelectContent>
+                  <SelectItem value="">All Departments</SelectItem>
                     {filterOptions.departments.map((dept) => (
                       <SelectItem key={dept} value={dept ? dept : ""}>
                         {dept}
