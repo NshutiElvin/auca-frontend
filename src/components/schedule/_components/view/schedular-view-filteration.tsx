@@ -624,12 +624,12 @@ export default function SchedulerViewFilteration({
                   value={configuration.category || ""}
                 >
                   <option value="" selected disabled>
-                    Select a location
+                    Select category
                   </option>
-                  <option value="Mid-Term" selected disabled>
+                  <option value="Mid-Term"  >
                     Mid Term
                   </option>
-                  <option value="Final" selected disabled>
+                  <option value="Final"  >
                     Final
                   </option>
                 </select>
