@@ -216,7 +216,15 @@ function ManualTimeTable() {
   const getExams = async () => {
     try {
       setIsLoadingExams(true);
-      const resp = await axios.get(`/api/exams/exams?id=${timetableId}`);
+      let resp= null;
+      if(timetableId !=null){
+        resp = await axios.get(`/api/exams/exams?id=${timetableId}`);
+        
+
+      }else{
+        resp = await axios.get(`/api/exams/exams`);
+      }
+       
 
       let exams: DailyExam[] = [];
       resp.data.data.map((ex: any) => {
