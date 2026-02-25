@@ -176,7 +176,7 @@ function ManualTimeTable() {
     try {
       setIsLoadingUnscheduled(true);
       let resp = null;
-      if (timetableId)
+      if (timetableId !==null)
         resp = await axios.get(
           `api/exams/exams/unscheduled_exams?id=${timetableId}`
         );
