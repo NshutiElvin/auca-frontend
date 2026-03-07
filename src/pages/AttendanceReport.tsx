@@ -262,9 +262,11 @@ export function AttendanceReport() {
   // PDF export
   const [exportingPdf, setExportingPdf] = React.useState(false);
 
+ 
+
   // ── Load timetables ────────────────────────────────────────────────────────
   React.useEffect(() => {
-    axios.get("/api/schedules/master-timetables/")
+    axios.get("/api/schedules/timetables/")
       .then((r) => {
         const list: Timetable[] = r.data.map((t: any) => ({
           id: t.id,
