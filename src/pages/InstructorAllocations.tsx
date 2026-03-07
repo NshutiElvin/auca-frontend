@@ -221,7 +221,7 @@ export function InstructorAllocationsPage() {
       setIsSubmittingReport(true);
 
       // Step 1: Create the report
-      const reportResp = await axios.post("/api/cheating-reports/mine/", {
+      const reportResp = await axios.post("/api/report/cheating-reports/mine/", {
         exam: selectedStudent.exam_id,
         student: selectedStudent.student_id,
         incident_description: reportForm.incident_description,
@@ -238,7 +238,7 @@ export function InstructorAllocationsPage() {
         formData.append("evidence_type", "document");
         formData.append("description", reportForm.evidence_description);
 
-        await axios.post(`/api/cheating-reports/${reportId}/evidence/`, formData, {
+        await axios.post(`/api/report/cheating-reports/${reportId}/evidence/`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
