@@ -35,6 +35,7 @@ import {
   ChevronDown,
   Shield,
   Sparkles,
+  ListCheck,
 } from "lucide-react";
 
 import {
@@ -73,7 +74,7 @@ const data = {
         { title: "Sitting Plan",     url: "occupancies",  icon: Table2 },
         { title: "Recent Timetables",url: "timetables",   icon: LucideHistory },
         { title: "Uploads",          url: "Uploads",      icon: UploadCloud },
-        { title: "Claims",           url: "claims",       icon: FileQuestion },
+        { title: "Claims",           url: "claims",       icon: ListCheck },
         { title: "Report",           url: "report",       icon: FileQuestion },
       ],
     },
