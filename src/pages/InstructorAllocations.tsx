@@ -60,6 +60,7 @@ import { Badge } from "../components/ui/badge";
 export type StudentExam = {
   id: string;
   student_id: string;
+  user_id: number;
   exam_id: string;
   reg_no: string;
   name: string;
@@ -122,6 +123,7 @@ export function InstructorAllocationsPage() {
         const formattedData = resp.data.students.map((data: any) => ({
           id: data.id,
           student_id: data.student.id,
+          user_id: data.student.user.id,
           exam_id: data.exam.id,
           reg_no: data.student.reg_no,
           name: data.student.user.first_name + " " + data.student.user.last_name,
@@ -223,7 +225,7 @@ export function InstructorAllocationsPage() {
       // Step 1: Create the report
       const reportResp = await axios.post("/api/report/cheating-reports/mine/", {
         exam: selectedStudent.exam_id,
-        student: selectedStudent.student_id,
+        student: selectedStudent.user_id,
         incident_description: reportForm.incident_description,
         severity: reportForm.severity,
         incident_time: reportForm.incident_time || undefined,
