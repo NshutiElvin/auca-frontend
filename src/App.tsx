@@ -47,6 +47,7 @@ import { ClaimDetailPage } from "./pages/ClaimDetailPage";
 import { AdminClaimsPage } from "./pages/AdminClaimsPage";
 import { StudentClaims } from "./pages/StudentClaims";
 import { NewClaimPage } from "./pages/newClaim";
+import { AttendanceReport } from "./pages/AttendanceReport";
 
 const App = () => {
   return (
@@ -87,6 +88,10 @@ const App = () => {
                                   <Route
                                     path="courses"
                                     element={<CoursesPage />}
+                                  />
+                                  <Route
+                                    path="report"
+                                    element={<AttendanceReport />}
                                   />
                                   <Route
                                     path="departments"
