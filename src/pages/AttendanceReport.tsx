@@ -11,16 +11,15 @@ import {
 } from "@tanstack/react-table";
 import {
   AlertTriangle, CheckCircle2, XCircle, Clock, Users,
-  UserCheck, UserX, FileText, Download, Eye, ChevronRight,
+  UserCheck, UserX, Download, Eye, ChevronRight,
   ArrowLeft, Loader2, RefreshCw, Shield, ShieldAlert,
-  ShieldCheck, ShieldX, Search, Filter,
+  ShieldCheck, ShieldX, Search, BookOpen, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
-import { Checkbox } from "../components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow,
@@ -41,10 +40,9 @@ import useToast from "../hooks/useToast";
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Timetable = { id: number; label: string };
 
-type ExamSummary = {
+/** One exam inside a course bucket (returned by /stats/) */
+type ExamEntry = {
   exam_id: number;
-  course: string;
-  course_code: string;
   group: string;
   date: string;
   start_time: string;
@@ -55,6 +53,18 @@ type ExamSummary = {
   signed_in: number;
   absent: number;
   cheating_reports: number;
+};
+
+/** Course-level summary returned by /stats/ */
+type CourseSummary = {
+  course_code: string;
+  course_title: string;
+  total: number;
+  signed_in: number;
+  absent: number;
+  cheating_reports: number;
+  signed_out: number;
+  exams: ExamEntry[];
 };
 
 type DashboardStats = {
@@ -88,21 +98,32 @@ type StudentRow = {
   cheating_report: CheatingReport;
 };
 
-type ExamDetail = {
-  id: number;
-  course: string;
-  course_code: string;
-  group: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  room: string;
-  status: string;
+/** One exam group inside the course attendance response */
+type ExamGroup = {
+  exam: {
+    id: number;
+    group: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    room: string;
+    status: string;
+  };
+  students: StudentRow[];
+  summary: {
+    total: number;
+    signed_in: number;
+    signed_out: number;
+    absent: number;
+    cheating_reports: number;
+  };
 };
 
-type AttendanceData = {
-  exam: ExamDetail;
-  students: StudentRow[];
+/** Full response from GET /api/report/attendance/?course_code=&timetable_id= */
+type CourseAttendanceData = {
+  course: { code: string; title: string };
+  timetable_id: number;
+  exam_groups: ExamGroup[];
   summary: {
     total: number;
     signed_in: number;
@@ -122,7 +143,9 @@ const fmt12 = (t: string) => {
 
 const fmtDate = (d: string) => {
   if (!d) return "–";
-  return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(d).toLocaleDateString("en-GB", {
+    day: "2-digit", month: "short", year: "numeric",
+  });
 };
 
 const SEVERITY_CONFIG = {
@@ -132,16 +155,21 @@ const SEVERITY_CONFIG = {
 };
 
 const REPORT_STATUS_CONFIG = {
-  pending:      { label: "Pending",      icon: Clock,        color: "bg-gray-100 text-gray-700" },
-  under_review: { label: "Under Review", icon: Eye,          color: "bg-blue-100 text-blue-700" },
-  confirmed:    { label: "Confirmed",    icon: ShieldAlert,  color: "bg-red-100 text-red-700" },
-  dismissed:    { label: "Dismissed",    icon: ShieldX,      color: "bg-green-100 text-green-700" },
+  pending:      { label: "Pending",      icon: Clock,       color: "bg-gray-100 text-gray-700" },
+  under_review: { label: "Under Review", icon: Eye,         color: "bg-blue-100 text-blue-700" },
+  confirmed:    { label: "Confirmed",    icon: ShieldAlert, color: "bg-red-100 text-red-700" },
+  dismissed:    { label: "Dismissed",    icon: ShieldX,     color: "bg-green-100 text-green-700" },
+};
+
+const EXAM_STATUS_COLOR: Record<string, string> = {
+  SCHEDULED: "bg-blue-100 text-blue-700",
+  ONGOING:   "bg-green-100 text-green-700",
+  COMPLETED: "bg-gray-100 text-gray-700",
+  CANCELLED: "bg-red-100 text-red-700",
 };
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
-function StatCard({
-  label, value, icon: Icon, color, sub,
-}: {
+function StatCard({ label, value, icon: Icon, color, sub }: {
   label: string; value: number; icon: any; color: string; sub?: string;
 }) {
   return (
@@ -162,16 +190,34 @@ function StatCard({
   );
 }
 
-// ── Exam Card ─────────────────────────────────────────────────────────────────
-function ExamCard({ exam, onClick }: { exam: ExamSummary; onClick: () => void }) {
-  const attendancePct = exam.total > 0 ? Math.round((exam.signed_in / exam.total) * 100) : 0;
-  const statusColor = {
-    SCHEDULED: "bg-blue-100 text-blue-700",
-    ONGOING:   "bg-green-100 text-green-700",
-    COMPLETED: "bg-gray-100 text-gray-700",
-    CANCELLED: "bg-red-100 text-red-700",
-  }[exam.status] || "bg-gray-100 text-gray-700";
+// ── Mini summary pill row ─────────────────────────────────────────────────────
+function SummaryPills({ total, signed_in, absent, cheating_reports }: {
+  total: number; signed_in: number; absent: number; cheating_reports: number;
+}) {
+  const pct = total > 0 ? Math.round((signed_in / total) * 100) : 0;
+  return (
+    <div className="flex flex-wrap gap-2 text-xs">
+      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+        {total} total
+      </span>
+      <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+        <UserCheck className="h-3 w-3" /> {signed_in} present ({pct}%)
+      </span>
+      <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+        <UserX className="h-3 w-3" /> {absent} absent
+      </span>
+      {cheating_reports > 0 && (
+        <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" /> {cheating_reports} cheating
+        </span>
+      )}
+    </div>
+  );
+}
 
+// ── Course Card (replaces ExamCard) ───────────────────────────────────────────
+function CourseCard({ course, onClick }: { course: CourseSummary; onClick: () => void }) {
+  const pct = course.total > 0 ? Math.round((course.signed_in / course.total) * 100) : 0;
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
@@ -180,54 +226,205 @@ function ExamCard({ exam, onClick }: { exam: ExamSummary; onClick: () => void })
       className="rounded-xl border bg-card p-5 cursor-pointer transition-all"
       onClick={onClick}
     >
+      {/* Course title */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="font-bold text-sm text-primary">{exam.course_code}</p>
-          <p className="font-semibold text-sm leading-snug mt-0.5">{exam.course}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Group: {exam.group}</p>
+          <p className="font-bold text-sm text-primary">{course.course_code}</p>
+          <p className="font-semibold text-sm leading-snug mt-0.5">{course.course_title}</p>
         </div>
-        <Badge className={`text-xs ${statusColor} border`}>{exam.status}</Badge>
-      </div>
-
-      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-        <span>{fmtDate(exam.date)}</span>
-        <span>·</span>
-        <span>{fmt12(exam.start_time)} – {fmt12(exam.end_time)}</span>
-        <span>·</span>
-        <span>{exam.room}</span>
+        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+          {course.exams.length} exam{course.exams.length !== 1 ? "s" : ""}
+        </span>
       </div>
 
       {/* Attendance bar */}
       <div className="mb-3">
         <div className="flex justify-between text-xs mb-1">
-          <span className="text-muted-foreground">Attendance</span>
-          <span className="font-semibold">{exam.signed_in}/{exam.total} ({attendancePct}%)</span>
+          <span className="text-muted-foreground">Overall Attendance</span>
+          <span className="font-semibold">{course.signed_in}/{course.total} ({pct}%)</span>
         </div>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
             className="h-full rounded-full bg-primary transition-all"
-            style={{ width: `${attendancePct}%` }}
+            style={{ width: `${pct}%` }}
           />
         </div>
       </div>
 
+      {/* Stats row */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-3 text-xs">
-          <span className="flex items-center gap-1 text-green-700">
-            <UserCheck className="h-3 w-3" /> {exam.signed_in} present
+        <SummaryPills
+          total={course.total}
+          signed_in={course.signed_in}
+          absent={course.absent}
+          cheating_reports={course.cheating_reports}
+        />
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+      </div>
+
+      {/* Exam dates strip */}
+      <div className="mt-3 flex flex-wrap gap-1">
+        {course.exams.map((e) => (
+          <span
+            key={e.exam_id}
+            className={`text-xs px-2 py-0.5 rounded-full border ${EXAM_STATUS_COLOR[e.status] ?? "bg-gray-100 text-gray-700"}`}
+          >
+            {e.group} · {fmtDate(e.date)}
           </span>
-          <span className="flex items-center gap-1 text-red-600">
-            <UserX className="h-3 w-3" /> {exam.absent} absent
-          </span>
-          {exam.cheating_reports > 0 && (
-            <span className="flex items-center gap-1 text-amber-600 font-semibold">
-              <AlertTriangle className="h-3 w-3" /> {exam.cheating_reports} cheating
-            </span>
-          )}
-        </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        ))}
       </div>
     </motion.div>
+  );
+}
+
+// ── Collapsible Exam Section (inside course detail view) ──────────────────────
+function ExamSection({
+  examGroup,
+  columns,
+  filterCheated,
+  globalFilter,
+  onReview,
+}: {
+  examGroup: ExamGroup;
+  columns: ColumnDef<StudentRow>[];
+  filterCheated: boolean;
+  globalFilter: string;
+  onReview: (row: StudentRow) => void;
+}) {
+  const [open, setOpen] = React.useState(true);
+  const { exam, students, summary } = examGroup;
+
+  const tableData = React.useMemo(
+    () => (filterCheated ? students.filter((s) => s.cheated) : students),
+    [students, filterCheated]
+  );
+
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [localFilter, setLocalFilter] = React.useState(globalFilter);
+
+  // keep local filter in sync with parent
+  React.useEffect(() => setLocalFilter(globalFilter), [globalFilter]);
+
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setLocalFilter,
+    state: { sorting, globalFilter: localFilter },
+    globalFilterFn: (row, _, val) => {
+      const q = val.toLowerCase();
+      return [row.original.reg_no, row.original.name, row.original.department]
+        .some((v) => v.toLowerCase().includes(q));
+    },
+    initialState: { pagination: { pageSize: 15 } },
+  });
+
+  return (
+    <div className="rounded-xl border overflow-hidden">
+      {/* Exam sub-header */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted/60 transition-colors text-left"
+      >
+        <div className="flex items-center gap-3 flex-wrap">
+          <Badge className={`text-xs ${EXAM_STATUS_COLOR[exam.status] ?? "bg-gray-100 text-gray-700"} border`}>
+            {exam.status}
+          </Badge>
+          <span className="font-semibold text-sm">Group: {exam.group}</span>
+          <span className="text-xs text-muted-foreground">
+            {fmtDate(exam.date)} · {fmt12(exam.start_time)} – {fmt12(exam.end_time)} · {exam.room}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <SummaryPills
+            total={summary.total}
+            signed_in={summary.signed_in}
+            absent={summary.absent}
+            cheating_reports={summary.cheating_reports}
+          />
+          {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </div>
+      </button>
+
+      {/* Collapsible table */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow key={hg.id} className="bg-muted/50">
+                    {hg.headers.map((h) => (
+                      <TableHead key={h.id} className="text-xs font-semibold text-center">
+                        {flexRender(h.column.columnDef.header, h.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      className={
+                        row.original.cheated
+                          ? "bg-amber-50/60 hover:bg-amber-50"
+                          : row.original.signin
+                          ? "hover:bg-muted/40"
+                          : "bg-red-50/40 hover:bg-red-50/60"
+                      }
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="text-center py-2.5">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-16 text-center text-muted-foreground text-sm">
+                      No students match the current filter.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+
+            {/* Pagination per exam */}
+            {table.getPageCount() > 1 && (
+              <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/20">
+                <p className="text-xs text-muted-foreground">
+                  {table.getFilteredRowModel().rows.length} student(s)
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                    Previous
+                  </Button>
+                  <span className="text-xs">
+                    {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -236,33 +433,30 @@ export function AttendanceReport() {
   const axios = useUserAxios();
   const { setToastMessage } = useToast();
 
-  // ── State ─────────────────────────────────────────────────────────────────
+  // ── State ──────────────────────────────────────────────────────────────────
   const [timetables, setTimetables] = React.useState<Timetable[]>([]);
   const [selectedTimetable, setSelectedTimetable] = React.useState<string>("");
   const [stats, setStats] = React.useState<DashboardStats | null>(null);
-  const [exams, setExams] = React.useState<ExamSummary[]>([]);
+  const [courses, setCourses] = React.useState<CourseSummary[]>([]);
   const [loadingStats, setLoadingStats] = React.useState(false);
 
-  // Drill-down: attendance table
-  const [selectedExam, setSelectedExam] = React.useState<ExamSummary | null>(null);
-  const [attendanceData, setAttendanceData] = React.useState<AttendanceData | null>(null);
+  // Drill-down: course attendance
+  const [selectedCourse, setSelectedCourse] = React.useState<CourseSummary | null>(null);
+  const [courseAttendance, setCourseAttendance] = React.useState<CourseAttendanceData | null>(null);
   const [loadingAttendance, setLoadingAttendance] = React.useState(false);
   const [globalFilter, setGlobalFilter] = React.useState("");
-  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [filterCheated, setFilterCheated] = React.useState(false);
 
   // Review dialog
-  const [reviewDialog, setReviewDialog] = React.useState<{
-    open: boolean; row: StudentRow | null;
-  }>({ open: false, row: null });
+  const [reviewDialog, setReviewDialog] = React.useState<{ open: boolean; row: StudentRow | null }>({
+    open: false, row: null,
+  });
   const [reviewStatus, setReviewStatus] = React.useState<string>("");
   const [reviewNotes, setReviewNotes] = React.useState("");
   const [submittingReview, setSubmittingReview] = React.useState(false);
 
   // PDF export
   const [exportingPdf, setExportingPdf] = React.useState(false);
-
- 
 
   // ── Load timetables ────────────────────────────────────────────────────────
   React.useEffect(() => {
@@ -282,25 +476,29 @@ export function AttendanceReport() {
   React.useEffect(() => {
     if (!selectedTimetable) return;
     setLoadingStats(true);
-    setSelectedExam(null);
-    setAttendanceData(null);
+    setSelectedCourse(null);
+    setCourseAttendance(null);
     axios.get(`/api/report/attendance/stats/?timetable_id=${selectedTimetable}`)
       .then((r) => {
         setStats(r.data.stats);
-        setExams(r.data.exams);
+        setCourses(r.data.courses);       // ← now "courses" not "exams"
       })
       .catch(() => setToastMessage({ message: "Failed to load stats", variant: "danger" }))
       .finally(() => setLoadingStats(false));
   }, [selectedTimetable]);
 
-  // ── Drill into exam ────────────────────────────────────────────────────────
-  const openExam = async (exam: ExamSummary) => {
-    setSelectedExam(exam);
+  // ── Drill into course ──────────────────────────────────────────────────────
+  const openCourse = async (course: CourseSummary) => {
+    setSelectedCourse(course);
     setLoadingAttendance(true);
-    setAttendanceData(null);
+    setCourseAttendance(null);
+    setGlobalFilter("");
+    setFilterCheated(false);
     try {
-      const r = await axios.get(`/api/report/attendance/?exam_id=${exam.exam_id}`);
-      setAttendanceData(r.data);
+      const r = await axios.get(
+        `/api/report/attendance/?course_code=${encodeURIComponent(course.course_code)}&timetable_id=${selectedTimetable}`
+      );
+      setCourseAttendance(r.data);
     } catch {
       setToastMessage({ message: "Failed to load attendance", variant: "danger" });
     } finally {
@@ -308,19 +506,22 @@ export function AttendanceReport() {
     }
   };
 
-  // ── Export PDF ─────────────────────────────────────────────────────────────
+  // ── Export PDF (whole timetable or filtered to course) ─────────────────────
   const exportPdf = async () => {
-    if (!selectedExam) return;
     setExportingPdf(true);
     try {
+      const courseParam = selectedCourse
+        ? `&course_code=${encodeURIComponent(selectedCourse.course_code)}`
+        : "";
       const r = await axios.get(
-        `/api/report/attendance/pdf/?exam_id=${selectedExam.exam_id}`,
+        `/api/report/attendance/pdf/?timetable_id=${selectedTimetable}${courseParam}`,
         { responseType: "blob" }
       );
       const url  = window.URL.createObjectURL(new Blob([r.data]));
       const link = document.createElement("a");
       link.href  = url;
-      link.setAttribute("download", `attendance_${selectedExam.course_code}_${selectedExam.date}.pdf`);
+      const suffix = selectedCourse ? `_${selectedCourse.course_code}` : "";
+      link.setAttribute("download", `attendance${suffix}_${selectedTimetable}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -344,8 +545,7 @@ export function AttendanceReport() {
       });
       setToastMessage({ message: "Report updated successfully", variant: "success" });
       setReviewDialog({ open: false, row: null });
-      // Refresh attendance data
-      if (selectedExam) openExam(selectedExam);
+      if (selectedCourse) openCourse(selectedCourse);   // refresh
     } catch {
       setToastMessage({ message: "Failed to update report", variant: "danger" });
     } finally {
@@ -353,8 +553,8 @@ export function AttendanceReport() {
     }
   };
 
-  // ── Table columns ──────────────────────────────────────────────────────────
-  const columns: ColumnDef<StudentRow>[] = [
+  // ── Table columns (shared across all exam sections) ────────────────────────
+  const columns: ColumnDef<StudentRow>[] = React.useMemo(() => [
     {
       accessorKey: "reg_no",
       header: "Reg No",
@@ -373,22 +573,18 @@ export function AttendanceReport() {
     {
       accessorKey: "signin",
       header: "Sign-In",
-      cell: ({ row }) => {
-        const v = row.getValue("signin") as boolean;
-        return v
+      cell: ({ row }) =>
+        row.getValue("signin")
           ? <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-          : <XCircle className="h-5 w-5 text-red-500 mx-auto" />;
-      },
+          : <XCircle className="h-5 w-5 text-red-500 mx-auto" />,
     },
     {
       accessorKey: "signout",
       header: "Sign-Out",
-      cell: ({ row }) => {
-        const v = row.getValue("signout") as boolean;
-        return v
+      cell: ({ row }) =>
+        row.getValue("signout")
           ? <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-          : <XCircle className="h-5 w-5 text-red-500 mx-auto" />;
-      },
+          : <XCircle className="h-5 w-5 text-red-500 mx-auto" />,
     },
     {
       accessorKey: "cheated",
@@ -413,7 +609,7 @@ export function AttendanceReport() {
       cell: ({ row }) => {
         const report = row.original.cheating_report;
         if (!report) return <span className="text-xs text-muted-foreground block text-center">–</span>;
-        const cfg = REPORT_STATUS_CONFIG[report.status];
+        const cfg  = REPORT_STATUS_CONFIG[report.status];
         const Icon = cfg.icon;
         return (
           <div className="flex justify-center">
@@ -446,44 +642,33 @@ export function AttendanceReport() {
         );
       },
     },
-  ];
-
-  // Filter: cheated only
-  const tableData = React.useMemo(() => {
-    if (!attendanceData) return [];
-    return filterCheated
-      ? attendanceData.students.filter((s) => s.cheated)
-      : attendanceData.students;
-  }, [attendanceData, filterCheated]);
-
-  const table = useReactTable({
-    data: tableData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    state: { sorting, globalFilter },
-    globalFilterFn: (row, _, val) => {
-      const q = val.toLowerCase();
-      return [row.original.reg_no, row.original.name, row.original.department]
-        .some((v) => v.toLowerCase().includes(q));
-    },
-    initialState: { pagination: { pageSize: 15 } },
-  });
+  ], []);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="w-full space-y-6 p-1">
-      {/* ── Header & Timetable selector ──────────────────────────────────── */}
+
+      {/* ── Header & Timetable selector ─────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Attendance & Reports</h1>
           <p className="text-sm text-muted-foreground">Monitor exam attendance and cheating incidents</p>
         </div>
         <div className="sm:ml-auto flex items-center gap-2">
+          {/* PDF export — visible on both views */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1"
+            onClick={exportPdf}
+            disabled={exportingPdf || loadingStats || !selectedTimetable}
+          >
+            {exportingPdf
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <Download className="h-4 w-4" />}
+            {selectedCourse ? "Export Course PDF" : "Export All PDF"}
+          </Button>
+
           <Select value={selectedTimetable} onValueChange={setSelectedTimetable}>
             <SelectTrigger className="w-[340px]">
               <SelectValue placeholder="Select timetable…" />
@@ -494,10 +679,11 @@ export function AttendanceReport() {
               ))}
             </SelectContent>
           </Select>
+
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setSelectedTimetable((v) => v)} // trigger re-fetch
+            onClick={() => setSelectedTimetable((v) => v)}
             disabled={loadingStats}
           >
             <RefreshCw className={`h-4 w-4 ${loadingStats ? "animate-spin" : ""}`} />
@@ -505,14 +691,15 @@ export function AttendanceReport() {
         </div>
       </div>
 
-      {/* ── Stat Cards ───────────────────────────────────────────────────── */}
+      {/* ── Stat Cards ──────────────────────────────────────────────────── */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard label="Total Students"    value={stats.total_students}   icon={Users}        color="bg-blue-50  text-blue-800   border-blue-200" />
-          <StatCard label="Signed In"         value={stats.signed_in}        icon={UserCheck}    color="bg-green-50 text-green-800  border-green-200" sub={`${Math.round((stats.signed_in / (stats.total_students || 1)) * 100)}% attendance`} />
-          <StatCard label="Signed Out"        value={stats.signed_out}       icon={UserCheck}    color="bg-teal-50  text-teal-800   border-teal-200" />
-          <StatCard label="Absent"            value={stats.absent}           icon={UserX}        color="bg-red-50   text-red-800    border-red-200" />
-          <StatCard label="Cheating Reports"  value={stats.cheating_reports} icon={ShieldAlert}  color="bg-amber-50 text-amber-800  border-amber-200" />
+          <StatCard label="Total Students"   value={stats.total_students}   icon={Users}       color="bg-blue-50  text-blue-800  border-blue-200" />
+          <StatCard label="Signed In"        value={stats.signed_in}        icon={UserCheck}   color="bg-green-50 text-green-800 border-green-200"
+            sub={`${Math.round((stats.signed_in / (stats.total_students || 1)) * 100)}% attendance`} />
+          <StatCard label="Signed Out"       value={stats.signed_out}       icon={UserCheck}   color="bg-teal-50  text-teal-800  border-teal-200" />
+          <StatCard label="Absent"           value={stats.absent}           icon={UserX}       color="bg-red-50   text-red-800   border-red-200" />
+          <StatCard label="Cheating Reports" value={stats.cheating_reports} icon={ShieldAlert} color="bg-amber-50 text-amber-800 border-amber-200" />
         </div>
       )}
 
@@ -522,65 +709,64 @@ export function AttendanceReport() {
         </div>
       )}
 
-      {/* ── Exam Grid OR Attendance Table ─────────────────────────────────── */}
+      {/* ── Course Grid OR Course Detail ─────────────────────────────────── */}
       <AnimatePresence mode="wait">
-        {!selectedExam ? (
-          /* Exam Cards Grid */
+
+        {/* ── Course Cards Grid ───────────────────────────────────────────── */}
+        {!selectedCourse ? (
           <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            {exams.length > 0 && (
+            {courses.length > 0 && (
               <>
-                <h2 className="text-base font-semibold mb-3 text-muted-foreground uppercase tracking-wide text-xs">
-                  {exams.length} Exam{exams.length !== 1 ? "s" : ""} — Click to view attendance
+                <h2 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <BookOpen className="h-3.5 w-3.5" />
+                  {courses.length} Course{courses.length !== 1 ? "s" : ""} — Click to view attendance
                 </h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {exams.map((exam) => (
-                    <ExamCard key={exam.exam_id} exam={exam} onClick={() => openExam(exam)} />
+                  {courses.map((course) => (
+                    <CourseCard
+                      key={course.course_code}
+                      course={course}
+                      onClick={() => openCourse(course)}
+                    />
                   ))}
                 </div>
               </>
             )}
           </motion.div>
+
         ) : (
-          /* Attendance Detail View */
+
+          /* ── Course Detail View ─────────────────────────────────────────── */
           <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
+
             {/* Back + header */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedExam(null)} className="w-fit gap-1">
-                <ArrowLeft className="h-4 w-4" /> Back to Exams
+              <Button
+                variant="ghost" size="sm"
+                onClick={() => { setSelectedCourse(null); setCourseAttendance(null); }}
+                className="w-fit gap-1"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to Courses
               </Button>
               <div className="sm:ml-2">
                 <h2 className="font-bold text-lg">
-                  {selectedExam.course_code} – {selectedExam.course}
+                  {selectedCourse.course_code} – {selectedCourse.course_title}
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  {fmtDate(selectedExam.date)} · {fmt12(selectedExam.start_time)} – {fmt12(selectedExam.end_time)} · Room: {selectedExam.room}
+                  {selectedCourse.exams.length} exam{selectedCourse.exams.length !== 1 ? "s" : ""}
                 </p>
-              </div>
-              <div className="sm:ml-auto flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1"
-                  onClick={exportPdf}
-                  disabled={exportingPdf || loadingAttendance}
-                >
-                  {exportingPdf
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <Download className="h-4 w-4" />}
-                  Export PDF
-                </Button>
               </div>
             </div>
 
-            {/* Mini summary cards */}
-            {attendanceData && (
+            {/* Course-level summary cards */}
+            {courseAttendance && (
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
                 {[
-                  { label: "Total",    val: attendanceData.summary.total,            color: "bg-slate-100" },
-                  { label: "Present",  val: attendanceData.summary.signed_in,        color: "bg-green-50 text-green-800" },
-                  { label: "Absent",   val: attendanceData.summary.absent,           color: "bg-red-50 text-red-700" },
-                  { label: "Signed Out", val: attendanceData.summary.signed_out,     color: "bg-teal-50 text-teal-700" },
-                  { label: "Cheating", val: attendanceData.summary.cheating_reports, color: "bg-amber-50 text-amber-700" },
+                  { label: "Total",      val: courseAttendance.summary.total,            color: "bg-slate-100" },
+                  { label: "Present",    val: courseAttendance.summary.signed_in,        color: "bg-green-50 text-green-800" },
+                  { label: "Absent",     val: courseAttendance.summary.absent,           color: "bg-red-50 text-red-700" },
+                  { label: "Signed Out", val: courseAttendance.summary.signed_out,       color: "bg-teal-50 text-teal-700" },
+                  { label: "Cheating",   val: courseAttendance.summary.cheating_reports, color: "bg-amber-50 text-amber-700" },
                 ].map((c) => (
                   <div key={c.label} className={`rounded-lg border px-4 py-3 text-center ${c.color}`}>
                     <p className="text-xl font-bold">{c.val}</p>
@@ -591,7 +777,7 @@ export function AttendanceReport() {
             )}
 
             {/* Toolbar */}
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-2 mb-4">
               <div className="relative flex-1 min-w-[200px] max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -616,71 +802,24 @@ export function AttendanceReport() {
               <div className="flex justify-center py-16">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : (
-              <>
-                <div className="rounded-xl border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      {table.getHeaderGroups().map((hg) => (
-                        <TableRow key={hg.id} className="bg-muted/50">
-                          {hg.headers.map((h) => (
-                            <TableHead key={h.id} className="text-xs font-semibold text-center">
-                              {flexRender(h.column.columnDef.header, h.getContext())}
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      ))}
-                    </TableHeader>
-                    <TableBody>
-                      {table.getRowModel().rows.length ? (
-                        table.getRowModel().rows.map((row) => (
-                          <TableRow
-                            key={row.id}
-                            className={
-                              row.original.cheated
-                                ? "bg-amber-50/60 hover:bg-amber-50"
-                                : row.original.signin
-                                ? "hover:bg-muted/40"
-                                : "bg-red-50/40 hover:bg-red-50/60"
-                            }
-                          >
-                            {row.getVisibleCells().map((cell) => (
-                              <TableCell key={cell.id} className="text-center py-2.5">
-                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                            No students found.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between pt-3">
-                  <p className="text-xs text-muted-foreground">
-                    {table.getFilteredRowModel().rows.length} student(s)
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                      Previous
-                    </Button>
-                    <span className="text-xs">
-                      Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                    </span>
-                    <Button size="sm" variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
+            ) : courseAttendance ? (
+              <div className="space-y-4">
+                {courseAttendance.exam_groups.map((eg) => (
+                  <ExamSection
+                    key={eg.exam.id}
+                    examGroup={eg}
+                    columns={columns}
+                    filterCheated={filterCheated}
+                    globalFilter={globalFilter}
+                    onReview={(row) => {
+                      setReviewDialog({ open: true, row });
+                      setReviewStatus(row.cheating_report?.status ?? "");
+                      setReviewNotes("");
+                    }}
+                  />
+                ))}
+              </div>
+            ) : null}
           </motion.div>
         )}
       </AnimatePresence>
@@ -699,9 +838,7 @@ export function AttendanceReport() {
             {reviewDialog.row && (
               <DialogDescription>
                 Student:{" "}
-                <span className="font-semibold text-foreground">
-                  {reviewDialog.row.name}
-                </span>{" "}
+                <span className="font-semibold text-foreground">{reviewDialog.row.name}</span>{" "}
                 ({reviewDialog.row.reg_no})
               </DialogDescription>
             )}
@@ -709,7 +846,6 @@ export function AttendanceReport() {
 
           {reviewDialog.row?.cheating_report && (
             <div className="space-y-4 py-2">
-              {/* Incident summary */}
               <div className="rounded-lg bg-muted/50 p-4 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Severity</span>
@@ -733,7 +869,6 @@ export function AttendanceReport() {
                 </div>
               </div>
 
-              {/* Action */}
               <div className="space-y-2">
                 <Label>Update Status</Label>
                 <Select value={reviewStatus} onValueChange={setReviewStatus}>
@@ -774,7 +909,9 @@ export function AttendanceReport() {
               Cancel
             </Button>
             <Button onClick={submitReview} disabled={submittingReview}>
-              {submittingReview ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
+              {submittingReview
+                ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                : <ShieldCheck className="h-4 w-4 mr-2" />}
               Save Decision
             </Button>
           </DialogFooter>
