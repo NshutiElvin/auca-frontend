@@ -268,7 +268,7 @@ export function AttendanceReport() {
   React.useEffect(() => {
     axios.get("/api/schedules/timetables/")
       .then((r) => {
-        const list: Timetable[] = r.data.map((t: any) => ({
+        const list: Timetable[] = r.data.data.map((t: any) => ({
           id: t.id,
           label: `${t.location?.name ?? "–"} | ${t.academic_year} | ${t.semester?.name} (${t.category})`,
         }));
