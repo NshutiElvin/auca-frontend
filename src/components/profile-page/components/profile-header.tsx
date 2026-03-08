@@ -2,48 +2,96 @@ import { Button } from "../../ui/button";
 import { Card, CardContent } from "../../ui/card";
 import { Badge } from "../../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
-import { Camera, Calendar, Mail, MapPin } from "lucide-react";
+import { Camera, Mail, Shield, User } from "lucide-react";
 
 export default function ProfileHeader(user: any) {
-  console.log(user);
+  const initials = `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase();
+
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
+    <Card className="overflow-hidden border border-border/60 shadow-sm mb-4">
+      {/* Banner */}
+      <div
+        className="h-28 w-full"
+        style={{
+          background:
+            "linear-gradient(135deg, hsl(213 51% 46%) 0%, hsl(213 51% 32%) 60%, hsl(213 51% 22%) 100%)",
+        }}
+      >
+        {/* subtle dot pattern overlay */}
+        <div
+          className="h-full w-full opacity-10"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, white 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        />
+      </div>
+
+      <CardContent className="px-6 pb-6">
+        {/* Avatar row */}
+        <div className="flex items-end justify-between -mt-12 mb-4">
           <div className="relative">
-            <Avatar className="h-24 w-24">
-              <AvatarImage
-                src="https://bundui-images.netlify.app/avatars/08.png"
-                alt="Profile"
-              />
-              <AvatarFallback className="text-sm uppercase">
-                {user&&user?.first_name?.toUpperCase()}
-                {user&&user?.last_name?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="rounded-full p-1 bg-background shadow-md ring-2 ring-background">
+              <Avatar className="h-20 w-20">
+                <AvatarImage
+                  src="https://bundui-images.netlify.app/avatars/08.png"
+                  alt="Profile"
+                />
+                <AvatarFallback className="text-base font-semibold bg-primary/10 text-primary">
+                  {initials || <User className="size-6" />}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             <Button
               size="icon"
               variant="outline"
-              className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full"
+              className="absolute -right-1 -bottom-1 h-7 w-7 rounded-full border-background shadow-sm bg-background hover:bg-muted transition-colors"
+              aria-label="Change photo"
             >
-          
+              <Camera className="size-3.5 text-muted-foreground" />
             </Button>
           </div>
-          <div className="flex-1 space-y-2">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center">
-              <h1 className="text-2xl font-bold text-wrap">{user?.first_name} {user?.last_name}</h1>
-              <Badge variant="secondary">{user?.role}</Badge>
-            </div>
-            <p className="text-muted-foreground">{user?.role}</p>
-            <div className="text-muted-foreground flex flex-wrap gap-4 text-sm text-wrap">
-              <div className="flex items-center gap-1">
-                <Mail className="size-4" />
-                {user?.email}
-              </div>
-              
-            </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs font-medium border-border/70 hover:bg-muted transition-colors"
+          >
+            Edit Profile
+          </Button>
+        </div>
+
+        {/* Info */}
+        <div className="space-y-3">
+          {/* Name + role badge */}
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-semibold tracking-tight text-foreground leading-none">
+              {user?.first_name} {user?.last_name}
+            </h1>
+            {user?.role && (
+              <Badge
+                variant="secondary"
+                className="text-xs font-medium gap-1 px-2 py-0.5"
+              >
+                <Shield className="size-3" />
+                {user.role}
+              </Badge>
+            )}
           </div>
-          
+
+          {/* Divider */}
+          <div className="h-px bg-border/50" />
+
+          {/* Meta info */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            {user?.email && (
+              <span className="flex items-center gap-1.5 min-w-0">
+                <Mail className="size-3.5 shrink-0 text-primary/70" />
+                <span className="truncate">{user.email}</span>
+              </span>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
