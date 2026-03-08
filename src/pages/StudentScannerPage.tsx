@@ -9,45 +9,42 @@ import { useState, useTransition } from "react";
 import useToast from "../hooks/useToast";
 import { Loader, CheckCircle, XCircle } from "lucide-react";
 import useUserAxios from "../hooks/useUserAxios";
- 
 
 function StudentExamScannerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { setToastMessage } = useToast();
   const [isVerifying, setVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] =
-    useState<any | null>(null);
+  const [verificationResult, setVerificationResult] = useState<any | null>(
+    null,
+  );
   const axios = useUserAxios();
+  const [hasScanned, setHasScanned] = useState(false);
 
   const performVerification = async (data: any) => {
     setVerifying(true);
-      try {
-        const response = await axios.post(
-          "/api/rooms/student_check_qr/",
-          data
-        );
-        console.log("Verification response:", response.data);
-        setVerificationResult(response.data.data || response.data);
-      } catch (error) {
-        setToastMessage({
-          message: "Error occurred while verifying student exam.",
-          variant: "danger",
-        });
-      
-      }finally{
-        setVerifying(false);
-      }
+    try {
+      const response = await axios.post("/api/rooms/student_check_qr/", data);
+      console.log("Verification response:", response.data);
+      setVerificationResult(response.data.data || response.data);
+    } catch (error) {
+      setToastMessage({
+        message: "Error occurred while verifying student exam.",
+        variant: "danger",
+      });
+    } finally {
+      setVerifying(false);
+    }
   };
 
   const handleQrCodeDetected = (result: any) => {
-    if (result) {
+    if (result && !hasScanned && !isVerifying) {
+      setHasScanned(true);
       try {
         const parsedData = JSON.parse(result[0].rawValue);
 
         setDialogOpen(true);
-        
 
-        performVerification( parsedData);
+        performVerification(parsedData);
       } catch (error) {
         console.log(error);
         setToastMessage({
@@ -110,8 +107,6 @@ function StudentExamScannerPage() {
               </p>
             </div>
           </div>
-
-          
         </div>
       );
     }
@@ -131,7 +126,13 @@ function StudentExamScannerPage() {
         </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setHasScanned(false);
+        }}
+      >
         <DialogContent className="sm:max-w-[500px] md:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-center space-y-2 pb-4">
             <DialogTitle className="text-xl font-bold">

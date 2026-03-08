@@ -42,6 +42,7 @@ function InstructorExamScannerPage() {
 
   const handleQrCodeDetected = (result: any) => {
     if (result && !hasScanned && !isVerifying) {
+      setHasScanned(true); 
       console.log(result);
       console.log(result[0].rawValue);
       try {
