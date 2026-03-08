@@ -217,18 +217,18 @@ export default function AdminMainPage() {
     minute: "2-digit",
   });
 
-  const sidebarWidth =
-    state === "collapsed"
-      ? isMobile
-        ? SIDEBAR_WIDTH_MOBILE
-        : SIDEBAR_WIDTH_ICON
+  const sidebarWidth = isMobile
+    ? "0px"
+    : state === "collapsed"
+      ? SIDEBAR_WIDTH_ICON
       : SIDEBAR_WIDTH;
 
   console.log("sidebarWidth: ", sidebarWidth);
   console.log("state: ", state);
 
   return (
-    <div>
+    <div className="flex">
+      {" "}
       <AppSidebar data={data} />
       <div
         style={{ width: `calc(100vw - ${sidebarWidth})` }}
