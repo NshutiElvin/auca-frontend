@@ -310,11 +310,11 @@ const DashboardPage = () => {
     return (
       <Card
         key={index}
-        className="group relative overflow-hidden cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] border"
+        className={`group relative overflow-hidden cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] border ${stat.bgColor}`}
         onClick={() => handleCardClick(cardType)}
       >
         <CardContent className="p-6 relative">
-          <div className={`flex items-start justify-between relative z-10 ${stat.bgColor}`}>
+          <div className={`flex items-start justify-between relative z-10 `}>
             <div className="space-y-3 flex-1 min-w-0">
               <div className="space-y-1">
                 <p className={`text-sm font-medium text-muted-foreground leading-tight ${stat.textColor}}`}>
