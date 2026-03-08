@@ -143,12 +143,12 @@ const DashboardPage = () => {
   };
 
 const colors = [
-  "hsl(210, 16%, 96%)",  // slate-100
-  "hsl(120, 67%, 90%)",  // bg-green-100
-  "hsl(0, 100%, 96%)",   // bg-red-100
-  "hsl(0, 100%, 96%)",   // bg-red-100
-  "hsl(45, 100%, 90%)",  // bg-amber-100
-  "hsl(45, 100%, 33%)",  // amber-700
+  "hsl(210, 29%, 20%)", // slate-700
+  "hsl(150, 80%, 34%)", // green-700
+  "hsl(0, 69%, 36%)",   // red-700
+  "hsl(0, 69%, 36%)",   // red-700
+  "hsl(38, 95%, 41%)",  // amber-700
+  "hsl(38, 87%, 34%)",  // amber-700
 ];
 
   const barChartData =
