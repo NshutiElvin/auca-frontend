@@ -95,10 +95,9 @@ function StudentExamScannerPage() {
                 }`}
               >
                 {verificationResult.status
-                  && verificationResult.message
-                   }
+                  ? verificationResult.message
+                  : verificationResult.message}
               </p>
-              
             </div>
           </div>
         </div>
