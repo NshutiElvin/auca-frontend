@@ -317,7 +317,7 @@ const colors = [
           <div className={`flex items-start justify-between relative z-10 `}>
             <div className="space-y-3 flex-1 min-w-0">
               <div className="space-y-1">
-                <p className={`text-sm font-medium  ${stat.textColor}}`}>
+                <p className={`text-sm font-bold  ${stat.textColor}}`}>
                   {stat.title}
                 </p>
                 <div className="flex items-baseline space-x-2">
