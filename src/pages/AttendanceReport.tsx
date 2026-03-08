@@ -31,6 +31,12 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  FileText,
+  Image as ImageIcon,
+  File,
+  ExternalLink,
+  ZoomIn,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -38,27 +44,16 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead,
+  TableHeader, TableRow,
 } from "../components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle,
 } from "../components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
 } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
@@ -68,44 +63,29 @@ import useToast from "../hooks/useToast";
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Timetable = { id: number; label: string };
 
-/** One exam inside a course bucket (returned by /stats/) */
 type ExamEntry = {
-  exam_id: number;
-  group: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  room: string;
-  status: string;
-  total: number;
-  signed_in: number;
-  absent: number;
-  cheating_reports: number;
+  exam_id: number; group: string; date: string;
+  start_time: string; end_time: string; room: string;
+  status: string; total: number; signed_in: number;
+  absent: number; cheating_reports: number;
 };
 
-/** Course-level summary returned by /stats/ */
 type CourseSummary = {
-  course_code: string;
-  course_title: string;
-  total: number;
-  signed_in: number;
-  absent: number;
-  cheating_reports: number;
-  signed_out: number;
+  course_code: string; course_title: string;
+  total: number; signed_in: number; absent: number;
+  cheating_reports: number; signed_out: number;
   exams: ExamEntry[];
 };
-type Evidence={
-  evidence_type:string
-  description:string
-  url:string
-}
+
+type Evidence = {
+  evidence_type: string;
+  description: string;
+  url: string;
+};
 
 type DashboardStats = {
-  total_students: number;
-  signed_in: number;
-  signed_out: number;
-  absent: number;
-  cheating_reports: number;
+  total_students: number; signed_in: number;
+  signed_out: number; absent: number; cheating_reports: number;
 };
 
 type CheatingReport = {
@@ -120,52 +100,23 @@ type CheatingReport = {
 } | null;
 
 type StudentRow = {
-  id: number;
-  student_id: number;
-  reg_no: string;
-  name: string;
-  department: string;
-  signin: boolean;
-  room: string;
-  group?: string;
-  signout: boolean;
-  status: string;
-  cheated: boolean;
-  cheating_report: CheatingReport;
+  id: number; student_id: number; reg_no: string;
+  name: string; department: string; signin: boolean;
+  room: string; group?: string; signout: boolean;
+  status: string; cheated: boolean; cheating_report: CheatingReport;
 };
 
-/** One exam group inside the course attendance response */
 type ExamGroup = {
-  exam: {
-    id: number;
-    group: string;
-    date: string;
-    start_time: string;
-    end_time: string;
-    status: string;
-  };
+  exam: { id: number; group: string; date: string; start_time: string; end_time: string; status: string };
   students: StudentRow[];
-  summary: {
-    total: number;
-    signed_in: number;
-    signed_out: number;
-    absent: number;
-    cheating_reports: number;
-  };
+  summary: { total: number; signed_in: number; signed_out: number; absent: number; cheating_reports: number };
 };
 
-/** Full response from GET /api/report/attendance/?course_code=&timetable_id= */
 type CourseAttendanceData = {
   course: { code: string; title: string };
   timetable_id: number;
   exam_groups: ExamGroup[];
-  summary: {
-    total: number;
-    signed_in: number;
-    signed_out: number;
-    absent: number;
-    cheating_reports: number;
-  };
+  summary: { total: number; signed_in: number; signed_out: number; absent: number; cheating_reports: number };
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -178,68 +129,275 @@ const fmt12 = (t: string) => {
 
 const fmtDate = (d: string) => {
   if (!d) return "–";
-  return new Date(d).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
 
+/** Detect file type from Cloudinary URL or evidence_type */
+function detectFileType(url: string, evidenceType: string): "image" | "pdf" | "doc" | "other" {
+  const lower = url.toLowerCase();
+  if (evidenceType === "image" || /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?|$)/.test(lower)) return "image";
+  if (/\.pdf(\?|$)/.test(lower) || evidenceType === "document") return "pdf";
+  if (/\.(doc|docx)(\?|$)/.test(lower)) return "doc";
+  return "other";
+}
+
+/** Build a Cloudinary thumbnail URL from a full resource URL */
+function cloudinaryThumb(url: string, w = 300, h = 200): string {
+  // Insert transformation before /upload/
+  return url.replace("/upload/", `/upload/w_${w},h_${h},c_fill,q_auto,f_auto/`);
+}
+
 const SEVERITY_CONFIG = {
-  low: {
-    label: "Low",
-    color: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  },
-  medium: {
-    label: "Medium",
-    color: "bg-orange-100 text-orange-800 border-orange-300",
-  },
-  high: { label: "High", color: "bg-red-100 text-red-800 border-red-300" },
+  low:    { label: "Low",    color: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+  medium: { label: "Medium", color: "bg-orange-100 text-orange-800 border-orange-300" },
+  high:   { label: "High",   color: "bg-red-100 text-red-800 border-red-300" },
 };
 
 const REPORT_STATUS_CONFIG = {
-  pending: {
-    label: "Pending",
-    icon: Clock,
-    color: "bg-gray-100 text-gray-700",
-  },
-  under_review: {
-    label: "Under Review",
-    icon: Eye,
-    color: "bg-blue-100 text-blue-700",
-  },
-  confirmed: {
-    label: "Confirmed",
-    icon: ShieldAlert,
-    color: "bg-red-100 text-red-700",
-  },
-  dismissed: {
-    label: "Dismissed",
-    icon: ShieldX,
-    color: "bg-green-100 text-green-700",
-  },
+  pending:      { label: "Pending",      icon: Clock,       color: "bg-gray-100 text-gray-700" },
+  under_review: { label: "Under Review", icon: Eye,         color: "bg-blue-100 text-blue-700" },
+  confirmed:    { label: "Confirmed",    icon: ShieldAlert, color: "bg-red-100 text-red-700" },
+  dismissed:    { label: "Dismissed",    icon: ShieldX,     color: "bg-green-100 text-green-700" },
 };
 
 const EXAM_STATUS_COLOR: Record<string, string> = {
   SCHEDULED: "bg-blue-100 text-blue-700",
-  ONGOING: "bg-green-100 text-green-700",
+  ONGOING:   "bg-green-100 text-green-700",
   COMPLETED: "bg-gray-100 text-gray-700",
   CANCELLED: "bg-red-100 text-red-700",
 };
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  color,
-  sub,
+// ══════════════════════════════════════════════════════════════════════════════
+//  EVIDENCE GALLERY COMPONENT
+// ══════════════════════════════════════════════════════════════════════════════
+function EvidenceGallery({ evidences }: { evidences: Evidence[] }) {
+  const [lightbox, setLightbox] = React.useState<Evidence | null>(null);
+
+  if (!evidences || evidences.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 text-muted-foreground gap-2 rounded-lg bg-muted/30 border border-dashed">
+        <File className="h-8 w-8 opacity-40" />
+        <p className="text-xs">No evidence attached</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {evidences.map((ev, idx) => {
+          const type = detectFileType(ev.url, ev.evidence_type);
+          return (
+            <EvidenceCard
+              key={idx}
+              evidence={ev}
+              type={type}
+              onPreview={() => setLightbox(ev)}
+            />
+          );
+        })}
+      </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setLightbox(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              className="relative max-w-3xl w-full max-h-[85vh] bg-white rounded-2xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Lightbox header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">
+                    {lightbox.description || "Evidence"}
+                  </p>
+                  <p className="text-xs text-muted-foreground capitalize">
+                    {lightbox.evidence_type}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={lightbox.url}
+                    download
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download
+                  </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => setLightbox(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Lightbox body */}
+              <div className="overflow-auto max-h-[70vh] flex items-center justify-center bg-muted/10 p-4">
+                <LightboxContent evidence={lightbox} />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// ── Single evidence card ───────────────────────────────────────────────────────
+function EvidenceCard({
+  evidence, type, onPreview,
 }: {
-  label: string;
-  value: number;
-  icon: any;
-  color: string;
-  sub?: string;
+  evidence: Evidence;
+  type: "image" | "pdf" | "doc" | "other";
+  onPreview: () => void;
+}) {
+  const [imgError, setImgError] = React.useState(false);
+
+  return (
+    <motion.div
+      whileHover={{ y: -2, boxShadow: "0 6px 20px rgba(0,0,0,0.12)" }}
+      className="group relative rounded-xl border bg-card overflow-hidden cursor-pointer transition-all"
+      onClick={onPreview}
+    >
+      {/* Thumbnail area */}
+      <div className="relative h-28 bg-muted/40 flex items-center justify-center overflow-hidden">
+        {type === "image" && !imgError ? (
+          <>
+            <img
+              src={cloudinaryThumb(evidence.url)}
+              alt={evidence.description || "Evidence"}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              onError={() => setImgError(true)}
+            />
+            {/* Zoom overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+              <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </>
+        ) : type === "pdf" ? (
+          <div className="flex flex-col items-center gap-1 text-red-500">
+            <FileText className="h-10 w-10" />
+            <span className="text-xs font-semibold">PDF</span>
+          </div>
+        ) : type === "doc" ? (
+          <div className="flex flex-col items-center gap-1 text-blue-600">
+            <FileText className="h-10 w-10" />
+            <span className="text-xs font-semibold">DOC</span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-1 text-muted-foreground">
+            <File className="h-10 w-10" />
+            <span className="text-xs font-semibold">FILE</span>
+          </div>
+        )}
+
+        {/* Type badge */}
+        <div className="absolute top-1.5 left-1.5">
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+            type === "image" ? "bg-purple-100 text-purple-700" :
+            type === "pdf"   ? "bg-red-100 text-red-700" :
+            type === "doc"   ? "bg-blue-100 text-blue-700" :
+                               "bg-gray-100 text-gray-700"
+          }`}>
+            {type.toUpperCase()}
+          </span>
+        </div>
+      </div>
+
+      {/* Card footer */}
+      <div className="px-2.5 py-2">
+        <p className="text-xs font-medium truncate leading-snug">
+          {evidence.description || "No description"}
+        </p>
+        <div className="flex items-center justify-between mt-1.5">
+          <span className="text-[10px] text-muted-foreground capitalize">
+            {evidence.evidence_type}
+          </span>
+          <a
+            href={evidence.url}
+            download
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-[10px] text-primary hover:underline flex items-center gap-0.5"
+          >
+            <Download className="h-2.5 w-2.5" /> Save
+          </a>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Lightbox content based on type ────────────────────────────────────────────
+function LightboxContent({ evidence }: { evidence: Evidence }) {
+  const type = detectFileType(evidence.url, evidence.evidence_type);
+
+  if (type === "image") {
+    return (
+      <img
+        src={evidence.url}
+        alt={evidence.description || "Evidence"}
+        className="max-w-full max-h-[60vh] object-contain rounded-lg shadow"
+      />
+    );
+  }
+
+  if (type === "pdf") {
+    return (
+      <div className="w-full h-[60vh]">
+        <iframe
+          src={`${evidence.url}#toolbar=0`}
+          className="w-full h-full rounded-lg border"
+          title={evidence.description || "PDF Evidence"}
+        />
+      </div>
+    );
+  }
+
+  // doc / other — can't preview inline, show download prompt
+  return (
+    <div className="flex flex-col items-center gap-4 py-12 text-center">
+      <FileText className="h-16 w-16 text-muted-foreground opacity-50" />
+      <div>
+        <p className="font-semibold">Preview not available</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          This file type cannot be previewed in the browser.
+        </p>
+      </div>
+      <a
+        href={evidence.url}
+        download
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:bg-primary/90 transition-colors"
+      >
+        <Download className="h-4 w-4" /> Download to view
+      </a>
+    </div>
+  );
+}
+
+// ── Stat Card ─────────────────────────────────────────────────────────────────
+function StatCard({ label, value, icon: Icon, color, sub }: {
+  label: string; value: number; icon: any; color: string; sub?: string;
 }) {
   return (
     <motion.div
@@ -259,24 +417,13 @@ function StatCard({
   );
 }
 
-// ── Mini summary pill row ─────────────────────────────────────────────────────
-function SummaryPills({
-  total,
-  signed_in,
-  absent,
-  cheating_reports,
-}: {
-  total: number;
-  signed_in: number;
-  absent: number;
-  cheating_reports: number;
+function SummaryPills({ total, signed_in, absent, cheating_reports }: {
+  total: number; signed_in: number; absent: number; cheating_reports: number;
 }) {
   const pct = total > 0 ? Math.round((signed_in / total) * 100) : 0;
   return (
     <div className="flex flex-wrap gap-2 text-xs">
-      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
-        {total} total
-      </span>
+      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">{total} total</span>
       <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
         <UserCheck className="h-3 w-3" /> {signed_in} present ({pct}%)
       </span>
@@ -292,16 +439,8 @@ function SummaryPills({
   );
 }
 
-// ── Course Card (replaces ExamCard) ───────────────────────────────────────────
-function CourseCard({
-  course,
-  onClick,
-}: {
-  course: CourseSummary;
-  onClick: () => void;
-}) {
-  const pct =
-    course.total > 0 ? Math.round((course.signed_in / course.total) * 100) : 0;
+function CourseCard({ course, onClick }: { course: CourseSummary; onClick: () => void }) {
+  const pct = course.total > 0 ? Math.round((course.signed_in / course.total) * 100) : 0;
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
@@ -310,53 +449,31 @@ function CourseCard({
       className="rounded-xl border bg-card p-5 cursor-pointer transition-all"
       onClick={onClick}
     >
-      {/* Course title */}
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="font-bold text-sm text-primary">{course.course_code}</p>
-          <p className="font-semibold text-sm leading-snug mt-0.5">
-            {course.course_title}
-          </p>
+          <p className="font-semibold text-sm leading-snug mt-0.5">{course.course_title}</p>
         </div>
         <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
           {course.exams.length} exam{course.exams.length !== 1 ? "s" : ""}
         </span>
       </div>
-
-      {/* Attendance bar */}
       <div className="mb-3">
         <div className="flex justify-between text-xs mb-1">
           <span className="text-muted-foreground">Overall Attendance</span>
-          <span className="font-semibold">
-            {course.signed_in}/{course.total} ({pct}%)
-          </span>
+          <span className="font-semibold">{course.signed_in}/{course.total} ({pct}%)</span>
         </div>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{ width: `${pct}%` }}
-          />
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
         </div>
       </div>
-
-      {/* Stats row */}
       <div className="flex items-center justify-between">
-        <SummaryPills
-          total={course.total}
-          signed_in={course.signed_in}
-          absent={course.absent}
-          cheating_reports={course.cheating_reports}
-        />
+        <SummaryPills total={course.total} signed_in={course.signed_in} absent={course.absent} cheating_reports={course.cheating_reports} />
         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
       </div>
-
-      {/* Exam dates strip */}
       <div className="mt-3 flex flex-wrap gap-1">
         {course.exams.map((e) => (
-          <span
-            key={e.exam_id}
-            className={`text-xs px-2 py-0.5 rounded-full border ${EXAM_STATUS_COLOR[e.status] ?? "bg-gray-100 text-gray-700"}`}
-          >
+          <span key={e.exam_id} className={`text-xs px-2 py-0.5 rounded-full border ${EXAM_STATUS_COLOR[e.status] ?? "bg-gray-100 text-gray-700"}`}>
             {e.group} · {fmtDate(e.date)}
           </span>
         ))}
@@ -365,27 +482,17 @@ function CourseCard({
   );
 }
 
-function FlatAttendanceTable({
-  rows,
-  columns,
-  filterCheated,
-  globalFilter,
-}: {
-  rows: StudentRow[];
-  columns: ColumnDef<StudentRow>[];
-  filterCheated: boolean;
-  globalFilter: string;
+function FlatAttendanceTable({ rows, columns, filterCheated, globalFilter }: {
+  rows: StudentRow[]; columns: ColumnDef<StudentRow>[];
+  filterCheated: boolean; globalFilter: string;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-
   const tableData = React.useMemo(
     () => (filterCheated ? rows.filter((s) => s.cheated) : rows),
-    [rows, filterCheated],
+    [rows, filterCheated]
   );
-
   const table = useReactTable({
-    data: tableData,
-    columns,
+    data: tableData, columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -394,12 +501,8 @@ function FlatAttendanceTable({
     state: { sorting, globalFilter },
     globalFilterFn: (row, _, val) => {
       const q = val.toLowerCase();
-      return [
-        row.original.reg_no,
-        row.original.name,
-        row.original.department,
-        row.original.group ?? "",
-      ].some((v) => v.toLowerCase().includes(q));
+      return [row.original.reg_no, row.original.name, row.original.department, row.original.group ?? ""]
+        .some((v) => v.toLowerCase().includes(q));
     },
     initialState: { pagination: { pageSize: 20 } },
   });
@@ -411,10 +514,7 @@ function FlatAttendanceTable({
           {table.getHeaderGroups().map((hg) => (
             <TableRow key={hg.id} className="bg-muted/50">
               {hg.headers.map((h) => (
-                <TableHead
-                  key={h.id}
-                  className="text-xs font-semibold text-center"
-                >
+                <TableHead key={h.id} className="text-xs font-semibold text-center">
                   {flexRender(h.column.columnDef.header, h.getContext())}
                 </TableHead>
               ))}
@@ -424,16 +524,11 @@ function FlatAttendanceTable({
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                className={
-                  row.original.cheated
-                    ? "bg-amber-50/60 hover:bg-amber-50"
-                    : row.original.signin
-                      ? "hover:bg-muted/40"
-                      : "bg-red-50/40 hover:bg-red-50/60"
-                }
-              >
+              <TableRow key={row.id} className={
+                row.original.cheated ? "bg-amber-50/60 hover:bg-amber-50"
+                : row.original.signin ? "hover:bg-muted/40"
+                : "bg-red-50/40 hover:bg-red-50/60"
+              }>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="text-center py-2.5">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -443,227 +538,23 @@ function FlatAttendanceTable({
             ))
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-16 text-center text-muted-foreground text-sm"
-              >
+              <TableCell colSpan={columns.length} className="h-16 text-center text-muted-foreground text-sm">
                 No students match the current filter.
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
-
       {table.getPageCount() > 1 && (
         <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/20">
-          <p className="text-xs text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} student(s)
-          </p>
+          <p className="text-xs text-muted-foreground">{table.getFilteredRowModel().rows.length} student(s)</p>
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <span className="text-xs">
-              {table.getState().pagination.pageIndex + 1} /{" "}
-              {table.getPageCount()}
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
+            <Button size="sm" variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button>
+            <span className="text-xs">{table.getState().pagination.pageIndex + 1} / {table.getPageCount()}</span>
+            <Button size="sm" variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ── Collapsible Exam Section (inside course detail view) ──────────────────────
-function ExamSection({
-  examGroup,
-  columns,
-  filterCheated,
-  globalFilter,
-  onReview,
-}: {
-  examGroup: ExamGroup;
-  columns: ColumnDef<StudentRow>[];
-  filterCheated: boolean;
-  globalFilter: string;
-  onReview: (row: StudentRow) => void;
-}) {
-  const [open, setOpen] = React.useState(true);
-  const { exam, students, summary } = examGroup;
-
-  const tableData = React.useMemo(() => {
-    const rows = filterCheated ? students.filter((s) => s.cheated) : students;
-    return rows.map((s) => ({ ...s, group: exam.group }));
-  }, [students, filterCheated, exam.group]);
-
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [localFilter, setLocalFilter] = React.useState(globalFilter);
-
-  // keep local filter in sync with parent
-  React.useEffect(() => setLocalFilter(globalFilter), [globalFilter]);
-
-  const table = useReactTable({
-    data: tableData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setLocalFilter,
-    state: { sorting, globalFilter: localFilter },
-    globalFilterFn: (row, _, val) => {
-      const q = val.toLowerCase();
-      return [
-        row.original.reg_no,
-        row.original.name,
-        row.original.department,
-      ].some((v) => v.toLowerCase().includes(q));
-    },
-    initialState: { pagination: { pageSize: 15 } },
-  });
-
-  return (
-    <div className="rounded-xl border overflow-hidden">
-      {/* Exam sub-header */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted/60 transition-colors text-left"
-      >
-        <div className="flex items-center gap-3 flex-wrap">
-          <Badge
-            className={`text-xs ${EXAM_STATUS_COLOR[exam.status] ?? "bg-gray-100 text-gray-700"} border`}
-          >
-            {exam.status}
-          </Badge>
-          <span className="font-semibold text-sm">Group: {exam.group}</span>
-          <span className="text-xs text-muted-foreground">
-            {fmtDate(exam.date)} · {fmt12(exam.start_time)} –{" "}
-            {fmt12(exam.end_time)}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <SummaryPills
-            total={summary.total}
-            signed_in={summary.signed_in}
-            absent={summary.absent}
-            cheating_reports={summary.cheating_reports}
-          />
-          {open ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
-        </div>
-      </button>
-
-      {/* Collapsible table */}
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((hg) => (
-                  <TableRow key={hg.id} className="bg-muted/50">
-                    {hg.headers.map((h) => (
-                      <TableHead
-                        key={h.id}
-                        className="text-xs font-semibold text-center"
-                      >
-                        {flexRender(h.column.columnDef.header, h.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className={
-                        row.original.cheated
-                          ? "bg-amber-50/60 hover:bg-amber-50"
-                          : row.original.signin
-                            ? "hover:bg-muted/40"
-                            : "bg-red-50/40 hover:bg-red-50/60"
-                      }
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="text-center py-2.5">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-16 text-center text-muted-foreground text-sm"
-                    >
-                      No students match the current filter.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            {/* Pagination per exam */}
-            {table.getPageCount() > 1 && (
-              <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/20">
-                <p className="text-xs text-muted-foreground">
-                  {table.getFilteredRowModel().rows.length} student(s)
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-xs">
-                    {table.getState().pagination.pageIndex + 1} /{" "}
-                    {table.getPageCount()}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
@@ -673,51 +564,33 @@ export function AttendanceReport() {
   const axios = useUserAxios();
   const { setToastMessage } = useToast();
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [timetables, setTimetables] = React.useState<Timetable[]>([]);
   const [selectedTimetable, setSelectedTimetable] = React.useState<string>("");
   const [stats, setStats] = React.useState<DashboardStats | null>(null);
   const [courses, setCourses] = React.useState<CourseSummary[]>([]);
   const [loadingStats, setLoadingStats] = React.useState(false);
 
-  // Drill-down: course attendance
-  const [selectedCourse, setSelectedCourse] =
-    React.useState<CourseSummary | null>(null);
-  const [courseAttendance, setCourseAttendance] =
-    React.useState<CourseAttendanceData | null>(null);
+  const [selectedCourse, setSelectedCourse] = React.useState<CourseSummary | null>(null);
+  const [courseAttendance, setCourseAttendance] = React.useState<CourseAttendanceData | null>(null);
   const [loadingAttendance, setLoadingAttendance] = React.useState(false);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [filterCheated, setFilterCheated] = React.useState(false);
+
   const flatRows = React.useMemo(() => {
     if (!courseAttendance) return [];
     return courseAttendance.exam_groups.flatMap((eg) =>
-      eg.students.map((s) => ({
-        ...s,
-        group: eg.exam.group,
-        room: s.room || "–",
-      })),
+      eg.students.map((s) => ({ ...s, group: eg.exam.group, room: s.room || "–" }))
     );
   }, [courseAttendance]);
 
-  // Review dialog
-  const [reviewDialog, setReviewDialog] = React.useState<{
-    open: boolean;
-    row: StudentRow | null;
-  }>({
-    open: false,
-    row: null,
-  });
+  const [reviewDialog, setReviewDialog] = React.useState<{ open: boolean; row: StudentRow | null }>({ open: false, row: null });
   const [reviewStatus, setReviewStatus] = React.useState<string>("");
   const [reviewNotes, setReviewNotes] = React.useState("");
   const [submittingReview, setSubmittingReview] = React.useState(false);
-
-  // PDF export
   const [exportingPdf, setExportingPdf] = React.useState(false);
 
-  // ── Load timetables ────────────────────────────────────────────────────────
   React.useEffect(() => {
-    axios
-      .get("/api/schedules/timetables/")
+    axios.get("/api/schedules/timetables/")
       .then((r) => {
         const list: Timetable[] = r.data.data.map((t: any) => ({
           id: t.id,
@@ -725,29 +598,20 @@ export function AttendanceReport() {
         }));
         setTimetables(list);
         if (list.length > 0) setSelectedTimetable(String(list[0].id));
-      })
-      .catch(() => {});
+      }).catch(() => {});
   }, []);
 
-  // ── Load stats when timetable changes ─────────────────────────────────────
   React.useEffect(() => {
     if (!selectedTimetable) return;
     setLoadingStats(true);
     setSelectedCourse(null);
     setCourseAttendance(null);
-    axios
-      .get(`/api/report/attendance/stats/?timetable_id=${selectedTimetable}`)
-      .then((r) => {
-        setStats(r.data.stats);
-        setCourses(r.data.courses); // ← now "courses" not "exams"
-      })
-      .catch(() =>
-        setToastMessage({ message: "Failed to load stats", variant: "danger" }),
-      )
+    axios.get(`/api/report/attendance/stats/?timetable_id=${selectedTimetable}`)
+      .then((r) => { setStats(r.data.stats); setCourses(r.data.courses); })
+      .catch(() => setToastMessage({ message: "Failed to load stats", variant: "danger" }))
       .finally(() => setLoadingStats(false));
   }, [selectedTimetable]);
 
-  // ── Drill into course ──────────────────────────────────────────────────────
   const openCourse = async (course: CourseSummary) => {
     setSelectedCourse(course);
     setLoadingAttendance(true);
@@ -756,38 +620,28 @@ export function AttendanceReport() {
     setFilterCheated(false);
     try {
       const r = await axios.get(
-        `/api/report/attendance/?course_code=${encodeURIComponent(course.course_code)}&timetable_id=${selectedTimetable}`,
+        `/api/report/attendance/?course_code=${encodeURIComponent(course.course_code)}&timetable_id=${selectedTimetable}`
       );
       setCourseAttendance(r.data);
     } catch {
-      setToastMessage({
-        message: "Failed to load attendance",
-        variant: "danger",
-      });
+      setToastMessage({ message: "Failed to load attendance", variant: "danger" });
     } finally {
       setLoadingAttendance(false);
     }
   };
 
-  // ── Export PDF (whole timetable or filtered to course) ─────────────────────
   const exportPdf = async () => {
     setExportingPdf(true);
     try {
-      const courseParam = selectedCourse
-        ? `&course_code=${encodeURIComponent(selectedCourse.course_code)}`
-        : "";
+      const courseParam = selectedCourse ? `&course_code=${encodeURIComponent(selectedCourse.course_code)}` : "";
       const r = await axios.get(
         `/api/report/attendance/pdf/?timetable_id=${selectedTimetable}${courseParam}`,
-        { responseType: "blob" },
+        { responseType: "blob" }
       );
       const url = window.URL.createObjectURL(new Blob([r.data]));
       const link = document.createElement("a");
       link.href = url;
-      const suffix = selectedCourse ? `_${selectedCourse.course_code}` : "";
-      link.setAttribute(
-        "download",
-        `attendance${suffix}_${selectedTimetable}.pdf`,
-      );
+      link.setAttribute("download", `attendance${selectedCourse ? `_${selectedCourse.course_code}` : ""}_${selectedTimetable}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -799,7 +653,6 @@ export function AttendanceReport() {
     }
   };
 
-  // ── Submit review action ───────────────────────────────────────────────────
   const submitReview = async () => {
     const report = reviewDialog.row?.cheating_report;
     if (!report) return;
@@ -809,359 +662,182 @@ export function AttendanceReport() {
         status: reviewStatus || report.status,
         admin_notes: reviewNotes,
       });
-      setToastMessage({
-        message: "Report updated successfully",
-        variant: "success",
-      });
+      setToastMessage({ message: "Report updated successfully", variant: "success" });
       setReviewDialog({ open: false, row: null });
-      if (selectedCourse) openCourse(selectedCourse); // refresh
+      if (selectedCourse) openCourse(selectedCourse);
     } catch {
-      setToastMessage({
-        message: "Failed to update report",
-        variant: "danger",
-      });
+      setToastMessage({ message: "Failed to update report", variant: "danger" });
     } finally {
       setSubmittingReview(false);
     }
   };
 
-  // ── Table columns (shared across all exam sections) ────────────────────────
-  const columns: ColumnDef<StudentRow>[] = React.useMemo(
-    () => [
-      {
-        accessorKey: "reg_no",
-        header: "Reg No",
-        cell: ({ row }) => (
-          <span className="font-mono text-xs">{row.getValue("reg_no")}</span>
-        ),
+  const columns: ColumnDef<StudentRow>[] = React.useMemo(() => [
+    {
+      accessorKey: "reg_no", header: "Reg No",
+      cell: ({ row }) => <span className="font-mono text-xs">{row.getValue("reg_no")}</span>,
+    },
+    {
+      accessorKey: "name", header: "Student Name",
+      cell: ({ row }) => <span className="font-medium text-sm">{row.getValue("name")}</span>,
+    },
+    {
+      accessorKey: "department", header: "Department",
+      cell: ({ row }) => <span className="text-xs text-muted-foreground">{row.getValue("department")}</span>,
+    },
+    {
+      accessorKey: "room", header: "Room",
+      cell: ({ row }) => <span className="text-xs text-muted-foreground">{row.getValue("room")}</span>,
+    },
+    {
+      accessorKey: "group", header: "Group",
+      cell: ({ row }) => <span className="text-xs font-medium">{row.getValue("group") ?? "–"}</span>,
+    },
+    {
+      accessorKey: "signin", header: "Sign-In",
+      cell: ({ row }) => row.getValue("signin")
+        ? <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
+        : <XCircle className="h-5 w-5 text-red-500 mx-auto" />,
+    },
+    {
+      accessorKey: "signout", header: "Sign-Out",
+      cell: ({ row }) => row.getValue("signout")
+        ? <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
+        : <XCircle className="h-5 w-5 text-red-500 mx-auto" />,
+    },
+    {
+      accessorKey: "cheated", header: "Cheated",
+      cell: ({ row }) => {
+        const cheated = row.getValue("cheated") as boolean;
+        const report = row.original.cheating_report;
+        if (!cheated) return <span className="text-xs text-muted-foreground mx-auto block text-center">–</span>;
+        const sev = SEVERITY_CONFIG[report?.severity ?? "low"];
+        return (
+          <div className="flex justify-center">
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${sev.color}`}>{sev.label}</span>
+          </div>
+        );
       },
-      {
-        accessorKey: "name",
-        header: "Student Name",
-        cell: ({ row }) => (
-          <span className="font-medium text-sm">{row.getValue("name")}</span>
-        ),
+    },
+    {
+      accessorKey: "status", header: "Report Status",
+      cell: ({ row }) => {
+        const report = row.original.cheating_report;
+        if (!report) return <span className="text-xs text-muted-foreground block text-center">–</span>;
+        const cfg = REPORT_STATUS_CONFIG[report.status];
+        const Icon = cfg.icon;
+        return (
+          <div className="flex justify-center">
+            <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${cfg.color}`}>
+              <Icon className="h-3 w-3" /> {cfg.label}
+            </span>
+          </div>
+        );
       },
-      {
-        accessorKey: "department",
-        header: "Department",
-        cell: ({ row }) => (
-          <span className="text-xs text-muted-foreground">
-            {row.getValue("department")}
-          </span>
-        ),
+    },
+    {
+      id: "actions", header: "Actions",
+      cell: ({ row }) => {
+        const report = row.original.cheating_report;
+        if (!report) return null;
+        return (
+          <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
+            onClick={() => {
+              setReviewDialog({ open: true, row: row.original });
+              setReviewStatus(report.status);
+              setReviewNotes("");
+            }}
+          >
+            <Shield className="h-3 w-3" /> Review
+          </Button>
+        );
       },
-      {
-        accessorKey: "room",
-        header: "Room",
-        cell: ({ row }) => (
-          <span className="text-xs text-muted-foreground">
-            {row.getValue("room")}
-          </span>
-        ),
-      },
+    },
+  ], []);
 
-      {
-        accessorKey: "group",
-        header: "Group",
-        cell: ({ row }) => (
-          <span className="text-xs font-medium">
-            {row.getValue("group") ?? "–"}
-          </span>
-        ),
-      },
-
-      {
-        accessorKey: "signin",
-        header: "Sign-In",
-        cell: ({ row }) =>
-          row.getValue("signin") ? (
-            <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-          ) : (
-            <XCircle className="h-5 w-5 text-red-500 mx-auto" />
-          ),
-      },
-      {
-        accessorKey: "signout",
-        header: "Sign-Out",
-        cell: ({ row }) =>
-          row.getValue("signout") ? (
-            <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-          ) : (
-            <XCircle className="h-5 w-5 text-red-500 mx-auto" />
-          ),
-      },
-      {
-        accessorKey: "cheated",
-        header: "Cheated",
-        cell: ({ row }) => {
-          const cheated = row.getValue("cheated") as boolean;
-          const report = row.original.cheating_report;
-          if (!cheated)
-            return (
-              <span className="text-xs text-muted-foreground mx-auto block text-center">
-                –
-              </span>
-            );
-          const sev = SEVERITY_CONFIG[report?.severity ?? "low"];
-          return (
-            <div className="flex justify-center">
-              <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${sev.color}`}
-              >
-                {sev.label}
-              </span>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "status",
-        header: "Report Status",
-        cell: ({ row }) => {
-          const report = row.original.cheating_report;
-          if (!report)
-            return (
-              <span className="text-xs text-muted-foreground block text-center">
-                –
-              </span>
-            );
-          const cfg = REPORT_STATUS_CONFIG[report.status];
-          const Icon = cfg.icon;
-          return (
-            <div className="flex justify-center">
-              <span
-                className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${cfg.color}`}
-              >
-                <Icon className="h-3 w-3" /> {cfg.label}
-              </span>
-            </div>
-          );
-        },
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const report = row.original.cheating_report;
-          if (!report) return null;
-          return (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1"
-              onClick={() => {
-                setReviewDialog({ open: true, row: row.original });
-                setReviewStatus(report.status);
-                setReviewNotes("");
-              }}
-            >
-              <Shield className="h-3 w-3" /> Review
-            </Button>
-          );
-        },
-      },
-    ],
-    [],
-  );
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="w-full space-y-6 p-1">
-      {/* ── Header & Timetable selector ─────────────────────────────────── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Attendance & Reports
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Monitor exam attendance and cheating incidents
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">Attendance & Reports</h1>
+          <p className="text-sm text-muted-foreground">Monitor exam attendance and cheating incidents</p>
         </div>
         <div className="sm:ml-auto flex items-center gap-2">
-          {/* PDF export — visible on both views */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1"
-            onClick={exportPdf}
-            disabled={exportingPdf || loadingStats || !selectedTimetable}
-          >
-            {exportingPdf ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
+          <Button variant="outline" size="sm" className="gap-1" onClick={exportPdf}
+            disabled={exportingPdf || loadingStats || !selectedTimetable}>
+            {exportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {selectedCourse ? "Export Course PDF" : "Export All PDF"}
           </Button>
-
-          <Select
-            value={selectedTimetable}
-            onValueChange={setSelectedTimetable}
-          >
-            <SelectTrigger className="w-[340px]">
+          <Select value={selectedTimetable} onValueChange={setSelectedTimetable}>
+            <SelectTrigger className="w-[300px]">
               <SelectValue placeholder="Select timetable…" />
             </SelectTrigger>
             <SelectContent>
               {timetables.map((t) => (
-                <SelectItem key={t.id} value={String(t.id)}>
-                  {t.label}
-                </SelectItem>
+                <SelectItem key={t.id} value={String(t.id)}>{t.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setSelectedTimetable((v) => v)}
-            disabled={loadingStats}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${loadingStats ? "animate-spin" : ""}`}
-            />
+          <Button variant="outline" size="icon" onClick={() => setSelectedTimetable((v) => v)} disabled={loadingStats}>
+            <RefreshCw className={`h-4 w-4 ${loadingStats ? "animate-spin" : ""}`} />
           </Button>
         </div>
       </div>
 
-      {/* ── Stat Cards ──────────────────────────────────────────────────── */}
+      {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard
-            label="Total Students"
-            value={stats.total_students}
-            icon={Users}
-            color="bg-blue-50  text-blue-800  border-blue-200"
-          />
-          <StatCard
-            label="Signed In"
-            value={stats.signed_in}
-            icon={UserCheck}
-            color="bg-green-50 text-green-800 border-green-200"
-            sub={`${Math.round((stats.signed_in / (stats.total_students || 1)) * 100)}% attendance`}
-          />
-          <StatCard
-            label="Signed Out"
-            value={stats.signed_out}
-            icon={UserCheck}
-            color="bg-teal-50  text-teal-800  border-teal-200"
-          />
-          <StatCard
-            label="Absent"
-            value={stats.absent}
-            icon={UserX}
-            color="bg-red-50   text-red-800   border-red-200"
-          />
-          <StatCard
-            label="Cheating Reports"
-            value={stats.cheating_reports}
-            icon={ShieldAlert}
-            color="bg-amber-50 text-amber-800 border-amber-200"
-          />
+          <StatCard label="Total Students"   value={stats.total_students}   icon={Users}       color="bg-blue-50  text-blue-800  border-blue-200" />
+          <StatCard label="Signed In"        value={stats.signed_in}        icon={UserCheck}   color="bg-green-50 text-green-800 border-green-200" sub={`${Math.round((stats.signed_in / (stats.total_students || 1)) * 100)}% attendance`} />
+          <StatCard label="Signed Out"       value={stats.signed_out}       icon={UserCheck}   color="bg-teal-50  text-teal-800  border-teal-200" />
+          <StatCard label="Absent"           value={stats.absent}           icon={UserX}       color="bg-red-50   text-red-800   border-red-200" />
+          <StatCard label="Cheating Reports" value={stats.cheating_reports} icon={ShieldAlert} color="bg-amber-50 text-amber-800 border-amber-200" />
         </div>
       )}
 
-      {loadingStats && (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )}
+      {loadingStats && <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
 
-      {/* ── Course Grid OR Course Detail ─────────────────────────────────── */}
+      {/* Course grid / detail */}
       <AnimatePresence mode="wait">
-        {/* ── Course Cards Grid ───────────────────────────────────────────── */}
         {!selectedCourse ? (
-          <motion.div
-            key="grid"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             {courses.length > 0 && (
               <>
                 <h2 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <BookOpen className="h-3.5 w-3.5" />
-                  {courses.length} Course{courses.length !== 1 ? "s" : ""} —
-                  Click to view attendance
+                  {courses.length} Course{courses.length !== 1 ? "s" : ""} — Click to view attendance
                 </h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {courses.map((course) => (
-                    <CourseCard
-                      key={course.course_code}
-                      course={course}
-                      onClick={() => openCourse(course)}
-                    />
+                    <CourseCard key={course.course_code} course={course} onClick={() => openCourse(course)} />
                   ))}
                 </div>
               </>
             )}
           </motion.div>
         ) : (
-          /* ── Course Detail View ─────────────────────────────────────────── */
-          <motion.div
-            key="detail"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0 }}
-          >
-            {/* Back + header */}
+          <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedCourse(null);
-                  setCourseAttendance(null);
-                }}
-                className="w-fit gap-1"
-              >
+              <Button variant="ghost" size="sm" onClick={() => { setSelectedCourse(null); setCourseAttendance(null); }} className="w-fit gap-1">
                 <ArrowLeft className="h-4 w-4" /> Back to Courses
               </Button>
               <div className="sm:ml-2">
-                <h2 className="font-bold text-lg">
-                  {selectedCourse.course_code} – {selectedCourse.course_title}
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  {selectedCourse.exams.length} exam
-                  {selectedCourse.exams.length !== 1 ? "s" : ""}
-                </p>
+                <h2 className="font-bold text-lg">{selectedCourse.course_code} – {selectedCourse.course_title}</h2>
+                <p className="text-xs text-muted-foreground">{selectedCourse.exams.length} exam{selectedCourse.exams.length !== 1 ? "s" : ""}</p>
               </div>
             </div>
 
-            {/* Course-level summary cards */}
             {courseAttendance && (
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
                 {[
-                  {
-                    label: "Total",
-                    val: courseAttendance.summary.total,
-                    color: "bg-slate-100",
-                  },
-                  {
-                    label: "Present",
-                    val: courseAttendance.summary.signed_in,
-                    color: "bg-green-50 text-green-800",
-                  },
-                  {
-                    label: "Absent",
-                    val: courseAttendance.summary.absent,
-                    color: "bg-red-50 text-red-700",
-                  },
-                  {
-                    label: "Signed Out",
-                    val: courseAttendance.summary.signed_out,
-                    color: "bg-teal-50 text-teal-700",
-                  },
-                  {
-                    label: "Cheating",
-                    val: courseAttendance.summary.cheating_reports,
-                    color: "bg-amber-50 text-amber-700",
-                  },
+                  { label: "Total",      val: courseAttendance.summary.total,            color: "bg-slate-100" },
+                  { label: "Present",    val: courseAttendance.summary.signed_in,        color: "bg-green-50 text-green-800" },
+                  { label: "Absent",     val: courseAttendance.summary.absent,           color: "bg-red-50 text-red-700" },
+                  { label: "Signed Out", val: courseAttendance.summary.signed_out,       color: "bg-teal-50 text-teal-700" },
+                  { label: "Cheating",   val: courseAttendance.summary.cheating_reports, color: "bg-amber-50 text-amber-700" },
                 ].map((c) => (
-                  <div
-                    key={c.label}
-                    className={`rounded-lg border px-4 py-3 text-center ${c.color}`}
-                  >
+                  <div key={c.label} className={`rounded-lg border px-4 py-3 text-center ${c.color}`}>
                     <p className="text-xl font-bold">{c.val}</p>
                     <p className="text-xs font-medium">{c.label}</p>
                   </div>
@@ -1169,54 +845,29 @@ export function AttendanceReport() {
               </div>
             )}
 
-            {/* Toolbar */}
             <div className="flex flex-wrap gap-2 mb-4">
               <div className="relative flex-1 min-w-[200px] max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search student, reg no…"
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  className="pl-9"
-                />
+                <Input placeholder="Search student, reg no…" value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-9" />
               </div>
-              <Button
-                variant={filterCheated ? "default" : "outline"}
-                size="sm"
-                className="gap-1"
-                onClick={() => setFilterCheated((v) => !v)}
-              >
+              <Button variant={filterCheated ? "default" : "outline"} size="sm" className="gap-1" onClick={() => setFilterCheated((v) => !v)}>
                 <AlertTriangle className="h-4 w-4" />
                 {filterCheated ? "All Students" : "Cheating Only"}
               </Button>
             </div>
 
             {loadingAttendance ? (
-              <div className="flex justify-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
+              <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
             ) : courseAttendance ? (
-              <div className="space-y-4">
-                {courseAttendance ? (
-                  <FlatAttendanceTable
-                    rows={flatRows}
-                    columns={columns}
-                    filterCheated={filterCheated}
-                    globalFilter={globalFilter}
-                  />
-                ) : null}
-              </div>
+              <FlatAttendanceTable rows={flatRows} columns={columns} filterCheated={filterCheated} globalFilter={globalFilter} />
             ) : null}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ── Review Dialog ─────────────────────────────────────────────────── */}
-      <Dialog
-        open={reviewDialog.open}
-        onOpenChange={(o) => !o && setReviewDialog({ open: false, row: null })}
-      >
-        <DialogContent className="sm:max-w-[520px]">
+      <Dialog open={reviewDialog.open} onOpenChange={(o) => !o && setReviewDialog({ open: false, row: null })}>
+        <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-amber-500" />
@@ -1224,60 +875,50 @@ export function AttendanceReport() {
             </DialogTitle>
             {reviewDialog.row && (
               <DialogDescription>
-                Student:{" "}
-                <span className="font-semibold text-foreground">
-                  {reviewDialog.row.name}
-                </span>{" "}
-                ({reviewDialog.row.reg_no})
+                Student: <span className="font-semibold text-foreground">{reviewDialog.row.name}</span> ({reviewDialog.row.reg_no})
               </DialogDescription>
             )}
           </DialogHeader>
 
           {reviewDialog.row?.cheating_report && (
             <div className="space-y-4 py-2">
+              {/* Incident meta */}
               <div className="rounded-lg bg-muted/50 p-4 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Severity</span>
-                  <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${SEVERITY_CONFIG[reviewDialog.row.cheating_report.severity].color}`}
-                  >
-                    {
-                      SEVERITY_CONFIG[reviewDialog.row.cheating_report.severity]
-                        .label
-                    }
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${SEVERITY_CONFIG[reviewDialog.row.cheating_report.severity].color}`}>
+                    {SEVERITY_CONFIG[reviewDialog.row.cheating_report.severity].label}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Reported by</span>
-                  <span className="font-medium">
-                    {reviewDialog.row.cheating_report.reported_by}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Evidence files</span>
-                  <span className="font-medium">
-                    {reviewDialog.row.cheating_report.evidence_count}
-                  </span>
+                  <span className="font-medium">{reviewDialog.row.cheating_report.reported_by}</span>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-1">
-                    Incident description
-                  </p>
-                  <p className="text-xs leading-relaxed bg-white rounded p-2 border">
+                  <p className="text-muted-foreground mb-1">Incident description</p>
+                  <p className="text-xs leading-relaxed bg-white dark:bg-muted rounded p-2 border">
                     {reviewDialog.row.cheating_report.incident_description}
                   </p>
                 </div>
-                <ul className="flex list-decimal list-inside space-y-1">
-                  {reviewDialog.row.cheating_report.evidences.map((e, idx) => {
-                    return <li key={idx}>
-                      <a href={e.url} download> {e.url}</a>
-                    </li>
-
-                  })}
-
-                </ul>
               </div>
 
+              {/* ── Evidence Gallery ───────────────────────────────────── */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-1.5">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    Evidence
+                    {reviewDialog.row.cheating_report.evidence_count > 0 && (
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                        {reviewDialog.row.cheating_report.evidence_count}
+                      </Badge>
+                    )}
+                  </Label>
+                </div>
+                <EvidenceGallery evidences={reviewDialog.row.cheating_report.evidences} />
+              </div>
+
+              {/* Action */}
               <div className="space-y-2">
                 <Label>Update Status</Label>
                 <Select value={reviewStatus} onValueChange={setReviewStatus}>
@@ -1286,26 +927,16 @@ export function AttendanceReport() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending">
-                      <span className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-500" /> Pending
-                      </span>
+                      <span className="flex items-center gap-2"><Clock className="h-4 w-4 text-gray-500" /> Pending</span>
                     </SelectItem>
                     <SelectItem value="under_review">
-                      <span className="flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-blue-500" /> Under Review
-                      </span>
+                      <span className="flex items-center gap-2"><Eye className="h-4 w-4 text-blue-500" /> Under Review</span>
                     </SelectItem>
                     <SelectItem value="confirmed">
-                      <span className="flex items-center gap-2">
-                        <ShieldAlert className="h-4 w-4 text-red-500" /> Confirm
-                        Cheating
-                      </span>
+                      <span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-red-500" /> Confirm Cheating</span>
                     </SelectItem>
                     <SelectItem value="dismissed">
-                      <span className="flex items-center gap-2">
-                        <ShieldX className="h-4 w-4 text-green-600" /> Dismiss
-                        Report
-                      </span>
+                      <span className="flex items-center gap-2"><ShieldX className="h-4 w-4 text-green-600" /> Dismiss Report</span>
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -1313,30 +944,15 @@ export function AttendanceReport() {
 
               <div className="space-y-2">
                 <Label>Admin Notes</Label>
-                <Textarea
-                  placeholder="Add notes about your decision…"
-                  rows={3}
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                />
+                <Textarea placeholder="Add notes about your decision…" rows={3} value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} />
               </div>
             </div>
           )}
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setReviewDialog({ open: false, row: null })}
-              disabled={submittingReview}
-            >
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setReviewDialog({ open: false, row: null })} disabled={submittingReview}>Cancel</Button>
             <Button onClick={submitReview} disabled={submittingReview}>
-              {submittingReview ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <ShieldCheck className="h-4 w-4 mr-2" />
-              )}
+              {submittingReview ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
               Save Decision
             </Button>
           </DialogFooter>
