@@ -218,24 +218,21 @@ export default function AdminMainPage() {
   });
 
   const sidebarWidth = isMobile
-    ? "0px"
-    : state === "collapsed"
-      ? SIDEBAR_WIDTH_ICON
-      : SIDEBAR_WIDTH;
+  ? "0px"   
+  : state === "collapsed"
+    ? SIDEBAR_WIDTH_ICON
+    : SIDEBAR_WIDTH;
 
   console.log("sidebarWidth: ", sidebarWidth);
   console.log("state: ", state);
 
   return (
-    <div className="flex">
-      <AppSidebar data={data} />
-      <div
-        style={{
-          marginLeft: sidebarWidth,
-          width: `calc(100vw - ${sidebarWidth})`,
-        }}
-        className="flex flex-col min-h-screen transition-all duration-200"
-      >
+  <div className="flex">   {/* ← add flex here */}
+    <AppSidebar data={data} />
+    <div
+      style={{ width: `calc(100vw - ${sidebarWidth})` }}
+      className="flex flex-col min-h-screen"
+    >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-0 border-b bg-background/95 backdrop-blur-sm px-3 w-full shadow-[0_1px_0_0_hsl(var(--border))]">
           {/* Left: trigger + breadcrumb */}
