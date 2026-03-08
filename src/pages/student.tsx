@@ -192,56 +192,71 @@ export default function StudentMainPage() {
     <>
       <AppSidebar data={data} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sticky top-0 z-50">
+          {/* Left: Sidebar trigger + breadcrumb */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <SidebarTrigger className="-ml-1 h-8 w-8 shrink-0" />
+            <Separator orientation="vertical" className="h-4 shrink-0 opacity-50" />
 
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">{parentUrl}</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{url}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+            <Breadcrumb className="min-w-0">
+              <BreadcrumbList className="flex-nowrap">
+                <BreadcrumbItem className="hidden md:flex">
+                  <BreadcrumbLink
+                    href="#"
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm truncate max-w-[160px]"
+                  >
+                    {parentUrl}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:flex opacity-50" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="font-medium text-sm truncate max-w-[200px]">
+                    {url}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
 
-          <div className="flex-1"></div>
-
-          <div className="gap-4 space-x-2">
+          {/* Right: Actions */}
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Camera / Exam verification */}
             <Button
-              onClick={() => {
-                navigate("exam-verification");
-              }}
-              variant={"outline"}
+              onClick={() => navigate("exam-verification")}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              aria-label="Exam verification"
             >
-              <Camera className="h-12 w-12" />
+              <Camera className="h-4 w-4" />
             </Button>
+
+            {/* Notifications */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  className="relative inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors mr-2"
+                  variant="ghost"
+                  size="icon"
+                  className="relative h-8 w-8 text-muted-foreground hover:text-foreground"
                   aria-label="Notifications"
                   onClick={markAllAsRead}
                 >
-                  <Bell className="h-4 w-4 text-gray-600" />
+                  <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white font-medium p-2">
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-semibold leading-none">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end" sideOffset={10}>
+              <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <h3 className="text-sm font-semibold">Notifications</h3>
                   {unreadCount > 0 && (
                     <Button
                       variant="link"
                       size="sm"
-                      className="h-auto p-0 text-sm"
+                      className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
                       onClick={markAllAsRead}
                     >
                       Mark all as read
@@ -252,36 +267,50 @@ export default function StudentMainPage() {
               </PopoverContent>
             </Popover>
 
+            {/* User menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="p-4">
-                  <User2Icon /> {decodedToken?.role.toLocaleUpperCase()}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 gap-2 px-2 text-muted-foreground hover:text-foreground"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
+                    <User2Icon className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="hidden sm:inline-block text-xs font-medium">
+                    {decodedToken?.role.toLocaleUpperCase()}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuSeparator className="md:hidden" />
-
+              <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
+                <div className="px-2 py-1.5">
+                  <p className="text-xs font-medium text-foreground">
+                    {decodedToken?.role.toLocaleUpperCase()}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {maskEmail(decodedToken?.email.toLocaleLowerCase() || "")}
+                  </p>
+                </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <User className="mr-2 size-4" />
-                  <span>
-                    My Profile (
-                    {maskEmail(decodedToken?.email.toLocaleLowerCase() || "")})
-                  </span>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>My Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Settings className="mr-2 size-4" />
+                  <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <LogOut className="mr-2 size-4" />
-                  <Link to={"/logout"}>Log out</Link>
+                <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <Link to="/logout">Log out</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
+
         <div className="flex flex-1 flex-col gap-4 p-4">
           <Outlet />
         </div>
