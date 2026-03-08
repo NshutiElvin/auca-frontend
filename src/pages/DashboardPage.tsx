@@ -310,7 +310,7 @@ const colors = [
     return (
       <Card
         key={index}
-        className={`group relative overflow-hidden cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] border ${stat.bgColor}`}
+        className={`group relative overflow-hidden cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] border ${stat.bgColor} border-${stat.textColor}`}
         onClick={() => handleCardClick(cardType)}
       >
         <CardContent className="p-6 relative">
