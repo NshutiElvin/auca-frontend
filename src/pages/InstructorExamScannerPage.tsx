@@ -28,7 +28,7 @@ function InstructorExamScannerPage() {
     setVerifying(true);
       try {
         const response = await axios.post(
-          "/api/exams/student-exam/",
+          "/api/exams/student-exam/verify",
           {encryptedData:data}
         );
         setStudentsInfo(response.data.data || response.data);
