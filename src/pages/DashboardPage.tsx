@@ -142,14 +142,14 @@ const DashboardPage = () => {
     });
   };
 
-  const colors = [
-    "slate-100",
-    "bg-green-100",
-    "bg-red-100",
-    "bg-red-100",
-    "bg-amber-100",
-    "amber-700",
-  ];
+const colors = [
+  "hsl(210, 16%, 96%)",  // slate-100
+  "hsl(120, 67%, 90%)",  // bg-green-100
+  "hsl(0, 100%, 96%)",   // bg-red-100
+  "hsl(0, 100%, 96%)",   // bg-red-100
+  "hsl(45, 100%, 90%)",  // bg-amber-100
+  "hsl(45, 100%, 33%)",  // amber-700
+];
 
   const barChartData =
     dashboardData.exams_with_most_students?.map((exam: any, index) => ({
