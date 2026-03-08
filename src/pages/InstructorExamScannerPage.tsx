@@ -1,4 +1,4 @@
- import { Scanner } from "@yudiel/react-qr-scanner";
+import { Scanner } from "@yudiel/react-qr-scanner";
 import {
   Dialog,
   DialogContent,
@@ -12,45 +12,42 @@ import useUserAxios from "../hooks/useUserAxios";
 import { Course } from "./courses";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusButton } from "../components/ui/status-button";
- 
- 
 
 function InstructorExamScannerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { setToastMessage } = useToast();
   const [isVerifying, setVerifying] = useState(false);
- 
-  
-  const [studentsInfo, setStudentsInfo] = useState<any[]|null>([]);
+  const [hasScanned, setHasScanned] = useState(false);
+
+  const [studentsInfo, setStudentsInfo] = useState<any[] | null>([]);
   const axios = useUserAxios();
 
   const performVerification = async (data: any) => {
+    setStudentsInfo(null);
     setVerifying(true);
-      try {
-        const response = await axios.post(
-          "/api/exams/student-exam/verify",
-          {encryptedData:data}
-        );
-        setStudentsInfo(response.data.data || response.data);
-      } catch (error) {
-        setToastMessage({
-          message: "Error occurred while  students info.",
-          variant: "danger",
-        });
-      }finally{
-        setVerifying(false);
-      }
+    try {
+      const response = await axios.post("/api/exams/student-exam/verify/", {
+        encryptedData: data,
+      });
+      setStudentsInfo(response.data.data || response.data);
+    } catch (error) {
+      setToastMessage({
+        message: "Error occurred while  students info.",
+        variant: "danger",
+      });
+    } finally {
+      setVerifying(false);
+    }
   };
 
   const handleQrCodeDetected = (result: any) => {
-    if (result) {
+    if (result && !hasScanned && !isVerifying) {
       console.log(result);
       console.log(result[0].rawValue);
       try {
         const parsedData = result[0].rawValue;
 
         setDialogOpen(true);
-        
 
         performVerification(parsedData);
       } catch (error) {
@@ -64,7 +61,7 @@ function InstructorExamScannerPage() {
     }
   };
 
-  const handleScanError = (e:any) => {
+  const handleScanError = (e: any) => {
     console.log(String(e));
     setToastMessage({
       variant: "danger",
@@ -87,12 +84,11 @@ function InstructorExamScannerPage() {
         <div className="space-y-4">
           {studentsInfo && (
             <Card className="border-0 shadow-sm  ">
-              <CardContent className="overflow-x-scroll"> 
+              <CardContent className="overflow-x-scroll">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b  ">
-                      
                         <th className="text-left p-4 text-sm font-medium ">
                           Reg No
                         </th>
@@ -118,7 +114,6 @@ function InstructorExamScannerPage() {
                     <tbody>
                       {studentsInfo.map((student: any, index) => (
                         <tr key={index} className="border-b   last:border-0">
-                          
                           <td className="p-2 text-sm  ">{student.reg_no}</td>
                           <td className="p-2 text-sm ">{student.first_name}</td>
                           <td className="p-2 text-sm ">{student.last_name}</td>
@@ -129,12 +124,13 @@ function InstructorExamScannerPage() {
                             {student.amount_paid}
                           </td>
 
-                          
                           <td className="p-4">
-                            <StatusButton status={student.all_paid?"Completed":"Pending" } />
+                            <StatusButton
+                              status={
+                                student.all_paid ? "Completed" : "Pending"
+                              }
+                            />
                           </td>
-
-                          
                         </tr>
                       ))}
                     </tbody>
@@ -162,7 +158,13 @@ function InstructorExamScannerPage() {
         </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setHasScanned(false);
+        }}
+      >
         <DialogContent className="sm:max-w-[700px] md:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-center space-y-2 pb-4">
             <DialogTitle className="text-xl font-bold">
