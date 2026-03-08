@@ -229,10 +229,7 @@ export default function AdminMainPage() {
   return (
   <div >   {/* ← add flex here */}
     <AppSidebar data={data} />
-    <div
-      style={{ width: `calc(100vw - ${sidebarWidth})` }}
-      className="flex flex-col min-h-screen"
-    >
+    <div className="flex flex-col flex-1 min-h-screen">
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-0 border-b bg-background/95 backdrop-blur-sm px-3 w-full shadow-[0_1px_0_0_hsl(var(--border))]">
           {/* Left: trigger + breadcrumb */}
