@@ -131,8 +131,9 @@ const ROLE_CONFIG: Record<string, { label: string; color: string; icon: any }> =
   student:    { label: "Student",    color: "bg-violet-100 text-violet-800 border-violet-200", icon: User },
 };
 
+
 export default function AdminMainPage() {
-  const { parentUrl, url } = useSidebar();
+  const { parentUrl, url, state } = useSidebar();
   const { auth } = useAuth();
   const [decodedToken, setDecodedToken] = useState<DecodedToken | null>(null);
   const navigate = useNavigate();
@@ -187,10 +188,14 @@ export default function AdminMainPage() {
   const dateStr = time.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const timeStr = time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
+  const sidebarWidth = state === "collapsed" 
+  ? "var(--sidebar-width-icon)" 
+  : "var(--sidebar-width)";
+
   return (
     <>
       <AppSidebar data={data} />
-      <main>
+      <div style={{ width: `calc(100vw - ${sidebarWidth})` }}>
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-0 border-b bg-background/95 backdrop-blur-sm px-3 w-full shadow-[0_1px_0_0_hsl(var(--border))]">
@@ -372,7 +377,7 @@ export default function AdminMainPage() {
         {/* ── Page content ───────────────────────────────────────────────── */}
           <Outlet />
 
-      </main>
+      </div>
     </>
   );
 }

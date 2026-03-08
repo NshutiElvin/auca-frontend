@@ -12,6 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <ThemeProvider>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
+        
         <App />
       </QueryClientProvider>
     </ErrorBoundary>
