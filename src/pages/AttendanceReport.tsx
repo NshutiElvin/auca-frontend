@@ -44,16 +44,27 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import {
-  Table, TableBody, TableCell, TableHead,
-  TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "../components/ui/table";
 import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "../components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
@@ -64,16 +75,27 @@ import useToast from "../hooks/useToast";
 type Timetable = { id: number; label: string };
 
 type ExamEntry = {
-  exam_id: number; group: string; date: string;
-  start_time: string; end_time: string; room: string;
-  status: string; total: number; signed_in: number;
-  absent: number; cheating_reports: number;
+  exam_id: number;
+  group: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  room: string;
+  status: string;
+  total: number;
+  signed_in: number;
+  absent: number;
+  cheating_reports: number;
 };
 
 type CourseSummary = {
-  course_code: string; course_title: string;
-  total: number; signed_in: number; absent: number;
-  cheating_reports: number; signed_out: number;
+  course_code: string;
+  course_title: string;
+  total: number;
+  signed_in: number;
+  absent: number;
+  cheating_reports: number;
+  signed_out: number;
   exams: ExamEntry[];
 };
 
@@ -84,8 +106,11 @@ type Evidence = {
 };
 
 type DashboardStats = {
-  total_students: number; signed_in: number;
-  signed_out: number; absent: number; cheating_reports: number;
+  total_students: number;
+  signed_in: number;
+  signed_out: number;
+  absent: number;
+  cheating_reports: number;
 };
 
 type CheatingReport = {
@@ -100,23 +125,50 @@ type CheatingReport = {
 } | null;
 
 type StudentRow = {
-  id: number; student_id: number; reg_no: string;
-  name: string; department: string; signin: boolean;
-  room: string; group?: string; signout: boolean;
-  status: string; cheated: boolean; cheating_report: CheatingReport;
+  id: number;
+  student_id: number;
+  reg_no: string;
+  name: string;
+  department: string;
+  signin: boolean;
+  room: string;
+  group?: string;
+  signout: boolean;
+  status: string;
+  cheated: boolean;
+  cheating_report: CheatingReport;
 };
 
 type ExamGroup = {
-  exam: { id: number; group: string; date: string; start_time: string; end_time: string; status: string };
+  exam: {
+    id: number;
+    group: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    status: string;
+  };
   students: StudentRow[];
-  summary: { total: number; signed_in: number; signed_out: number; absent: number; cheating_reports: number };
+  summary: {
+    total: number;
+    signed_in: number;
+    signed_out: number;
+    absent: number;
+    cheating_reports: number;
+  };
 };
 
 type CourseAttendanceData = {
   course: { code: string; title: string };
   timetable_id: number;
   exam_groups: ExamGroup[];
-  summary: { total: number; signed_in: number; signed_out: number; absent: number; cheating_reports: number };
+  summary: {
+    total: number;
+    signed_in: number;
+    signed_out: number;
+    absent: number;
+    cheating_reports: number;
+  };
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -129,13 +181,24 @@ const fmt12 = (t: string) => {
 
 const fmtDate = (d: string) => {
   if (!d) return "–";
-  return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(d).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 /** Detect file type from Cloudinary URL or evidence_type */
-function detectFileType(url: string, evidenceType: string): "image" | "pdf" | "doc" | "other" {
+function detectFileType(
+  url: string,
+  evidenceType: string,
+): "image" | "pdf" | "doc" | "other" {
   const lower = url.toLowerCase();
-  if (evidenceType === "image" || /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?|$)/.test(lower)) return "image";
+  if (
+    evidenceType === "image" ||
+    /\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?|$)/.test(lower)
+  )
+    return "image";
   if (/\.pdf(\?|$)/.test(lower) || evidenceType === "document") return "pdf";
   if (/\.(doc|docx)(\?|$)/.test(lower)) return "doc";
   return "other";
@@ -148,21 +211,43 @@ function cloudinaryThumb(url: string, w = 300, h = 200): string {
 }
 
 const SEVERITY_CONFIG = {
-  low:    { label: "Low",    color: "bg-yellow-100 text-yellow-800 border-yellow-300" },
-  medium: { label: "Medium", color: "bg-orange-100 text-orange-800 border-orange-300" },
-  high:   { label: "High",   color: "bg-red-100 text-red-800 border-red-300" },
+  low: {
+    label: "Low",
+    color: "bg-yellow-100 text-yellow-800 border-yellow-300",
+  },
+  medium: {
+    label: "Medium",
+    color: "bg-orange-100 text-orange-800 border-orange-300",
+  },
+  high: { label: "High", color: "bg-red-100 text-red-800 border-red-300" },
 };
 
 const REPORT_STATUS_CONFIG = {
-  pending:      { label: "Pending",      icon: Clock,       color: "bg-gray-100 text-gray-700" },
-  under_review: { label: "Under Review", icon: Eye,         color: "bg-blue-100 text-blue-700" },
-  confirmed:    { label: "Confirmed",    icon: ShieldAlert, color: "bg-red-100 text-red-700" },
-  dismissed:    { label: "Dismissed",    icon: ShieldX,     color: "bg-green-100 text-green-700" },
+  pending: {
+    label: "Pending",
+    icon: Clock,
+    color: "bg-gray-100 text-gray-700",
+  },
+  under_review: {
+    label: "Under Review",
+    icon: Eye,
+    color: "bg-blue-100 text-blue-700",
+  },
+  confirmed: {
+    label: "Confirmed",
+    icon: ShieldAlert,
+    color: "bg-red-100 text-red-700",
+  },
+  dismissed: {
+    label: "Dismissed",
+    icon: ShieldX,
+    color: "bg-green-100 text-green-700",
+  },
 };
 
 const EXAM_STATUS_COLOR: Record<string, string> = {
   SCHEDULED: "bg-blue-100 text-blue-700",
-  ONGOING:   "bg-green-100 text-green-700",
+  ONGOING: "bg-green-100 text-green-700",
   COMPLETED: "bg-gray-100 text-gray-700",
   CANCELLED: "bg-red-100 text-red-700",
 };
@@ -262,7 +347,9 @@ function EvidenceGallery({ evidences }: { evidences: Evidence[] }) {
 
 // ── Single evidence card ───────────────────────────────────────────────────────
 function EvidenceCard({
-  evidence, type, onPreview,
+  evidence,
+  type,
+  onPreview,
 }: {
   evidence: Evidence;
   type: "image" | "pdf" | "doc" | "other";
@@ -310,12 +397,17 @@ function EvidenceCard({
 
         {/* Type badge */}
         <div className="absolute top-1.5 left-1.5">
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-            type === "image" ? "bg-purple-100 text-purple-700" :
-            type === "pdf"   ? "bg-red-100 text-red-700" :
-            type === "doc"   ? "bg-blue-100 text-blue-700" :
-                               "bg-gray-100 text-gray-700"
-          }`}>
+          <span
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+              type === "image"
+                ? "bg-purple-100 text-purple-700"
+                : type === "pdf"
+                  ? "bg-red-100 text-red-700"
+                  : type === "doc"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-100 text-gray-700"
+            }`}
+          >
             {type.toUpperCase()}
           </span>
         </div>
@@ -396,8 +488,18 @@ function LightboxContent({ evidence }: { evidence: Evidence }) {
 }
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
-function StatCard({ label, value, icon: Icon, color, sub }: {
-  label: string; value: number; icon: any; color: string; sub?: string;
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  color,
+  sub,
+}: {
+  label: string;
+  value: number;
+  icon: any;
+  color: string;
+  sub?: string;
 }) {
   return (
     <motion.div
@@ -417,13 +519,23 @@ function StatCard({ label, value, icon: Icon, color, sub }: {
   );
 }
 
-function SummaryPills({ total, signed_in, absent, cheating_reports }: {
-  total: number; signed_in: number; absent: number; cheating_reports: number;
+function SummaryPills({
+  total,
+  signed_in,
+  absent,
+  cheating_reports,
+}: {
+  total: number;
+  signed_in: number;
+  absent: number;
+  cheating_reports: number;
 }) {
   const pct = total > 0 ? Math.round((signed_in / total) * 100) : 0;
   return (
     <div className="flex flex-wrap gap-2 text-xs">
-      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">{total} total</span>
+      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+        {total} total
+      </span>
       <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
         <UserCheck className="h-3 w-3" /> {signed_in} present ({pct}%)
       </span>
@@ -439,8 +551,15 @@ function SummaryPills({ total, signed_in, absent, cheating_reports }: {
   );
 }
 
-function CourseCard({ course, onClick }: { course: CourseSummary; onClick: () => void }) {
-  const pct = course.total > 0 ? Math.round((course.signed_in / course.total) * 100) : 0;
+function CourseCard({
+  course,
+  onClick,
+}: {
+  course: CourseSummary;
+  onClick: () => void;
+}) {
+  const pct =
+    course.total > 0 ? Math.round((course.signed_in / course.total) * 100) : 0;
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
@@ -452,7 +571,9 @@ function CourseCard({ course, onClick }: { course: CourseSummary; onClick: () =>
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="font-bold text-sm text-primary">{course.course_code}</p>
-          <p className="font-semibold text-sm leading-snug mt-0.5">{course.course_title}</p>
+          <p className="font-semibold text-sm leading-snug mt-0.5">
+            {course.course_title}
+          </p>
         </div>
         <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
           {course.exams.length} exam{course.exams.length !== 1 ? "s" : ""}
@@ -461,19 +582,32 @@ function CourseCard({ course, onClick }: { course: CourseSummary; onClick: () =>
       <div className="mb-3">
         <div className="flex justify-between text-xs mb-1">
           <span className="text-muted-foreground">Overall Attendance</span>
-          <span className="font-semibold">{course.signed_in}/{course.total} ({pct}%)</span>
+          <span className="font-semibold">
+            {course.signed_in}/{course.total} ({pct}%)
+          </span>
         </div>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${pct}%` }}
+          />
         </div>
       </div>
       <div className="flex items-center justify-between">
-        <SummaryPills total={course.total} signed_in={course.signed_in} absent={course.absent} cheating_reports={course.cheating_reports} />
+        <SummaryPills
+          total={course.total}
+          signed_in={course.signed_in}
+          absent={course.absent}
+          cheating_reports={course.cheating_reports}
+        />
         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
       </div>
       <div className="mt-3 flex flex-wrap gap-1">
         {course.exams.map((e) => (
-          <span key={e.exam_id} className={`text-xs px-2 py-0.5 rounded-full border ${EXAM_STATUS_COLOR[e.status] ?? "bg-gray-100 text-gray-700"}`}>
+          <span
+            key={e.exam_id}
+            className={`text-xs px-2 py-0.5 rounded-full border ${EXAM_STATUS_COLOR[e.status] ?? "bg-gray-100 text-gray-700"}`}
+          >
             {e.group} · {fmtDate(e.date)}
           </span>
         ))}
@@ -482,17 +616,25 @@ function CourseCard({ course, onClick }: { course: CourseSummary; onClick: () =>
   );
 }
 
-function FlatAttendanceTable({ rows, columns, filterCheated, globalFilter }: {
-  rows: StudentRow[]; columns: ColumnDef<StudentRow>[];
-  filterCheated: boolean; globalFilter: string;
+function FlatAttendanceTable({
+  rows,
+  columns,
+  filterCheated,
+  globalFilter,
+}: {
+  rows: StudentRow[];
+  columns: ColumnDef<StudentRow>[];
+  filterCheated: boolean;
+  globalFilter: string;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const tableData = React.useMemo(
     () => (filterCheated ? rows.filter((s) => s.cheated) : rows),
-    [rows, filterCheated]
+    [rows, filterCheated],
   );
   const table = useReactTable({
-    data: tableData, columns,
+    data: tableData,
+    columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -501,8 +643,12 @@ function FlatAttendanceTable({ rows, columns, filterCheated, globalFilter }: {
     state: { sorting, globalFilter },
     globalFilterFn: (row, _, val) => {
       const q = val.toLowerCase();
-      return [row.original.reg_no, row.original.name, row.original.department, row.original.group ?? ""]
-        .some((v) => v.toLowerCase().includes(q));
+      return [
+        row.original.reg_no,
+        row.original.name,
+        row.original.department,
+        row.original.group ?? "",
+      ].some((v) => v.toLowerCase().includes(q));
     },
     initialState: { pagination: { pageSize: 20 } },
   });
@@ -514,7 +660,10 @@ function FlatAttendanceTable({ rows, columns, filterCheated, globalFilter }: {
           {table.getHeaderGroups().map((hg) => (
             <TableRow key={hg.id} className="bg-muted/50">
               {hg.headers.map((h) => (
-                <TableHead key={h.id} className="text-xs font-semibold text-center">
+                <TableHead
+                  key={h.id}
+                  className="text-xs font-semibold text-center"
+                >
                   {flexRender(h.column.columnDef.header, h.getContext())}
                 </TableHead>
               ))}
@@ -524,11 +673,16 @@ function FlatAttendanceTable({ rows, columns, filterCheated, globalFilter }: {
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className={
-                row.original.cheated ? "bg-amber-50/60 hover:bg-amber-50"
-                : row.original.signin ? "hover:bg-muted/40"
-                : "bg-red-50/40 hover:bg-red-50/60"
-              }>
+              <TableRow
+                key={row.id}
+                className={
+                  row.original.cheated
+                    ? "bg-amber-50/60 hover:bg-amber-50"
+                    : row.original.signin
+                      ? "hover:bg-muted/40"
+                      : "bg-red-50/40 hover:bg-red-50/60"
+                }
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="text-center py-2.5">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -538,7 +692,10 @@ function FlatAttendanceTable({ rows, columns, filterCheated, globalFilter }: {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-16 text-center text-muted-foreground text-sm">
+              <TableCell
+                colSpan={columns.length}
+                className="h-16 text-center text-muted-foreground text-sm"
+              >
                 No students match the current filter.
               </TableCell>
             </TableRow>
@@ -547,11 +704,30 @@ function FlatAttendanceTable({ rows, columns, filterCheated, globalFilter }: {
       </Table>
       {table.getPageCount() > 1 && (
         <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/20">
-          <p className="text-xs text-muted-foreground">{table.getFilteredRowModel().rows.length} student(s)</p>
+          <p className="text-xs text-muted-foreground">
+            {table.getFilteredRowModel().rows.length} student(s)
+          </p>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button>
-            <span className="text-xs">{table.getState().pagination.pageIndex + 1} / {table.getPageCount()}</span>
-            <Button size="sm" variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <span className="text-xs">
+              {table.getState().pagination.pageIndex + 1} /{" "}
+              {table.getPageCount()}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
           </div>
         </div>
       )}
@@ -568,10 +744,16 @@ export function AttendanceReport() {
   const [selectedTimetable, setSelectedTimetable] = React.useState<string>("");
   const [stats, setStats] = React.useState<DashboardStats | null>(null);
   const [courses, setCourses] = React.useState<CourseSummary[]>([]);
-  const [loadingStats, setLoadingStats] = React.useState(false);
+  const[courseSearchQuery, setCourseSearchQuery]= React.useState<string>("")
+  const filteredCourses=React.useMemo<CourseSummary[]>(()=>{
+    return courses.filter((c)=>c.course_code.toLowerCase().includes(courseSearchQuery.toLowerCase()) || c.course_title.toLowerCase().includes(courseSearchQuery.toLowerCase()))
+  },[courseSearchQuery, courses])
+ const [loadingStats, setLoadingStats] = React.useState(false);
 
-  const [selectedCourse, setSelectedCourse] = React.useState<CourseSummary | null>(null);
-  const [courseAttendance, setCourseAttendance] = React.useState<CourseAttendanceData | null>(null);
+  const [selectedCourse, setSelectedCourse] =
+    React.useState<CourseSummary | null>(null);
+  const [courseAttendance, setCourseAttendance] =
+    React.useState<CourseAttendanceData | null>(null);
   const [loadingAttendance, setLoadingAttendance] = React.useState(false);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [filterCheated, setFilterCheated] = React.useState(false);
@@ -579,18 +761,26 @@ export function AttendanceReport() {
   const flatRows = React.useMemo(() => {
     if (!courseAttendance) return [];
     return courseAttendance.exam_groups.flatMap((eg) =>
-      eg.students.map((s) => ({ ...s, group: eg.exam.group, room: s.room || "–" }))
+      eg.students.map((s) => ({
+        ...s,
+        group: eg.exam.group,
+        room: s.room || "–",
+      })),
     );
   }, [courseAttendance]);
 
-  const [reviewDialog, setReviewDialog] = React.useState<{ open: boolean; row: StudentRow | null }>({ open: false, row: null });
+  const [reviewDialog, setReviewDialog] = React.useState<{
+    open: boolean;
+    row: StudentRow | null;
+  }>({ open: false, row: null });
   const [reviewStatus, setReviewStatus] = React.useState<string>("");
   const [reviewNotes, setReviewNotes] = React.useState("");
   const [submittingReview, setSubmittingReview] = React.useState(false);
   const [exportingPdf, setExportingPdf] = React.useState(false);
 
   React.useEffect(() => {
-    axios.get("/api/schedules/timetables/")
+    axios
+      .get("/api/schedules/timetables/")
       .then((r) => {
         const list: Timetable[] = r.data.data.map((t: any) => ({
           id: t.id,
@@ -598,7 +788,8 @@ export function AttendanceReport() {
         }));
         setTimetables(list);
         if (list.length > 0) setSelectedTimetable(String(list[0].id));
-      }).catch(() => {});
+      })
+      .catch(() => {});
   }, []);
 
   React.useEffect(() => {
@@ -606,9 +797,15 @@ export function AttendanceReport() {
     setLoadingStats(true);
     setSelectedCourse(null);
     setCourseAttendance(null);
-    axios.get(`/api/report/attendance/stats/?timetable_id=${selectedTimetable}`)
-      .then((r) => { setStats(r.data.stats); setCourses(r.data.courses); })
-      .catch(() => setToastMessage({ message: "Failed to load stats", variant: "danger" }))
+    axios
+      .get(`/api/report/attendance/stats/?timetable_id=${selectedTimetable}`)
+      .then((r) => {
+        setStats(r.data.stats);
+        setCourses(r.data.courses);
+      })
+      .catch(() =>
+        setToastMessage({ message: "Failed to load stats", variant: "danger" }),
+      )
       .finally(() => setLoadingStats(false));
   }, [selectedTimetable]);
 
@@ -620,11 +817,14 @@ export function AttendanceReport() {
     setFilterCheated(false);
     try {
       const r = await axios.get(
-        `/api/report/attendance/?course_code=${encodeURIComponent(course.course_code)}&timetable_id=${selectedTimetable}`
+        `/api/report/attendance/?course_code=${encodeURIComponent(course.course_code)}&timetable_id=${selectedTimetable}`,
       );
       setCourseAttendance(r.data);
     } catch {
-      setToastMessage({ message: "Failed to load attendance", variant: "danger" });
+      setToastMessage({
+        message: "Failed to load attendance",
+        variant: "danger",
+      });
     } finally {
       setLoadingAttendance(false);
     }
@@ -633,15 +833,20 @@ export function AttendanceReport() {
   const exportPdf = async () => {
     setExportingPdf(true);
     try {
-      const courseParam = selectedCourse ? `&course_code=${encodeURIComponent(selectedCourse.course_code)}` : "";
+      const courseParam = selectedCourse
+        ? `&course_code=${encodeURIComponent(selectedCourse.course_code)}`
+        : "";
       const r = await axios.get(
         `/api/report/attendance/pdf/?timetable_id=${selectedTimetable}${courseParam}`,
-        { responseType: "blob" }
+        { responseType: "blob" },
       );
       const url = window.URL.createObjectURL(new Blob([r.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `attendance${selectedCourse ? `_${selectedCourse.course_code}` : ""}_${selectedTimetable}.pdf`);
+      link.setAttribute(
+        "download",
+        `attendance${selectedCourse ? `_${selectedCourse.course_code}` : ""}_${selectedTimetable}.pdf`,
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -662,125 +867,210 @@ export function AttendanceReport() {
         status: reviewStatus || report.status,
         admin_notes: reviewNotes,
       });
-      setToastMessage({ message: "Report updated successfully", variant: "success" });
+      setToastMessage({
+        message: "Report updated successfully",
+        variant: "success",
+      });
       setReviewDialog({ open: false, row: null });
       if (selectedCourse) openCourse(selectedCourse);
     } catch {
-      setToastMessage({ message: "Failed to update report", variant: "danger" });
+      setToastMessage({
+        message: "Failed to update report",
+        variant: "danger",
+      });
     } finally {
       setSubmittingReview(false);
     }
   };
 
-  const columns: ColumnDef<StudentRow>[] = React.useMemo(() => [
-    {
-      accessorKey: "reg_no", header: "Reg No",
-      cell: ({ row }) => <span className="font-mono text-xs">{row.getValue("reg_no")}</span>,
-    },
-    {
-      accessorKey: "name", header: "Student Name",
-      cell: ({ row }) => <span className="font-medium text-sm">{row.getValue("name")}</span>,
-    },
-    {
-      accessorKey: "department", header: "Department",
-      cell: ({ row }) => <span className="text-xs text-muted-foreground">{row.getValue("department")}</span>,
-    },
-    {
-      accessorKey: "room", header: "Room",
-      cell: ({ row }) => <span className="text-xs text-muted-foreground">{row.getValue("room")}</span>,
-    },
-    {
-      accessorKey: "group", header: "Group",
-      cell: ({ row }) => <span className="text-xs font-medium">{row.getValue("group") ?? "–"}</span>,
-    },
-    {
-      accessorKey: "signin", header: "Sign-In",
-      cell: ({ row }) => row.getValue("signin")
-        ? <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-        : <XCircle className="h-5 w-5 text-red-500 mx-auto" />,
-    },
-    {
-      accessorKey: "signout", header: "Sign-Out",
-      cell: ({ row }) => row.getValue("signout")
-        ? <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
-        : <XCircle className="h-5 w-5 text-red-500 mx-auto" />,
-    },
-    {
-      accessorKey: "cheated", header: "Cheated",
-      cell: ({ row }) => {
-        const cheated = row.getValue("cheated") as boolean;
-        const report = row.original.cheating_report;
-        if (!cheated) return <span className="text-xs text-muted-foreground mx-auto block text-center">–</span>;
-        const sev = SEVERITY_CONFIG[report?.severity ?? "low"];
-        return (
-          <div className="flex justify-center">
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${sev.color}`}>{sev.label}</span>
-          </div>
-        );
+  const columns: ColumnDef<StudentRow>[] = React.useMemo(
+    () => [
+      {
+        accessorKey: "reg_no",
+        header: "Reg No",
+        cell: ({ row }) => (
+          <span className="font-mono text-xs">{row.getValue("reg_no")}</span>
+        ),
       },
-    },
-    {
-      accessorKey: "status", header: "Report Status",
-      cell: ({ row }) => {
-        const report = row.original.cheating_report;
-        if (!report) return <span className="text-xs text-muted-foreground block text-center">–</span>;
-        const cfg = REPORT_STATUS_CONFIG[report.status];
-        const Icon = cfg.icon;
-        return (
-          <div className="flex justify-center">
-            <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${cfg.color}`}>
-              <Icon className="h-3 w-3" /> {cfg.label}
-            </span>
-          </div>
-        );
+      {
+        accessorKey: "name",
+        header: "Student Name",
+        cell: ({ row }) => (
+          <span className="font-medium text-sm">{row.getValue("name")}</span>
+        ),
       },
-    },
-    {
-      id: "actions", header: "Actions",
-      cell: ({ row }) => {
-        const report = row.original.cheating_report;
-        if (!report) return null;
-        return (
-          <Button size="sm" variant="outline" className="h-7 text-xs gap-1"
-            onClick={() => {
-              setReviewDialog({ open: true, row: row.original });
-              setReviewStatus(report.status);
-              setReviewNotes("");
-            }}
-          >
-            <Shield className="h-3 w-3" /> Review
-          </Button>
-        );
+      {
+        accessorKey: "department",
+        header: "Department",
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {row.getValue("department")}
+          </span>
+        ),
       },
-    },
-  ], []);
+      {
+        accessorKey: "room",
+        header: "Room",
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {row.getValue("room")}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "group",
+        header: "Group",
+        cell: ({ row }) => (
+          <span className="text-xs font-medium">
+            {row.getValue("group") ?? "–"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "signin",
+        header: "Sign-In",
+        cell: ({ row }) =>
+          row.getValue("signin") ? (
+            <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
+          ) : (
+            <XCircle className="h-5 w-5 text-red-500 mx-auto" />
+          ),
+      },
+      {
+        accessorKey: "signout",
+        header: "Sign-Out",
+        cell: ({ row }) =>
+          row.getValue("signout") ? (
+            <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
+          ) : (
+            <XCircle className="h-5 w-5 text-red-500 mx-auto" />
+          ),
+      },
+      {
+        accessorKey: "cheated",
+        header: "Cheated",
+        cell: ({ row }) => {
+          const cheated = row.getValue("cheated") as boolean;
+          const report = row.original.cheating_report;
+          if (!cheated)
+            return (
+              <span className="text-xs text-muted-foreground mx-auto block text-center">
+                –
+              </span>
+            );
+          const sev = SEVERITY_CONFIG[report?.severity ?? "low"];
+          return (
+            <div className="flex justify-center">
+              <span
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${sev.color}`}
+              >
+                {sev.label}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: "Report Status",
+        cell: ({ row }) => {
+          const report = row.original.cheating_report;
+          if (!report)
+            return (
+              <span className="text-xs text-muted-foreground block text-center">
+                –
+              </span>
+            );
+          const cfg = REPORT_STATUS_CONFIG[report.status];
+          const Icon = cfg.icon;
+          return (
+            <div className="flex justify-center">
+              <span
+                className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${cfg.color}`}
+              >
+                <Icon className="h-3 w-3" /> {cfg.label}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const report = row.original.cheating_report;
+          if (!report) return null;
+          return (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1"
+              onClick={() => {
+                setReviewDialog({ open: true, row: row.original });
+                setReviewStatus(report.status);
+                setReviewNotes("");
+              }}
+            >
+              <Shield className="h-3 w-3" /> Review
+            </Button>
+          );
+        },
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="w-full space-y-6 p-1">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Attendance & Reports</h1>
-          <p className="text-sm text-muted-foreground">Monitor exam attendance and cheating incidents</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Attendance & Reports
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Monitor exam attendance and cheating incidents
+          </p>
         </div>
         <div className="sm:ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1" onClick={exportPdf}
-            disabled={exportingPdf || loadingStats || !selectedTimetable}>
-            {exportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1"
+            onClick={exportPdf}
+            disabled={exportingPdf || loadingStats || !selectedTimetable}
+          >
+            {exportingPdf ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
             {selectedCourse ? "Export Course PDF" : "Export All PDF"}
           </Button>
-          <Select value={selectedTimetable} onValueChange={setSelectedTimetable}>
+          <Select
+            value={selectedTimetable}
+            onValueChange={setSelectedTimetable}
+          >
             <SelectTrigger className="w-[300px]">
               <SelectValue placeholder="Select timetable…" />
             </SelectTrigger>
             <SelectContent>
               {timetables.map((t) => (
-                <SelectItem key={t.id} value={String(t.id)}>{t.label}</SelectItem>
+                <SelectItem key={t.id} value={String(t.id)}>
+                  {t.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={() => setSelectedTimetable((v) => v)} disabled={loadingStats}>
-            <RefreshCw className={`h-4 w-4 ${loadingStats ? "animate-spin" : ""}`} />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSelectedTimetable((v) => v)}
+            disabled={loadingStats}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${loadingStats ? "animate-spin" : ""}`}
+            />
           </Button>
         </div>
       </div>
@@ -788,56 +1078,146 @@ export function AttendanceReport() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard label="Total Students"   value={stats.total_students}   icon={Users}       color="bg-blue-50  text-blue-800  border-blue-200" />
-          <StatCard label="Signed In"        value={stats.signed_in}        icon={UserCheck}   color="bg-green-50 text-green-800 border-green-200" sub={`${Math.round((stats.signed_in / (stats.total_students || 1)) * 100)}% attendance`} />
-          <StatCard label="Signed Out"       value={stats.signed_out}       icon={UserCheck}   color="bg-teal-50  text-teal-800  border-teal-200" />
-          <StatCard label="Absent"           value={stats.absent}           icon={UserX}       color="bg-red-50   text-red-800   border-red-200" />
-          <StatCard label="Cheating Reports" value={stats.cheating_reports} icon={ShieldAlert} color="bg-amber-50 text-amber-800 border-amber-200" />
+          <StatCard
+            label="Total Students"
+            value={stats.total_students}
+            icon={Users}
+            color="bg-blue-50  text-blue-800  border-blue-200"
+          />
+          <StatCard
+            label="Signed In"
+            value={stats.signed_in}
+            icon={UserCheck}
+            color="bg-green-50 text-green-800 border-green-200"
+            sub={`${Math.round((stats.signed_in / (stats.total_students || 1)) * 100)}% attendance`}
+          />
+          <StatCard
+            label="Signed Out"
+            value={stats.signed_out}
+            icon={UserCheck}
+            color="bg-teal-50  text-teal-800  border-teal-200"
+          />
+          <StatCard
+            label="Absent"
+            value={stats.absent}
+            icon={UserX}
+            color="bg-red-50   text-red-800   border-red-200"
+          />
+          <StatCard
+            label="Cheating Reports"
+            value={stats.cheating_reports}
+            icon={ShieldAlert}
+            color="bg-amber-50 text-amber-800 border-amber-200"
+          />
         </div>
       )}
 
-      {loadingStats && <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
+      {loadingStats && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
 
       {/* Course grid / detail */}
       <AnimatePresence mode="wait">
         {!selectedCourse ? (
-          <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            {courses.length > 0 && (
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search course title, course code"
+                value={courseSearchQuery}
+                onChange={(e) =>  setCourseSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            {filteredCourses.length > 0 && (
               <>
                 <h2 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <BookOpen className="h-3.5 w-3.5" />
-                  {courses.length} Course{courses.length !== 1 ? "s" : ""} — Click to view attendance
+                  {filteredCourses.length} Course{filteredCourses.length !== 1 ? "s" : ""} —
+                  Click to view attendance
                 </h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {courses.map((course) => (
-                    <CourseCard key={course.course_code} course={course} onClick={() => openCourse(course)} />
+                  {filteredCourses.map((course) => (
+                    <CourseCard
+                      key={course.course_code}
+                      course={course}
+                      onClick={() => openCourse(course)}
+                    />
                   ))}
                 </div>
               </>
             )}
           </motion.div>
         ) : (
-          <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
+          <motion.div
+            key="detail"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0 }}
+          >
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-              <Button variant="ghost" size="sm" onClick={() => { setSelectedCourse(null); setCourseAttendance(null); }} className="w-fit gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedCourse(null);
+                  setCourseAttendance(null);
+                }}
+                className="w-fit gap-1"
+              >
                 <ArrowLeft className="h-4 w-4" /> Back to Courses
               </Button>
               <div className="sm:ml-2">
-                <h2 className="font-bold text-lg">{selectedCourse.course_code} – {selectedCourse.course_title}</h2>
-                <p className="text-xs text-muted-foreground">{selectedCourse.exams.length} exam{selectedCourse.exams.length !== 1 ? "s" : ""}</p>
+                <h2 className="font-bold text-lg">
+                  {selectedCourse.course_code} – {selectedCourse.course_title}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {selectedCourse.exams.length} exam
+                  {selectedCourse.exams.length !== 1 ? "s" : ""}
+                </p>
               </div>
             </div>
 
             {courseAttendance && (
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
                 {[
-                  { label: "Total",      val: courseAttendance.summary.total,            color: "bg-slate-100" },
-                  { label: "Present",    val: courseAttendance.summary.signed_in,        color: "bg-green-50 text-green-800" },
-                  { label: "Absent",     val: courseAttendance.summary.absent,           color: "bg-red-50 text-red-700" },
-                  { label: "Signed Out", val: courseAttendance.summary.signed_out,       color: "bg-teal-50 text-teal-700" },
-                  { label: "Cheating",   val: courseAttendance.summary.cheating_reports, color: "bg-amber-50 text-amber-700" },
+                  {
+                    label: "Total",
+                    val: courseAttendance.summary.total,
+                    color: "bg-slate-100",
+                  },
+                  {
+                    label: "Present",
+                    val: courseAttendance.summary.signed_in,
+                    color: "bg-green-50 text-green-800",
+                  },
+                  {
+                    label: "Absent",
+                    val: courseAttendance.summary.absent,
+                    color: "bg-red-50 text-red-700",
+                  },
+                  {
+                    label: "Signed Out",
+                    val: courseAttendance.summary.signed_out,
+                    color: "bg-teal-50 text-teal-700",
+                  },
+                  {
+                    label: "Cheating",
+                    val: courseAttendance.summary.cheating_reports,
+                    color: "bg-amber-50 text-amber-700",
+                  },
                 ].map((c) => (
-                  <div key={c.label} className={`rounded-lg border px-4 py-3 text-center ${c.color}`}>
+                  <div
+                    key={c.label}
+                    className={`rounded-lg border px-4 py-3 text-center ${c.color}`}
+                  >
                     <p className="text-xl font-bold">{c.val}</p>
                     <p className="text-xs font-medium">{c.label}</p>
                   </div>
@@ -848,25 +1228,45 @@ export function AttendanceReport() {
             <div className="flex flex-wrap gap-2 mb-4">
               <div className="relative flex-1 min-w-[200px] max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search student, reg no…" value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="pl-9" />
+                <Input
+                  placeholder="Search student, reg no…"
+                  value={globalFilter}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              <Button variant={filterCheated ? "default" : "outline"} size="sm" className="gap-1" onClick={() => setFilterCheated((v) => !v)}>
+              <Button
+                variant={filterCheated ? "default" : "outline"}
+                size="sm"
+                className="gap-1"
+                onClick={() => setFilterCheated((v) => !v)}
+              >
                 <AlertTriangle className="h-4 w-4" />
                 {filterCheated ? "All Students" : "Cheating Only"}
               </Button>
             </div>
 
             {loadingAttendance ? (
-              <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
             ) : courseAttendance ? (
-              <FlatAttendanceTable rows={flatRows} columns={columns} filterCheated={filterCheated} globalFilter={globalFilter} />
+              <FlatAttendanceTable
+                rows={flatRows}
+                columns={columns}
+                filterCheated={filterCheated}
+                globalFilter={globalFilter}
+              />
             ) : null}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ── Review Dialog ─────────────────────────────────────────────────── */}
-      <Dialog open={reviewDialog.open} onOpenChange={(o) => !o && setReviewDialog({ open: false, row: null })}>
+      <Dialog
+        open={reviewDialog.open}
+        onOpenChange={(o) => !o && setReviewDialog({ open: false, row: null })}
+      >
         <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -875,7 +1275,11 @@ export function AttendanceReport() {
             </DialogTitle>
             {reviewDialog.row && (
               <DialogDescription>
-                Student: <span className="font-semibold text-foreground">{reviewDialog.row.name}</span> ({reviewDialog.row.reg_no})
+                Student:{" "}
+                <span className="font-semibold text-foreground">
+                  {reviewDialog.row.name}
+                </span>{" "}
+                ({reviewDialog.row.reg_no})
               </DialogDescription>
             )}
           </DialogHeader>
@@ -886,16 +1290,25 @@ export function AttendanceReport() {
               <div className="rounded-lg bg-muted/50 p-4 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Severity</span>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${SEVERITY_CONFIG[reviewDialog.row.cheating_report.severity].color}`}>
-                    {SEVERITY_CONFIG[reviewDialog.row.cheating_report.severity].label}
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${SEVERITY_CONFIG[reviewDialog.row.cheating_report.severity].color}`}
+                  >
+                    {
+                      SEVERITY_CONFIG[reviewDialog.row.cheating_report.severity]
+                        .label
+                    }
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Reported by</span>
-                  <span className="font-medium">{reviewDialog.row.cheating_report.reported_by}</span>
+                  <span className="font-medium">
+                    {reviewDialog.row.cheating_report.reported_by}
+                  </span>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-1">Incident description</p>
+                  <p className="text-muted-foreground mb-1">
+                    Incident description
+                  </p>
                   <p className="text-xs leading-relaxed bg-white dark:bg-muted rounded p-2 border">
                     {reviewDialog.row.cheating_report.incident_description}
                   </p>
@@ -909,13 +1322,18 @@ export function AttendanceReport() {
                     <ImageIcon className="h-4 w-4 text-muted-foreground" />
                     Evidence
                     {reviewDialog.row.cheating_report.evidence_count > 0 && (
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs px-1.5 py-0"
+                      >
                         {reviewDialog.row.cheating_report.evidence_count}
                       </Badge>
                     )}
                   </Label>
                 </div>
-                <EvidenceGallery evidences={reviewDialog.row.cheating_report.evidences} />
+                <EvidenceGallery
+                  evidences={reviewDialog.row.cheating_report.evidences}
+                />
               </div>
 
               {/* Action */}
@@ -927,16 +1345,26 @@ export function AttendanceReport() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending">
-                      <span className="flex items-center gap-2"><Clock className="h-4 w-4 text-gray-500" /> Pending</span>
+                      <span className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-gray-500" /> Pending
+                      </span>
                     </SelectItem>
                     <SelectItem value="under_review">
-                      <span className="flex items-center gap-2"><Eye className="h-4 w-4 text-blue-500" /> Under Review</span>
+                      <span className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-blue-500" /> Under Review
+                      </span>
                     </SelectItem>
                     <SelectItem value="confirmed">
-                      <span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-red-500" /> Confirm Cheating</span>
+                      <span className="flex items-center gap-2">
+                        <ShieldAlert className="h-4 w-4 text-red-500" /> Confirm
+                        Cheating
+                      </span>
                     </SelectItem>
                     <SelectItem value="dismissed">
-                      <span className="flex items-center gap-2"><ShieldX className="h-4 w-4 text-green-600" /> Dismiss Report</span>
+                      <span className="flex items-center gap-2">
+                        <ShieldX className="h-4 w-4 text-green-600" /> Dismiss
+                        Report
+                      </span>
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -944,15 +1372,30 @@ export function AttendanceReport() {
 
               <div className="space-y-2">
                 <Label>Admin Notes</Label>
-                <Textarea placeholder="Add notes about your decision…" rows={3} value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} />
+                <Textarea
+                  placeholder="Add notes about your decision…"
+                  rows={3}
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                />
               </div>
             </div>
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReviewDialog({ open: false, row: null })} disabled={submittingReview}>Cancel</Button>
+            <Button
+              variant="outline"
+              onClick={() => setReviewDialog({ open: false, row: null })}
+              disabled={submittingReview}
+            >
+              Cancel
+            </Button>
             <Button onClick={submitReview} disabled={submittingReview}>
-              {submittingReview ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
+              {submittingReview ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <ShieldCheck className="h-4 w-4 mr-2" />
+              )}
               Save Decision
             </Button>
           </DialogFooter>
