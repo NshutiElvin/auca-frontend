@@ -12,6 +12,7 @@ import useUserAxios from "../hooks/useUserAxios";
 import { Course } from "./courses";
 import { Card, CardContent } from "../components/ui/card";
 import { StatusButton } from "../components/ui/status-button";
+import { isAxiosError } from "axios";
 
 function InstructorExamScannerPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,6 +32,13 @@ function InstructorExamScannerPage() {
       });
       setStudentsInfo(response.data.data || response.data);
     } catch (error) {
+      if(isAxiosError(error)){
+        setToastMessage({
+        message: error.response?.data?.message,
+        variant: "danger",
+      });
+
+      }
       setToastMessage({
         message: "Error occurred while  students info.",
         variant: "danger",
