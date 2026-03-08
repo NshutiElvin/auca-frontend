@@ -5,7 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Camera, Mail, Shield, User } from "lucide-react";
 
 export default function ProfileHeader(user: any) {
-  const initials = `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase();
+  const initials =
+    `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase();
 
   return (
     <Card className="overflow-hidden border border-border/60 shadow-sm mb-4">
@@ -43,23 +44,17 @@ export default function ProfileHeader(user: any) {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <Button
-              size="icon"
-              variant="outline"
-              className="absolute -right-1 -bottom-1 h-7 w-7 rounded-full border-background shadow-sm bg-background hover:bg-muted transition-colors"
-              aria-label="Change photo"
-            >
-              <Camera className="size-3.5 text-muted-foreground" />
-            </Button>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs font-medium border-border/70 hover:bg-muted transition-colors"
-          >
-            Edit Profile
-          </Button>
+          {user?.role && (
+            <Badge
+              variant="secondary"
+              className="text-xs font-medium gap-1 px-2 py-0.5"
+            >
+              <Shield className="size-3" />
+              {user.role}
+            </Badge>
+          )}
         </div>
 
         {/* Info */}
@@ -69,15 +64,6 @@ export default function ProfileHeader(user: any) {
             <h1 className="text-xl font-semibold tracking-tight text-foreground leading-none">
               {user?.first_name} {user?.last_name}
             </h1>
-            {user?.role && (
-              <Badge
-                variant="secondary"
-                className="text-xs font-medium gap-1 px-2 py-0.5"
-              >
-                <Shield className="size-3" />
-                {user.role}
-              </Badge>
-            )}
           </div>
 
           {/* Divider */}
