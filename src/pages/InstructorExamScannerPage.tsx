@@ -38,11 +38,13 @@ function InstructorExamScannerPage() {
         variant: "danger",
       });
 
-      }
-      setToastMessage({
+      }else{
+         setToastMessage({
         message: "Error occurred while  students info.",
         variant: "danger",
       });
+      }
+     
     } finally {
       setVerifying(false);
     }
