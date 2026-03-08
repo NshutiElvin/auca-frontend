@@ -190,7 +190,7 @@ export default function AdminMainPage() {
   return (
     <>
       <AppSidebar data={data} />
-      <SidebarInset>
+      <main>
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-0 border-b bg-background/95 backdrop-blur-sm px-3 w-full shadow-[0_1px_0_0_hsl(var(--border))]">
@@ -374,7 +374,7 @@ export default function AdminMainPage() {
           <Outlet />
         </main>
 
-      </SidebarInset>
+      </main>
     </>
   );
 }

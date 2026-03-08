@@ -75,8 +75,8 @@ const App = () => {
                       {/* Protected Routes */}
                       <Route element={<RefreshLayout />}>
                         <Route element={<LocationLayout />}>
-                          <Route element={<LoginRequiredLayout />}>
-                            <Route element={<NotificationLayout />}>
+                          <Route element={<NotificationLayout />}>
+                            <Route element={<LoginRequiredLayout />}>
                               {/* Admin Routes */}
                               <Route element={<AdminRequiredLayout />}>
                                 <Route path="/admin" element={<AdminPage />}>
