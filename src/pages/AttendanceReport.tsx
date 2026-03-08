@@ -94,6 +94,11 @@ type CourseSummary = {
   signed_out: number;
   exams: ExamEntry[];
 };
+type Evidence={
+  evidence_type:string
+  description:string
+  url:string
+}
 
 type DashboardStats = {
   total_students: number;
@@ -111,6 +116,7 @@ type CheatingReport = {
   reported_by: string;
   created_at: string;
   evidence_count: number;
+  evidences: Evidence[];
 } | null;
 
 type StudentRow = {
@@ -1261,6 +1267,15 @@ export function AttendanceReport() {
                     {reviewDialog.row.cheating_report.incident_description}
                   </p>
                 </div>
+                <ul className="flex list-decimal list-inside space-y-1">
+                  {reviewDialog.row.cheating_report.evidences.map((e, idx) => {
+                    return <li key={idx}>
+                      <a href={e.url} download> {e.url}</a>
+                    </li>
+
+                  })}
+
+                </ul>
               </div>
 
               <div className="space-y-2">
