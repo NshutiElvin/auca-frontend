@@ -65,7 +65,7 @@ export const NewClaimPage: React.FC = () => {
   }
 
   return (
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full mx-auto">
         <div className="flex items-center mb-6">
           <Button 
             variant="ghost" 
