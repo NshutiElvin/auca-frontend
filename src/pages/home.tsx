@@ -13,7 +13,7 @@ import DotGrid from "../dotgrid";
 
 function HomePage() {
   return (
-    <div className="flex-1 overflow-auto mx-auto" >
+    <div  >
   
       <Navbar />
       <Hero />
