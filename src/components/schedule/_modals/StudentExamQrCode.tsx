@@ -103,13 +103,7 @@ function StudentExamQrCodeModal({selectedExam}:{selectedExam:Exam}) {
                 <QrCode className="w-12 h-12" />
               </div>
 
-              <h1 className="text-l font-bold  leading-tight">
-                Scan for Exam Details
-              </h1>
-
-              <h5 className="text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-                Use your phone's camera to scan this QR code and instantly access complete exam information and resources.
-              </h5>
+              
             </header>
 
             {selectedExam && (

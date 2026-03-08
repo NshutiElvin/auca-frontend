@@ -29,7 +29,7 @@ function InstructorExamScannerPage() {
       try {
         const response = await axios.post(
           "/api/rooms/instructor_check_qr/",
-          data
+          {data}
         );
         setStudentsInfo(response.data.data || response.data);
       } catch (error) {
