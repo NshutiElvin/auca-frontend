@@ -951,6 +951,7 @@ const OccupanciesPage = () => {
                       date: room.date,
                       slot_name: room.slot_name,
                       room_id: room.room_id,
+                      timetable_id: selectedTimetable,
                     },
                   );
                   if (resp.data.success) {
