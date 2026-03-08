@@ -28,8 +28,8 @@ function InstructorExamScannerPage() {
     setVerifying(true);
       try {
         const response = await axios.post(
-          "/api/rooms/instructor_check_qr/",
-          {data}
+          "/api/exams/student-exam/",
+          {encryptedData:data}
         );
         setStudentsInfo(response.data.data || response.data);
       } catch (error) {
@@ -47,7 +47,7 @@ function InstructorExamScannerPage() {
       console.log(result);
       console.log(result[0].rawValue);
       try {
-        const parsedData = JSON.parse(result[0].rawValue);
+        const parsedData = result[0].rawValue;
 
         setDialogOpen(true);
         
