@@ -370,9 +370,7 @@ export default function AdminMainPage() {
         </header>
 
         {/* ── Page content ───────────────────────────────────────────────── */}
-        <main className="flex-1 overflow-auto">
           <Outlet />
-        </main>
 
       </main>
     </>
