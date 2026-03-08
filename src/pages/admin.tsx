@@ -228,11 +228,13 @@ export default function AdminMainPage() {
 
   return (
     <div className="flex">
-      {" "}
       <AppSidebar data={data} />
       <div
-        style={{ width: `calc(100vw - ${sidebarWidth})` }}
-        className="flex flex-col min-h-screen"
+        style={{
+          marginLeft: sidebarWidth,
+          width: `calc(100vw - ${sidebarWidth})`,
+        }}
+        className="flex flex-col min-h-screen transition-all duration-200"
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-0 border-b bg-background/95 backdrop-blur-sm px-3 w-full shadow-[0_1px_0_0_hsl(var(--border))]">
