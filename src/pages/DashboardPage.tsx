@@ -143,12 +143,12 @@ const DashboardPage = () => {
   };
 
   const colors = [
-    "hsl(var(--primary))",
-    "hsl(var(--primary) )",
-    "hsl(var(--primary) )",
-    "hsl(var(--primary) )",
-    "hsl(var(--primary) )",
-    "hsl(var(--primary) )",
+    "slate-100",
+    "bg-green-100",
+    "bg-red-100",
+    "bg-red-100",
+    "bg-amber-100",
+    "amber-700",
   ];
 
   const barChartData =
@@ -178,41 +178,57 @@ const DashboardPage = () => {
       title: "Today Exams",
       value: dashboardData.today_exams.toString(),
       icon: ListBulletIcon,
+      bgColor:"bg-slate-100",
+      textColor:"text-slate-700"
     },
     {
       title: "Upcoming Exams",
       value: dashboardData.upcoming_exams.toString(),
       icon: Clock12,
+      bgColor:"bg-amber-100",
+      textColor:"text-amber-700"
     },
     {
       title: "On Going Exams",
       value: dashboardData.ongoing_exams.toString(),
       icon: Play,
+      bgColor:"bg-green-100",
+      textColor:"text-green-700"
     },
     {
       title: "Students at exams Now",
       value: dashboardData.today_students.toString(),
       icon: Users,
+      bgColor:"bg-yellow-100",
+      textColor:"text-yellow-700"
     },
     {
       title: "Today's Completed Exams",
       value: dashboardData.recent_completed_exams.toString(),
       icon: LockClosedIcon,
+      bgColor:"bg-red-100",
+      textColor:"text-red-700"
     },
     {
       title: "Today's Expected Exams",
       value: dashboardData.recent_expected_exams.toString(),
       icon: Clock1,
+      bgColor:"bg-blue-100",
+      textColor:"text-blue-700"
     },
     {
       title: "Scheduled Exams",
       value: dashboardData.total_exams.toString(),
       icon: FileText,
+      bgColor:"bg-purple-100",
+      textColor:"text-purple-700"
     },
     {
       title: "Completed Exams",
       value: `${dashboardData.completed_percentage}%`,
       icon: CheckCircle,
+      bgColor:"bg-green-100",
+      textColor:"text-green-700"
     },
   ];
 
@@ -298,14 +314,14 @@ const DashboardPage = () => {
         onClick={() => handleCardClick(cardType)}
       >
         <CardContent className="p-6 relative">
-          <div className="flex items-start justify-between relative z-10">
+          <div className={`flex items-start justify-between relative z-10 ${stat.bgColor}`}>
             <div className="space-y-3 flex-1 min-w-0">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground leading-tight">
+                <p className={`text-sm font-medium text-muted-foreground leading-tight ${stat.textColor}}`}>
                   {stat.title}
                 </p>
                 <div className="flex items-baseline space-x-2">
-                  <p className="text-3xl font-bold text-foreground tracking-tight">
+                  <p className={`text-3xl font-bold text-foreground tracking-tight ${stat.textColor}`  }>
                     {stat.value}
                   </p>
                 </div>
