@@ -744,11 +744,15 @@ export function AttendanceReport() {
   const [selectedTimetable, setSelectedTimetable] = React.useState<string>("");
   const [stats, setStats] = React.useState<DashboardStats | null>(null);
   const [courses, setCourses] = React.useState<CourseSummary[]>([]);
-  const[courseSearchQuery, setCourseSearchQuery]= React.useState<string>("")
-  const filteredCourses=React.useMemo<CourseSummary[]>(()=>{
-    return courses.filter((c)=>c.course_code.toLowerCase().includes(courseSearchQuery.toLowerCase()) || c.course_title.toLowerCase().includes(courseSearchQuery.toLowerCase()))
-  },[courseSearchQuery, courses])
- const [loadingStats, setLoadingStats] = React.useState(false);
+  const [courseSearchQuery, setCourseSearchQuery] = React.useState<string>("");
+  const filteredCourses = React.useMemo<CourseSummary[]>(() => {
+    return courses.filter(
+      (c) =>
+        c.course_code.toLowerCase().includes(courseSearchQuery.toLowerCase()) ||
+        c.course_title.toLowerCase().includes(courseSearchQuery.toLowerCase()),
+    );
+  }, [courseSearchQuery, courses]);
+  const [loadingStats, setLoadingStats] = React.useState(false);
 
   const [selectedCourse, setSelectedCourse] =
     React.useState<CourseSummary | null>(null);
@@ -1127,21 +1131,22 @@ export function AttendanceReport() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="relative flex-1 min-w-[200px] max-w-sm py-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search course title, course code"
-                value={courseSearchQuery}
-                onChange={(e) =>  setCourseSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
             {filteredCourses.length > 0 && (
               <>
+                <div className="relative flex-1 min-w-[200px] max-w-sm py-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search course title, course code"
+                    value={courseSearchQuery}
+                    onChange={(e) => setCourseSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
                 <h2 className="text-xs font-semibold mb-3 text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                   <BookOpen className="h-3.5 w-3.5" />
-                  {filteredCourses.length} Course{filteredCourses.length !== 1 ? "s" : ""} —
-                  Click to view attendance
+                  {filteredCourses.length} Course
+                  {filteredCourses.length !== 1 ? "s" : ""} — Click to view
+                  attendance
                 </h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredCourses.map((course) => (
