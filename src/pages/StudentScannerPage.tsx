@@ -95,16 +95,10 @@ function StudentExamScannerPage() {
                 }`}
               >
                 {verificationResult.status
-                  ? verificationResult.message
-                  : verificationResult.message}
+                  && verificationResult.message
+                   }
               </p>
-              <p
-                className={`text-sm ${
-                  verificationResult.status ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {verificationResult.message}
-              </p>
+              
             </div>
           </div>
         </div>
