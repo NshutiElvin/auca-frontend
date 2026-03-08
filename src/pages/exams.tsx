@@ -195,7 +195,7 @@ function GroupedView({
     );
 
   return (
-    <div className="space-y-6">
+     <div className="w-full space-y-4">
       {groups.map((deptGroup) => (
         <div key={deptGroup.dept}>
           {/* Department banner */}

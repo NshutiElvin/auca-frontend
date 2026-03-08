@@ -27,7 +27,7 @@ export const StudentClaims: React.FC = () => {
     : claims.filter(claim => claim.status === statusFilter);
 
   return (
-      <div className="space-y-6">
+       <div className="w-full space-y-4">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">My Claims</h1>

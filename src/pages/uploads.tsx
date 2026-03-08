@@ -343,7 +343,7 @@ const BulkUpload = () => {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background">
+     <div className="w-full space-y-4">
       <div className="max-w-6xl mx-auto px-6 py-8">
 
         {/* Header */}

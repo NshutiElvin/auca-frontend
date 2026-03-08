@@ -390,7 +390,7 @@ export function EnrollmentsPage() {
     <TableSkeleton />
   ) : (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <div className="w-full">
+       <div className="w-full space-y-4">
         <div className="flex justify-between gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500 pb-2">
           <div
             className={`p-1 w-full rounded-sm cursor-pointer hover:bg-opacity-50 transition-colors ${

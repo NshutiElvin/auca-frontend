@@ -179,7 +179,7 @@ export default function InstructorMainPage() {
       </DropdownMenuContent>
     </DropdownMenu>
     </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
+        <div className="flex-1 overflow-auto m-8">
            
           <Outlet />
         </div>

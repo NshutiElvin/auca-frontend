@@ -310,7 +310,7 @@ useEffect(()=>{
   return (
     
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <div className="w-full">
+         <div className="w-full space-y-4">
           <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <Input
               placeholder="Filter Exams..."

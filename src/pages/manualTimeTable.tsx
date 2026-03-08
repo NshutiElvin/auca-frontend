@@ -903,7 +903,7 @@ function ManualTimeTable() {
   }, [selectedSlotInfo]);
 
   return (
-    <>
+    <div className="w-full space-y-4">
       <Dialog
         open={dialogOpen}
         onOpenChange={() => {
@@ -1703,7 +1703,7 @@ function ManualTimeTable() {
         onOpenChange={handleCloseConflicts}
         open={showConflicts}
       />
-    </>
+    </div>
   );
 }
 

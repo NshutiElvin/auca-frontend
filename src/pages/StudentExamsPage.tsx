@@ -100,7 +100,7 @@ function StudentExamsPage() {
   }, []);
   return (
     isPending ? <TableSkeleton /> :
-    <div>
+     <div className="w-full space-y-4">
       
       <div className="flex gap-1 py-2">
         <Button onClick={() => handleViewChange("grid")}>

@@ -1093,302 +1093,305 @@ const OccupanciesPage = () => {
         setDialogMessage(null);
       }}
     >
-      <div
-        className={` ${
-          serverLoadingMessage?.isServerLoading &&
-          "pointer-events-none opacity-20"
-        }`}
-      >
-        <div className="min-h-screen bg-background">
-          {/* Stats Bar */}
-          <div className=" border-b px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm">Total Rooms:</span>
-                  <span className="font-semibol">{stats.totalRooms}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">Occupied:</span>
-                  <span className="font-semibold">{stats.occupiedRooms}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Users className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm">Students:</span>
-                  <span className="font-semibold">{stats.totalStudents}</span>
-                </div>
-                {stats.overcapacityRooms > 0 && (
+      <div className="w-full space-y-4">
+        <div
+          className={` ${
+            serverLoadingMessage?.isServerLoading &&
+            "pointer-events-none opacity-20"
+          }`}
+        >
+          <div className="min-h-screen bg-background">
+            {/* Stats Bar */}
+            <div className=" border-b px-6 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-6">
                   <div className="flex items-center space-x-2">
-                    <AlertTriangle className="w-4 h-4 text-red-500" />
-                    <span className="text-sm text-gray-600">Overcapacity:</span>
-                    <span className="font-semibold">
-                      {stats.overcapacityRooms}
+                    <MapPin className="w-4 h-4 text-blue-500" />
+                    <span className="text-sm">Total Rooms:</span>
+                    <span className="font-semibol">{stats.totalRooms}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-green-500" />
+                    <span className="text-sm">Occupied:</span>
+                    <span className="font-semibold">{stats.occupiedRooms}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-4 h-4 text-purple-500" />
+                    <span className="text-sm">Students:</span>
+                    <span className="font-semibold">{stats.totalStudents}</span>
+                  </div>
+                  {stats.overcapacityRooms > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <span className="text-sm text-gray-600">
+                        Overcapacity:
+                      </span>
+                      <span className="font-semibold">
+                        {stats.overcapacityRooms}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Add Timetable Selector */}
+                  <Select
+                    value={selectedTimetable}
+                    onValueChange={(value) => {
+                      setSelectedTimetable(value);
+                      const timetable = timetables?.find(
+                        (tt) => tt.id.toString() === value,
+                      );
+                      if (timetable && locations) {
+                        const matchedLocation = locations.find(
+                          (loc) => loc.id === timetable.location.id,
+                        );
+                        setSelectedLocation(matchedLocation || null);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Timetable" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timetables?.map((tt) => (
+                        <SelectItem key={tt.id} value={tt.id.toString()}>
+                          {tt.academic_year}-{tt.semester?.name || tt.id} (
+                          {tt.location?.name || "No campus"})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Grouped Buttons - Add Report Buttons */}
+                  <div className="flex rounded-full border overflow-hidden space-x-2">
+                    <Button
+                      onClick={generateFullTimetableReport}
+                      variant="default"
+                      disabled={isGeneratingReport}
+                      className="flex items-center gap-1"
+                    >
+                      <DownloadCloudIcon className="w-4 h-4" />
+                      <span>Full Report</span>
+                    </Button>
+
+                    <Button onClick={exportData} variant="default">
+                      <Download className="w-4 h-4" />
+                      <span>Export CSV</span>
+                    </Button>
+
+                    <Button
+                      onClick={fetchOccupancies}
+                      className="flex items-center space-x-2 px-3 py-1 rounded-none last:rounded-r-full text-sm"
+                      variant="outline"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${
+                          isGettingOccupancies ? "animate-spin" : ""
+                        }`}
+                      />
+                      <span>Refresh</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Search and Filters */}
+            <div className=" border-b px-6 py-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search courses, rooms..."
+                      className="pl-10 pr-4 py-2 border  rounded-md text-sm w-64 font-bold"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm `}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>Filters</span>
+                  </button>
+                </div>
+              </div>
+
+              {showFilters && (
+                <div className="grid grid-cols-4 gap-4 p-4 rounded-md">
+                  {/* Departments (already styled) */}
+                  <Select
+                    value={filters.department}
+                    onValueChange={(value) => {
+                      if (value == "All") {
+                        setFilters({ ...filters, department: "" });
+                      } else {
+                        setFilters({ ...filters, department: value });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[250px]">
+                      <SelectValue placeholder="All Departments" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Departments</SelectItem>
+                      {filterOptions.departments.map((dept) => (
+                        <SelectItem key={dept} value={dept ? dept : ""}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Semesters */}
+                  <Select
+                    value={filters.semester}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, semester: value })
+                    }
+                  >
+                    <SelectTrigger className="w-[250px]">
+                      <SelectValue placeholder="All Semesters" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filterOptions.semesters.map((sem) => (
+                        <SelectItem key={sem} value={sem ? sem : ""}>
+                          {sem}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Capacities */}
+                  <Select
+                    value={filters.capacity}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, capacity: value })
+                    }
+                  >
+                    <SelectTrigger className="w-[250px]">
+                      <SelectValue placeholder="All Capacities" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filterOptions.capacities.map((cap) => (
+                        <SelectItem key={cap} value={cap.toString()}>
+                          {cap} students
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Occupancy Status */}
+                  <Select
+                    value={filters.occupancyStatus}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, occupancyStatus: value })
+                    }
+                  >
+                    <SelectTrigger className="w-[250px]">
+                      <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="overcapacity">Overcapacity</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={selectedLocation?.id.toString() || ""}
+                    onValueChange={(value) => {
+                      const location = locations?.find(
+                        (loc) => loc.id === Number(value),
+                      );
+                      setSelectedLocation(location || null);
+                    }}
+                  >
+                    <SelectTrigger className="w-[250px]">
+                      <SelectValue placeholder="Select Campus" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locations?.map((loc) => (
+                        <SelectItem key={loc.id} value={loc.id.toString()}>
+                          {loc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            {/* Controls */}
+            <div className="border-b  px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Button
+                    onClick={() => navigateDate("prev")}
+                    disabled={currentDateIndex === 0}
+                    className="p-1  rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant={"default"}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-bold">Date</span>
+                    <span className="font-medium">
+                      {format(new Date(selectedDate), "PPPP")}
                     </span>
                   </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* Add Timetable Selector */}
-                <Select
-                  value={selectedTimetable}
-                  onValueChange={(value) => {
-                    setSelectedTimetable(value);
-                    const timetable = timetables?.find(
-                      (tt) => tt.id.toString() === value,
-                    );
-                    if (timetable && locations) {
-                      const matchedLocation = locations.find(
-                        (loc) => loc.id === timetable.location.id,
-                      );
-                      setSelectedLocation(matchedLocation || null);
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Timetable" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timetables?.map((tt) => (
-                      <SelectItem key={tt.id} value={tt.id.toString()}>
-                        {tt.academic_year}-{tt.semester?.name || tt.id} (
-                        {tt.location?.name || "No campus"})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Grouped Buttons - Add Report Buttons */}
-                <div className="flex rounded-full border overflow-hidden space-x-2">
                   <Button
-                    onClick={generateFullTimetableReport}
-                    variant="default"
-                    disabled={isGeneratingReport}
-                    className="flex items-center gap-1"
+                    onClick={() => navigateDate("next")}
+                    disabled={currentDateIndex === availableDates.length - 1}
+                    className="p-1  rounded disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <DownloadCloudIcon className="w-4 h-4" />
-                    <span>Full Report</span>
-                  </Button>
-
-                  <Button onClick={exportData} variant="default">
-                    <Download className="w-4 h-4" />
-                    <span>Export CSV</span>
-                  </Button>
-
-                  <Button
-                    onClick={fetchOccupancies}
-                    className="flex items-center space-x-2 px-3 py-1 rounded-none last:rounded-r-full text-sm"
-                    variant="outline"
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 ${
-                        isGettingOccupancies ? "animate-spin" : ""
-                      }`}
-                    />
-                    <span>Refresh</span>
+                    <ChevronRight className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Search and Filters */}
-          <div className=" border-b px-6 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4 flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder="Search courses, rooms..."
-                    className="pl-10 pr-4 py-2 border  rounded-md text-sm w-64 font-bold"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm `}
-                >
-                  <Filter className="w-4 h-4" />
-                  <span>Filters</span>
-                </button>
-              </div>
-            </div>
-
-            {showFilters && (
-              <div className="grid grid-cols-4 gap-4 p-4 rounded-md">
-                {/* Departments (already styled) */}
-                <Select
-                  value={filters.department}
-                  onValueChange={(value) =>{
-                    if(value=="All"){
-                      setFilters({ ...filters, department: "" })
-                    }else{
-                      setFilters({ ...filters, department: value })
-                    }
-                  }
-                   
-                  }
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="All Departments" />
-                  </SelectTrigger>
-                  <SelectContent>
-                  <SelectItem value="All">All Departments</SelectItem>
-                    {filterOptions.departments.map((dept) => (
-                      <SelectItem key={dept} value={dept ? dept : ""}>
-                        {dept}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Semesters */}
-                <Select
-                  value={filters.semester}
-                  onValueChange={(value) =>
-                    setFilters({ ...filters, semester: value })
-                  }
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="All Semesters" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filterOptions.semesters.map((sem) => (
-                      <SelectItem key={sem} value={sem ? sem : ""}>
-                        {sem}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Capacities */}
-                <Select
-                  value={filters.capacity}
-                  onValueChange={(value) =>
-                    setFilters({ ...filters, capacity: value })
-                  }
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="All Capacities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filterOptions.capacities.map((cap) => (
-                      <SelectItem key={cap} value={cap.toString()}>
-                        {cap} students
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Occupancy Status */}
-                <Select
-                  value={filters.occupancyStatus}
-                  onValueChange={(value) =>
-                    setFilters({ ...filters, occupancyStatus: value })
-                  }
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="overcapacity">Overcapacity</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={selectedLocation?.id.toString() || ""}
-                  onValueChange={(value) => {
-                    const location = locations?.find(
-                      (loc) => loc.id === Number(value),
-                    );
-                    setSelectedLocation(location || null);
-                  }}
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="Select Campus" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations?.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.id.toString()}>
-                        {loc.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          {/* Controls */}
-          <div className="border-b  px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button
-                  onClick={() => navigateDate("prev")}
-                  disabled={currentDateIndex === 0}
-                  className="p-1  rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                  variant={"default"}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-bold">Date</span>
-                  <span className="font-medium">
-                    {format(new Date(selectedDate), "PPPP")}
-                  </span>
-                </div>
-                <Button
-                  onClick={() => navigateDate("next")}
-                  disabled={currentDateIndex === availableDates.length - 1}
-                  className="p-1  rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6">
-            <div className="rounded-lg border  overflow-hidden">
-              <div className="flex border-b ">
-                <div className="w-20 p-3  font-medium text-sm mx-7 ">Rooms</div>
-                {timeSlots.map((time, index) => (
-                  <div
-                    key={index}
-                    className="flex-1 p-3  text-center text-sm font-medium  border-r  last:border-r-0 flex col"
-                  >
-                    {formatTime(time)}
+            <div className="p-6">
+              <div className="rounded-lg border  overflow-hidden">
+                <div className="flex border-b ">
+                  <div className="w-20 p-3  font-medium text-sm mx-7 ">
+                    Rooms
                   </div>
-                ))}
-              </div>
+                  {timeSlots.map((time, index) => (
+                    <div
+                      key={index}
+                      className="flex-1 p-3  text-center text-sm font-medium  border-r  last:border-r-0 flex col"
+                    >
+                      {formatTime(time)}
+                    </div>
+                  ))}
+                </div>
 
-              <div className="divide-y divide-gray-800 max-h-[600px] overflow-y-auto">
-                {rooms.map((room) => (
-                  <div key={room} className="flex">
-                    <div className="w-fit p-3  items-center justify-center border-r">
-                      <Button
-                        className="flex items-center space-x-2 flex-1 min-w-fit"
-                        onClick={() => {
-                          setShowQrCode(true);
-                          setSelectedRoomDetails({
-                            name: room,
-                            date: selectedDate,
-                          });
-                          setDialogOpen(true);
-                        }}
-                        variant={"secondary"}
-                      >
-                        <HouseIcon className="w-4 h-3" />
-                        <span className="text-sm font-medium ">{room}</span>
-                        <QrCodeIcon className="w-4 h-4" />
-                      </Button>
+                <div className="divide-y divide-gray-800 max-h-[600px] overflow-y-auto">
+                  {rooms.map((room) => (
+                    <div key={room} className="flex">
+                      <div className="w-fit p-3  items-center justify-center border-r">
+                        <Button
+                          className="flex items-center space-x-2 flex-1 min-w-fit"
+                          onClick={() => {
+                            setShowQrCode(true);
+                            setSelectedRoomDetails({
+                              name: room,
+                              date: selectedDate,
+                            });
+                            setDialogOpen(true);
+                          }}
+                          variant={"secondary"}
+                        >
+                          <HouseIcon className="w-4 h-3" />
+                          <span className="text-sm font-medium ">{room}</span>
+                          <QrCodeIcon className="w-4 h-4" />
+                        </Button>
 
-                      {/* <Button
+                        {/* <Button
                         className="flex items-center space-x-2"
                         onClick={() => {
                           // Find the room ID from the data
@@ -1415,195 +1418,181 @@ const OccupanciesPage = () => {
                           <DownloadCloudIcon className="w-3 h-3" />
                         <span className="text-xs">Report</span>
                       </Button> */}
-                    </div>
-                    {timeSlots.map((_, timeIndex) => {
-                      const occupancies = getOccupancyForSlot(
-                        room,
-                        timeSlots[timeIndex],
-                      );
-                      return (
-                        <div
-                          key={timeIndex}
-                          className="flex-1 p-2 border-r  last:border-r-0 min-h-[80px] cursor-move"
-                          onDrop={(e) => {
-                            handleDroppedGroup(e, {
-                              roomName: room,
-                              date: selectedDate,
-                              startTime: timeSlots[timeIndex],
-                              endTime: timeSlots[timeIndex],
-                            });
-                          }}
-                          onDragOver={handleDragOver}
-                        >
-                          {occupancies.length > 0 && (
-                            <div
-                              draggable
-                              onDragStart={(e) => {
-                                handleCourseGroupDragStart(e, {
-                                  courseId:
-                                    occupancies[occupancies.length - 1].exam_id,
-                                  courseCode:
-                                    occupancies[occupancies.length - 1]
-                                      .course_code,
-                                  courseTitle:
-                                    occupancies[occupancies.length - 1]
-                                      .course_title,
-                                  courseSemester:
-                                    occupancies[occupancies.length - 1]
-                                      .course_semester,
-                                  courseDepartment:
-                                    occupancies[occupancies.length - 1]
-                                      .course_department,
-                                  courseGroup:
-                                    occupancies[occupancies.length - 1]
-                                      .course_group,
-                                  roomName:
-                                    occupancies[occupancies.length - 1]
-                                      .room_name,
-                                });
-                              }}
-                            >
-                              <OccupancyCard
-                                occupancies={occupancies}
-                                onGenerateSlotReport={(
-                                  roomId,
-                                  date,
-                                  startTime,
-                                  endTime,
-                                ) =>
-                                  generateSeatingReport(
+                      </div>
+                      {timeSlots.map((_, timeIndex) => {
+                        const occupancies = getOccupancyForSlot(
+                          room,
+                          timeSlots[timeIndex],
+                        );
+                        return (
+                          <div
+                            key={timeIndex}
+                            className="flex-1 p-2 border-r  last:border-r-0 min-h-[80px] cursor-move"
+                            onDrop={(e) => {
+                              handleDroppedGroup(e, {
+                                roomName: room,
+                                date: selectedDate,
+                                startTime: timeSlots[timeIndex],
+                                endTime: timeSlots[timeIndex],
+                              });
+                            }}
+                            onDragOver={handleDragOver}
+                          >
+                            {occupancies.length > 0 && (
+                              <div
+                                draggable
+                                onDragStart={(e) => {
+                                  handleCourseGroupDragStart(e, {
+                                    courseId:
+                                      occupancies[occupancies.length - 1]
+                                        .exam_id,
+                                    courseCode:
+                                      occupancies[occupancies.length - 1]
+                                        .course_code,
+                                    courseTitle:
+                                      occupancies[occupancies.length - 1]
+                                        .course_title,
+                                    courseSemester:
+                                      occupancies[occupancies.length - 1]
+                                        .course_semester,
+                                    courseDepartment:
+                                      occupancies[occupancies.length - 1]
+                                        .course_department,
+                                    courseGroup:
+                                      occupancies[occupancies.length - 1]
+                                        .course_group,
+                                    roomName:
+                                      occupancies[occupancies.length - 1]
+                                        .room_name,
+                                  });
+                                }}
+                              >
+                                <OccupancyCard
+                                  occupancies={occupancies}
+                                  onGenerateSlotReport={(
                                     roomId,
                                     date,
                                     startTime,
                                     endTime,
-                                  )
-                                }
-                                isGeneratingReport={isGeneratingReport}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+                                  ) =>
+                                    generateSeatingReport(
+                                      roomId,
+                                      date,
+                                      startTime,
+                                      endTime,
+                                    )
+                                  }
+                                  isGeneratingReport={isGeneratingReport}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {showModal && (
-            <div>
-              <Draggable
-                handle=".drag-handle"
-                cancel=".no-drag"
-                nodeRef={modalRef}
-              >
-                <div
-                  ref={modalRef}
-                  className={`bg-background border p-2 animate-in border-gray-800 shadow-gray-800 z-50 relative  w-fit hover:z-[55] rounded-lg shadow-lg duration-200 text-white`}
-                  style={{
-                    position: "fixed",
-                    maxHeight: "80vh",
-                    top: "25%",
-                    left: "40%",
-                    transform: "translate(-50%, -50%)",
-                  }}
+            {showModal && (
+              <div>
+                <Draggable
+                  handle=".drag-handle"
+                  cancel=".no-drag"
+                  nodeRef={modalRef}
                 >
-                  <PanelGroup direction="horizontal">
-                    {/* Second Panel (could be empty or contain additional info) */}
-                    <Panel
-                      className="w-0 min-w-0 overflow-hidden"
-                      defaultSize={0}
-                      minSize={0}
-                      maxSize={0} // Lock at 0 width
-                      order={1} // Explicit order helps
-                    />
-                    <PanelResizeHandle className="w-1   hover:bg-gray-800 transition-colors" />
+                  <div
+                    ref={modalRef}
+                    className={`bg-background border p-2 animate-in border-gray-800 shadow-gray-800 z-50 relative  w-fit hover:z-[55] rounded-lg shadow-lg duration-200 text-white`}
+                    style={{
+                      position: "fixed",
+                      maxHeight: "80vh",
+                      top: "25%",
+                      left: "40%",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  >
+                    <PanelGroup direction="horizontal">
+                      {/* Second Panel (could be empty or contain additional info) */}
+                      <Panel
+                        className="w-0 min-w-0 overflow-hidden"
+                        defaultSize={0}
+                        minSize={0}
+                        maxSize={0} // Lock at 0 width
+                        order={1} // Explicit order helps
+                      />
+                      <PanelResizeHandle className="w-1   hover:bg-gray-800 transition-colors" />
 
-                    <Panel
-                      defaultSize={60}
-                      minSize={30}
-                      order={2}
-                      className="drag-handle  border-b  cursor-move"
-                    >
-                      <div className="text-center space-y-4 p-4 flex items-center justify-between  bg-gray-800 w-full">
-                        <h1 className="text-l font-bold leading-tight">
-                          Room Occupancy Details
-                        </h1>
-                        <Button
-                          className="ring-offset-background focus:ring-ring  absolute top-1 right-8 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-                          variant={"secondary"}
-                          onClick={handleCloseModal}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      <div className="p-6  w-fit no-drag cursor-default   overflow-y-scroll max-h-[50vh]">
-                        {groupedOccupancies.map((slot, index) => (
-                          <div
-                            key={index}
-                            className="mb-6 p-4 border  rounded-lg"
+                      <Panel
+                        defaultSize={60}
+                        minSize={30}
+                        order={2}
+                        className="drag-handle  border-b  cursor-move"
+                      >
+                        <div className="text-center space-y-4 p-4 flex items-center justify-between  bg-gray-800 w-full">
+                          <h1 className="text-l font-bold leading-tight">
+                            Room Occupancy Details
+                          </h1>
+                          <Button
+                            className="ring-offset-background focus:ring-ring  absolute top-1 right-8 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                            variant={"secondary"}
+                            onClick={handleCloseModal}
                           >
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-2">
-                                  <MapPin className="w-5 h-5 text-blue-500" />
-                                  <span className="font-semibold text-lg">
-                                    Room {slot.room_name}
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Clock className="w-4 h-4 font-semibold" />
-                                  <span className="text-sm font-bold">
-                                    {formatTime(slot.start_time)} -{" "}
-                                    {formatTime(slot.end_time)} ({slot.duration}
-                                    )
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Users className="w-4 h-4 text-purple-500" />
-                                <span
-                                  className={`font-semibold ${
-                                    slot.total_students > slot.room_capacity
-                                      ? "text-red-600"
-                                      : "text-green-600"
-                                  }`}
-                                >
-                                  {slot.total_students} / {slot.room_capacity}{" "}
-                                  students
-                                </span>
-                                {slot.total_students > slot.room_capacity && (
-                                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                                )}
-                              </div>
-                            </div>
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
 
-                            <div className="grid gap-3 ">
-                              {slot.courses.map(
-                                (course: any, courseIndex: number) => (
-                                  <div
-                                    key={courseIndex}
-                                    className="p-3  rounded-sm border  cursor-grabbing"
-                                    draggable
-                                    onDragStart={(e) => {
-                                      handleCourseGroupDragStart(e, {
-                                        courseId: course.exam_id,
-                                        courseCode: course.course_code,
-                                        courseTitle: course.course_title,
-                                        courseSemester: course.course_semester,
-                                        courseDepartment:
-                                          course.course_department,
-                                        courseGroup: course.course_group,
-                                        roomName: slot.room_name,
-                                      });
-                                    }}
+                        <div className="p-6  w-fit no-drag cursor-default   overflow-y-scroll max-h-[50vh]">
+                          {groupedOccupancies.map((slot, index) => (
+                            <div
+                              key={index}
+                              className="mb-6 p-4 border  rounded-lg"
+                            >
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-4">
+                                  <div className="flex items-center space-x-2">
+                                    <MapPin className="w-5 h-5 text-blue-500" />
+                                    <span className="font-semibold text-lg">
+                                      Room {slot.room_name}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Clock className="w-4 h-4 font-semibold" />
+                                    <span className="text-sm font-bold">
+                                      {formatTime(slot.start_time)} -{" "}
+                                      {formatTime(slot.end_time)} (
+                                      {slot.duration})
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Users className="w-4 h-4 text-purple-500" />
+                                  <span
+                                    className={`font-semibold ${
+                                      slot.total_students > slot.room_capacity
+                                        ? "text-red-600"
+                                        : "text-green-600"
+                                    }`}
                                   >
+                                    {slot.total_students} / {slot.room_capacity}{" "}
+                                    students
+                                  </span>
+                                  {slot.total_students > slot.room_capacity && (
+                                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="grid gap-3 ">
+                                {slot.courses.map(
+                                  (course: any, courseIndex: number) => (
                                     <div
-                                      className="flex items-center justify-between hover:opacity-50"
-                                      onClick={() => {
-                                        handleGettingStudents({
+                                      key={courseIndex}
+                                      className="p-3  rounded-sm border  cursor-grabbing"
+                                      draggable
+                                      onDragStart={(e) => {
+                                        handleCourseGroupDragStart(e, {
                                           courseId: course.exam_id,
                                           courseCode: course.course_code,
                                           courseTitle: course.course_title,
@@ -1616,274 +1605,292 @@ const OccupanciesPage = () => {
                                         });
                                       }}
                                     >
-                                      <div className="flex-1">
-                                        <div className="flex items-center space-x-3">
-                                          <span className="font-medium text-blue-700">
-                                            {course.course_code}
-                                          </span>
-                                          <span className="text-gray-600">
-                                            {course.course_title}{" "}
-                                            {course.course_group}
-                                          </span>
+                                      <div
+                                        className="flex items-center justify-between hover:opacity-50"
+                                        onClick={() => {
+                                          handleGettingStudents({
+                                            courseId: course.exam_id,
+                                            courseCode: course.course_code,
+                                            courseTitle: course.course_title,
+                                            courseSemester:
+                                              course.course_semester,
+                                            courseDepartment:
+                                              course.course_department,
+                                            courseGroup: course.course_group,
+                                            roomName: slot.room_name,
+                                          });
+                                        }}
+                                      >
+                                        <div className="flex-1">
+                                          <div className="flex items-center space-x-3">
+                                            <span className="font-medium text-blue-700">
+                                              {course.course_code}
+                                            </span>
+                                            <span className="text-gray-600">
+                                              {course.course_title}{" "}
+                                              {course.course_group}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center space-x-4 mt-1 text-sm">
+                                            {course.course_department && (
+                                              <span>
+                                                Department:{" "}
+                                                {course.course_department}
+                                              </span>
+                                            )}
+                                            {course.course_semester && (
+                                              <span>
+                                                Semester:{" "}
+                                                {course.course_semester}
+                                              </span>
+                                            )}
+                                            {course.course_group && (
+                                              <span>
+                                                Group: {course.course_group}
+                                              </span>
+                                            )}
+                                          </div>
                                         </div>
-                                        <div className="flex items-center space-x-4 mt-1 text-sm">
-                                          {course.course_department && (
-                                            <span>
-                                              Department:{" "}
-                                              {course.course_department}
-                                            </span>
-                                          )}
-                                          {course.course_semester && (
-                                            <span>
-                                              Semester: {course.course_semester}
-                                            </span>
-                                          )}
-                                          {course.course_group && (
-                                            <span>
-                                              Group: {course.course_group}
-                                            </span>
-                                          )}
+                                        <div className="flex items-center space-x-2">
+                                          <Users className="w-4 h-4" />
+                                          <Badge
+                                            className="font-medium"
+                                            variant="outline"
+                                          >
+                                            {course.student_count} students
+                                          </Badge>
                                         </div>
-                                      </div>
-                                      <div className="flex items-center space-x-2">
-                                        <Users className="w-4 h-4" />
-                                        <Badge
-                                          className="font-medium"
-                                          variant="outline"
-                                        >
-                                          {course.student_count} students
-                                        </Badge>
                                       </div>
                                     </div>
+                                  ),
+                                )}
+                              </div>
+
+                              {slot.total_students > slot.room_capacity && (
+                                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                                  <div className="flex items-center space-x-2">
+                                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                                    <span className="font-medium text-red-700">
+                                      Overcapacity Warning
+                                    </span>
                                   </div>
-                                ),
+                                  <p className="text-sm text-red-600 mt-1">
+                                    This room is overcapacity by{" "}
+                                    {slot.total_students - slot.room_capacity}{" "}
+                                    students. Consider moving some exams to
+                                    larger rooms or different time slots.
+                                  </p>
+                                </div>
                               )}
                             </div>
-
-                            {slot.total_students > slot.room_capacity && (
-                              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                                <div className="flex items-center space-x-2">
-                                  <AlertTriangle className="w-5 h-5 text-red-500" />
-                                  <span className="font-medium text-red-700">
-                                    Overcapacity Warning
-                                  </span>
-                                </div>
-                                <p className="text-sm text-red-600 mt-1">
-                                  This room is overcapacity by{" "}
-                                  {slot.total_students - slot.room_capacity}{" "}
-                                  students. Consider moving some exams to larger
-                                  rooms or different time slots.
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </Panel>
-                    <PanelResizeHandle className="w-1   hover:bg-gray-800 transition-colors" />
-
-                    {/* Second Panel (could be empty or contain additional info) */}
-                    <Panel
-                      className="w-0 min-w-0 overflow-hidden"
-                      defaultSize={0}
-                      minSize={0}
-                      maxSize={0} // Lock at 0 width
-                      order={3}
-                    />
-                  </PanelGroup>
-                </div>
-              </Draggable>
-            </div>
-          )}
-
-          {showStudentModal && (
-            <div>
-              <Draggable
-                handle=".drag-handle"
-                cancel=".no-drag"
-                nodeRef={studentModalRef}
-              >
-                <div
-                  ref={studentModalRef}
-                  className={`bg-background border animate-in border-gray-800 shadow-gray-800 p-2 z-50 relative  text-white w-fit hover:z-[55] rounded-lg shadow-lg duration-200`}
-                  style={{
-                    position: "fixed",
-                    maxHeight: "80vh",
-                    top: "10%",
-                    left: "10%",
-                    transform: "translate(-50%, -50%)",
-                  }}
-                  onWheel={(e) => e.stopPropagation()}
-                >
-                  <PanelGroup
-                    direction="horizontal"
-                    onLayout={(sizes: number[]) => {
-                      // Calculate new width based on panel sizes (adjust formula as needed)
-                      const newWidth =
-                        sizes.reduce((sum, size) => sum + size, 0) + 32;
-                      setDimensions((prev) => ({
-                        ...prev,
-                        width: newWidth,
-                      }));
-                    }}
-                  >
-                    <Panel
-                      className="w-0 min-w-0 overflow-hidden"
-                      defaultSize={0}
-                      minSize={0}
-                      maxSize={0} // Lock at 0 width
-                      order={1} // Explicit order helps
-                    />
-                    <PanelResizeHandle className="w-1   hover:bg-gray-800 transition-colors" />
-
-                    <Panel
-                      defaultSize={60}
-                      minSize={30}
-                      order={2}
-                      className="drag-handle  border-b  cursor-move"
-                    >
-                      <div className="text-center space-y-4 p-4 flex items-center justify-between bg-gray-800 w-full">
-                        <h1 className="text-l  font-bold">
-                          Students Belongs in Selected Course Group
-                        </h1>
-                        <Button
-                          className="ring-offset-background focus:ring-ring  absolute top-1 right-8 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-                          variant={"secondary"}
-                          onClick={handleCloseStudentsModal}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      {isGettingStudents ? (
-                        <div className="flex items-center justify-center p-2 font-bold">
-                          {" "}
-                          <RefreshCw
-                            className={`w-4 h-4 ${
-                              isGettingStudents ? "animate-spin" : ""
-                            }`}
-                          />
+                          ))}
                         </div>
-                      ) : (
-                        <div className="p-6  no-drag cursor-default font-bold">
-                          <div className="flex items-center">
+                      </Panel>
+                      <PanelResizeHandle className="w-1   hover:bg-gray-800 transition-colors" />
+
+                      {/* Second Panel (could be empty or contain additional info) */}
+                      <Panel
+                        className="w-0 min-w-0 overflow-hidden"
+                        defaultSize={0}
+                        minSize={0}
+                        maxSize={0} // Lock at 0 width
+                        order={3}
+                      />
+                    </PanelGroup>
+                  </div>
+                </Draggable>
+              </div>
+            )}
+
+            {showStudentModal && (
+              <div>
+                <Draggable
+                  handle=".drag-handle"
+                  cancel=".no-drag"
+                  nodeRef={studentModalRef}
+                >
+                  <div
+                    ref={studentModalRef}
+                    className={`bg-background border animate-in border-gray-800 shadow-gray-800 p-2 z-50 relative  text-white w-fit hover:z-[55] rounded-lg shadow-lg duration-200`}
+                    style={{
+                      position: "fixed",
+                      maxHeight: "80vh",
+                      top: "10%",
+                      left: "10%",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                    onWheel={(e) => e.stopPropagation()}
+                  >
+                    <PanelGroup
+                      direction="horizontal"
+                      onLayout={(sizes: number[]) => {
+                        // Calculate new width based on panel sizes (adjust formula as needed)
+                        const newWidth =
+                          sizes.reduce((sum, size) => sum + size, 0) + 32;
+                        setDimensions((prev) => ({
+                          ...prev,
+                          width: newWidth,
+                        }));
+                      }}
+                    >
+                      <Panel
+                        className="w-0 min-w-0 overflow-hidden"
+                        defaultSize={0}
+                        minSize={0}
+                        maxSize={0} // Lock at 0 width
+                        order={1} // Explicit order helps
+                      />
+                      <PanelResizeHandle className="w-1   hover:bg-gray-800 transition-colors" />
+
+                      <Panel
+                        defaultSize={60}
+                        minSize={30}
+                        order={2}
+                        className="drag-handle  border-b  cursor-move"
+                      >
+                        <div className="text-center space-y-4 p-4 flex items-center justify-between bg-gray-800 w-full">
+                          <h1 className="text-l  font-bold">
+                            Students Belongs in Selected Course Group
+                          </h1>
+                          <Button
+                            className="ring-offset-background focus:ring-ring  absolute top-1 right-8 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                            variant={"secondary"}
+                            onClick={handleCloseStudentsModal}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {isGettingStudents ? (
+                          <div className="flex items-center justify-center p-2 font-bold">
                             {" "}
-                            <Checkbox
-                              className="h-4 w-4 m-2 border shadow-md border-foreground"
-                              id="select-all"
-                              checked={
-                                courseStudents.length ===
-                                selectedStudents?.length
-                              }
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? setSelectedStudents([...courseStudents])
-                                  : setSelectedStudents([]);
-                              }}
-                            />{" "}
-                            <Label
-                              htmlFor="select-all"
-                              className="text-foreground"
-                            >
-                              Select All
-                            </Label>
+                            <RefreshCw
+                              className={`w-4 h-4 ${
+                                isGettingStudents ? "animate-spin" : ""
+                              }`}
+                            />
                           </div>
-                          <div className=" overflow-y-scroll max-h-[50vh]">
-                            {courseStudents.map((student, index) => (
-                              <div
-                                key={index}
-                                className="p-3  rounded-sm border  cursor-grabbing mt-2"
-                                draggable
-                                onDragStart={(e) =>
-                                  handleStudentDragStart(e, student)
+                        ) : (
+                          <div className="p-6  no-drag cursor-default font-bold">
+                            <div className="flex items-center">
+                              {" "}
+                              <Checkbox
+                                className="h-4 w-4 m-2 border shadow-md border-foreground"
+                                id="select-all"
+                                checked={
+                                  courseStudents.length ===
+                                  selectedStudents?.length
                                 }
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? setSelectedStudents([...courseStudents])
+                                    : setSelectedStudents([]);
+                                }}
+                              />{" "}
+                              <Label
+                                htmlFor="select-all"
+                                className="text-foreground"
                               >
+                                Select All
+                              </Label>
+                            </div>
+                            <div className=" overflow-y-scroll max-h-[50vh]">
+                              {courseStudents.map((student, index) => (
                                 <div
-                                  className="flex items-center justify-between hover:opacity-50 border-foreground"
-                                  onClick={() => {
-                                    const selected = selectedStudents?.some(
-                                      (s) => s.id == student.id,
-                                    );
-                                    selected
-                                      ? setSelectedStudents([
-                                          ...selectedStudents?.filter(
-                                            (s: any) => s.id != student.id,
-                                          ),
-                                        ])
-                                      : setSelectedStudents((prev: any) => [
-                                          ...prev,
-                                          student,
-                                        ]);
-                                  }}
+                                  key={index}
+                                  className="p-3  rounded-sm border  cursor-grabbing mt-2"
+                                  draggable
+                                  onDragStart={(e) =>
+                                    handleStudentDragStart(e, student)
+                                  }
                                 >
-                                  <Checkbox
-                                    className="h-4 w-4 m-2 border shadow-md border-foreground"
-                                    id={student.id}
-                                    checked={selectedStudents?.some(
-                                      (s) => s.id == student.id,
-                                    )}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? setSelectedStudents((prev: any) => [
-                                            ...prev,
-                                            student,
-                                          ])
-                                        : setSelectedStudents([
+                                  <div
+                                    className="flex items-center justify-between hover:opacity-50 border-foreground"
+                                    onClick={() => {
+                                      const selected = selectedStudents?.some(
+                                        (s) => s.id == student.id,
+                                      );
+                                      selected
+                                        ? setSelectedStudents([
                                             ...selectedStudents?.filter(
                                               (s: any) => s.id != student.id,
                                             ),
+                                          ])
+                                        : setSelectedStudents((prev: any) => [
+                                            ...prev,
+                                            student,
                                           ]);
                                     }}
-                                  />
-                                  <div className="flex-1">
-                                    <div className="flex items-center space-x-3">
-                                      <span className="font-medium text-blue-700">
-                                        {student.student.reg_no}
-                                      </span>
-                                      <span className="text-gray-600">
-                                        {student.student.user.first_name}{" "}
-                                        {student.student.user.last_name}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center space-x-4 mt-1 text-sm  ">
-                                      {student.student.department && (
-                                        <span>
-                                          Department:{" "}
-                                          {student.student.department.name}
-                                        </span>
+                                  >
+                                    <Checkbox
+                                      className="h-4 w-4 m-2 border shadow-md border-foreground"
+                                      id={student.id}
+                                      checked={selectedStudents?.some(
+                                        (s) => s.id == student.id,
                                       )}
-                                      {student.exam.group.course.semester && (
-                                        <span>
-                                          Semester:{" "}
-                                          {
-                                            student.exam.group.course.semester
-                                              .name
-                                          }
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? setSelectedStudents((prev: any) => [
+                                              ...prev,
+                                              student,
+                                            ])
+                                          : setSelectedStudents([
+                                              ...selectedStudents?.filter(
+                                                (s: any) => s.id != student.id,
+                                              ),
+                                            ]);
+                                      }}
+                                    />
+                                    <div className="flex-1">
+                                      <div className="flex items-center space-x-3">
+                                        <span className="font-medium text-blue-700">
+                                          {student.student.reg_no}
                                         </span>
-                                      )}
+                                        <span className="text-gray-600">
+                                          {student.student.user.first_name}{" "}
+                                          {student.student.user.last_name}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center space-x-4 mt-1 text-sm  ">
+                                        {student.student.department && (
+                                          <span>
+                                            Department:{" "}
+                                            {student.student.department.name}
+                                          </span>
+                                        )}
+                                        {student.exam.group.course.semester && (
+                                          <span>
+                                            Semester:{" "}
+                                            {
+                                              student.exam.group.course.semester
+                                                .name
+                                            }
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </Panel>
-                    <PanelResizeHandle className="w-2   hover:bg-gray-800 transition-colors" />
+                        )}
+                      </Panel>
+                      <PanelResizeHandle className="w-2   hover:bg-gray-800 transition-colors" />
 
-                    {/* Second Panel (could be empty or contain additional info) */}
-                    <Panel
-                      className="w-0 min-w-0 overflow-hidden"
-                      defaultSize={0}
-                      minSize={0}
-                      maxSize={0} // Lock at 0 width
-                      order={3}
-                    />
-                  </PanelGroup>
-                </div>
-              </Draggable>
-            </div>
-          )}
+                      {/* Second Panel (could be empty or contain additional info) */}
+                      <Panel
+                        className="w-0 min-w-0 overflow-hidden"
+                        defaultSize={0}
+                        minSize={0}
+                        maxSize={0} // Lock at 0 width
+                        order={3}
+                      />
+                    </PanelGroup>
+                  </div>
+                </Draggable>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

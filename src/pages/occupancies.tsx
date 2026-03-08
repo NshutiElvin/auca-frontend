@@ -202,7 +202,7 @@ export function OccupanciesPage() {
   return isGettingOccupancies ? (
     <TableSkeleton />
   ) : (
-    <div>
+     <div className="w-full space-y-4">
       <div className="flex flex-col mb-4">
         <motion.h2
           key={"occupancies-header"}

@@ -205,6 +205,7 @@ function InstructorExamScannerPage() {
   };
 
   return (
+     <div className="w-full space-y-4">
     <div className="h-2">
       <div className="max-w-2xl mx-auto">
         <div className="rounded-lg shadow-sm">
@@ -230,6 +231,7 @@ function InstructorExamScannerPage() {
           {renderVerificationContent()}
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

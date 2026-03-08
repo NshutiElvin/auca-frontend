@@ -31,7 +31,7 @@ export const NewClaimPage: React.FC = () => {
 
   if (success && createdClaimId) {
     return (
-        <div className="max-w-2xl mx-auto py-12">
+         <div className="w-full space-y-4">
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <AlertTitle className="text-green-800">Claim Submitted Successfully!</AlertTitle>

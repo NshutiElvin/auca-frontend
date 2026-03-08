@@ -7,7 +7,7 @@ export function SchedulesPage() {
   const {exams}= useExamsSchedule()
   
 
-  return (<div className="w-full">
+  return ( <div className="w-full space-y-4">
         <SchedulerProvider weekStartsOn="sunday"  initialState={exams}>
     
       <SchedulerWrapper 
