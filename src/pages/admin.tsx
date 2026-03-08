@@ -55,9 +55,14 @@ import { useContext, useEffect, useState } from "react";
 import useToast from "../hooks/useToast";
 import { useNavigate } from "react-router-dom";
 import { DecodedToken } from "../../types";
+import { NotificationList } from "./notifications-list";
+import useNotifications from "../hooks/useNotifications";
+import { NotificationData } from "../contexts/NotificationContext";
 import LocationContext from "../contexts/LocationContext";
 import { ModeToggle } from "../components/mode-toggle";
 import { motion } from "framer-motion";
+import useUserAxios from "../hooks/useUserAxios";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 
 const data = {
   versions: ["1.0.1"],
@@ -132,8 +137,21 @@ export default function AdminMainPage() {
   const [decodedToken, setDecodedToken] = useState<DecodedToken | null>(null);
   const navigate = useNavigate();
   const { setToastMessage } = useToast();
-  const { locations, setLocations } = useContext(LocationContext);
-  const routerLocation = useLocation();
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const { notifications, setNotifications } = useNotifications();
+   const axios = useUserAxios();
+
+   const markAllAsRead = async () => {
+      try {
+        await axios.post("/api/notifications/mark_all_as_read/");
+        setUnreadCount(0);
+        setNotifications(
+          notifications.map((n: NotificationData) => ({ ...n, is_read: true })),
+        );
+      } catch (error) {
+        console.error("Error marking notifications as read:", error);
+      }
+    };
 
   // Current time for the header clock
   const [time, setTime] = useState(new Date());
@@ -141,6 +159,10 @@ export default function AdminMainPage() {
     const t = setInterval(() => setTime(new Date()), 60_000);
     return () => clearInterval(t);
   }, []);
+
+   useEffect(() => {
+    setUnreadCount(notifications.filter((n) => n.is_read == false).length);
+  }, [notifications]);
 
   useEffect(() => {
     try {
@@ -225,16 +247,41 @@ export default function AdminMainPage() {
             </Badge>
 
             {/* Notification bell — placeholder */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-8 w-8 rounded-full hover:bg-muted"
-              aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4" />
-              {/* Unread dot — remove when wired up */}
-              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-red-500 ring-1 ring-background" />
-            </Button>
+             {/* Notifications */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative h-8 w-8 text-muted-foreground hover:text-foreground"
+                  aria-label="Notifications"
+                  onClick={markAllAsRead}
+                >
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-semibold leading-none">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
+                <div className="flex items-center justify-between border-b px-4 py-3">
+                  <h3 className="text-sm font-semibold">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={markAllAsRead}
+                    >
+                      Mark all as read
+                    </Button>
+                  )}
+                </div>
+                <NotificationList notifications={notifications} />
+              </PopoverContent>
+            </Popover>
 
             {/* Theme toggle */}
             <ModeToggle />
