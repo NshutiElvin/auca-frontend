@@ -16,7 +16,7 @@ export default function ProfileHeader(user: any) {
                 src="https://bundui-images.netlify.app/avatars/08.png"
                 alt="Profile"
               />
-              <AvatarFallback className="text-2xl">
+              <AvatarFallback className="text-sm uppercase">
                 {user&&user?.first_name?.toUpperCase()}
                 {user&&user?.last_name?.toUpperCase()}
               </AvatarFallback>
@@ -31,11 +31,11 @@ export default function ProfileHeader(user: any) {
           </div>
           <div className="flex-1 space-y-2">
             <div className="flex flex-col gap-2 md:flex-row md:items-center">
-              <h1 className="text-2xl font-bold">{user?.first_name} {user?.last_name}</h1>
+              <h1 className="text-2xl font-bold text-wrap">{user?.first_name} {user?.last_name}</h1>
               <Badge variant="secondary">{user?.role}</Badge>
             </div>
             <p className="text-muted-foreground">{user?.role}</p>
-            <div className="text-muted-foreground flex flex-wrap gap-4 text-sm">
+            <div className="text-muted-foreground flex flex-wrap gap-4 text-sm text-wrap">
               <div className="flex items-center gap-1">
                 <Mail className="size-4" />
                 {user?.email}
