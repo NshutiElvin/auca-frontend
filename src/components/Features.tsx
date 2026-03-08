@@ -43,7 +43,7 @@ export const Features = () => {
   return (
     <section
       id="features"
-       className="flex flex-col items-center justify-center py-24 px-2 w-full"
+       className="flex flex-col items-center justify-center py-24 px-2 w-full mx-8"
     >
       <h2 className="text-3xl lg:text-4xl font-bold md:text-center">
         Many{" "}

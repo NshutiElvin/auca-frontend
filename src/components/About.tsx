@@ -6,7 +6,7 @@ export const About = () => {
   return (
     <section
       id="about"
-      className="flex flex-col items-center justify-center py-24 px-2 w-full"
+      className="flex flex-col items-center justify-center py-24 px-2 w-full mx-8"
     >
       <h2 className="text-3xl md:text-4xl font-bold ">
         About Our Exam{" "}

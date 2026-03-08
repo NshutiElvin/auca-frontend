@@ -140,8 +140,8 @@ export const Navbar = () => {
   return (
     <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
       <header  className="bg-white dark:bg-gray-900 fixed top-0 left-0 w-full z-50 shadow-md transition-all duration-300 ease-in-out  text-black">
-        <NavigationMenu className="">
-          <NavigationMenuList className={`container h-14 px-4 w-screen flex justify-between items-center  `}>
+        <NavigationMenu className="mx-auto">
+          <NavigationMenuList className={` h-14 px-4 w-screen flex justify-between items-center  `}>
             <NavigationMenuItem className="font-bold flex">
               <Link
                 rel="noreferrer noopener"
