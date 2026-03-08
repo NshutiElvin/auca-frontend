@@ -189,7 +189,7 @@ export default function AdminMainPage() {
 
   return (
     <>
-      <AppSidebar data={data} />
+      <AppSidebar data={data}  variant="sidebar"/>
       <SidebarInset>
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
