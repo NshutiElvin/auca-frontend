@@ -62,12 +62,7 @@ import LocationContext from "../contexts/LocationContext";
 import { ModeToggle } from "../components/mode-toggle";
 import { motion } from "framer-motion";
 import useUserAxios from "../hooks/useUserAxios";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../components/ui/popover";
-import { useIsMobile } from "../hooks/use-mobile";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 
 const data = {
   versions: ["1.0.1"],
@@ -76,29 +71,31 @@ const data = {
       title: "Admin Portal",
       url: "#",
       items: [
-        { title: "Dashboard", url: "dashboard", icon: LucideLayoutDashboard },
-        { title: "Auto Timetable", url: "schedules", icon: CalendarClock },
-        { title: "Manual Timetable", url: "manual", icon: CalendarDays },
-        { title: "Courses", url: "courses", icon: BookOpen },
-        { title: "Students Exams", url: "allocations", icon: Users },
-        { title: "Sitting Plan", url: "occupancies", icon: Table2 },
-        { title: "Recent Timetables", url: "timetables", icon: LucideHistory },
-        { title: "Uploads", url: "Uploads", icon: UploadCloud },
-        { title: "Claims", url: "claims", icon: ListCheck },
-        { title: "Report", url: "report", icon: FileQuestion },
+        { title: "Dashboard",        url: "dashboard",    icon: LucideLayoutDashboard },
+        { title: "Auto Timetable",   url: "schedules",    icon: CalendarClock },
+        { title: "Manual Timetable", url: "manual",       icon: CalendarDays },
+        { title: "Courses",          url: "courses",      icon: BookOpen },
+        { title: "Students Exams",   url: "allocations",  icon: Users },
+        { title: "Sitting Plan",     url: "occupancies",  icon: Table2 },
+        { title: "Recent Timetables",url: "timetables",   icon: LucideHistory },
+        { title: "Uploads",          url: "Uploads",      icon: UploadCloud },
+        { title: "Claims",           url: "claims",       icon: ListCheck },
+        { title: "Report",           url: "report",       icon: FileQuestion },
       ],
     },
     {
       title: "Users",
       url: "#",
-      items: [{ title: "Users", url: "users", icon: UserCog }],
+      items: [
+        { title: "Users", url: "users", icon: UserCog },
+      ],
     },
     {
       title: "Authentication",
       url: "#",
       items: [
         { title: "Profile", url: "profile", icon: User },
-        { title: "Logout", url: "/Logout", icon: LogOut },
+        { title: "Logout",  url: "/Logout",  icon: LogOut },
       ],
     },
   ],
@@ -128,50 +125,33 @@ function getInitials(name?: string, email?: string): string {
   return "AD";
 }
 
-const ROLE_CONFIG: Record<string, { label: string; color: string; icon: any }> =
-  {
-    admin: {
-      label: "Admin",
-      color: "bg-blue-100 text-blue-800 border-blue-200",
-      icon: Shield,
-    },
-    instructor: {
-      label: "Instructor",
-      color: "bg-emerald-100 text-emerald-800 border-emerald-200",
-      icon: GraduationCap,
-    },
-    student: {
-      label: "Student",
-      color: "bg-violet-100 text-violet-800 border-violet-200",
-      icon: User,
-    },
-  };
+const ROLE_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
+  admin:      { label: "Admin",      color: "bg-blue-100 text-blue-800 border-blue-200",    icon: Shield },
+  instructor: { label: "Instructor", color: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: GraduationCap },
+  student:    { label: "Student",    color: "bg-violet-100 text-violet-800 border-violet-200", icon: User },
+};
 
 export default function AdminMainPage() {
-  const { parentUrl, url, state } = useSidebar();
+  const { parentUrl, url } = useSidebar();
   const { auth } = useAuth();
   const [decodedToken, setDecodedToken] = useState<DecodedToken | null>(null);
   const navigate = useNavigate();
   const { setToastMessage } = useToast();
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const { notifications, setNotifications } = useNotifications();
-  const axios = useUserAxios();
-  const SIDEBAR_WIDTH = "16rem";
-  const SIDEBAR_WIDTH_MOBILE = "18rem";
-  const SIDEBAR_WIDTH_ICON = "3rem";
-  const isMobile = useIsMobile();
+   const axios = useUserAxios();
 
-  const markAllAsRead = async () => {
-    try {
-      await axios.post("/api/notifications/mark_all_as_read/");
-      setUnreadCount(0);
-      setNotifications(
-        notifications.map((n: NotificationData) => ({ ...n, is_read: true })),
-      );
-    } catch (error) {
-      console.error("Error marking notifications as read:", error);
-    }
-  };
+   const markAllAsRead = async () => {
+      try {
+        await axios.post("/api/notifications/mark_all_as_read/");
+        setUnreadCount(0);
+        setNotifications(
+          notifications.map((n: NotificationData) => ({ ...n, is_read: true })),
+        );
+      } catch (error) {
+        console.error("Error marking notifications as read:", error);
+      }
+    };
 
   // Current time for the header clock
   const [time, setTime] = useState(new Date());
@@ -180,7 +160,7 @@ export default function AdminMainPage() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => {
+   useEffect(() => {
     setUnreadCount(notifications.filter((n) => n.is_read == false).length);
   }, [notifications]);
 
@@ -197,42 +177,24 @@ export default function AdminMainPage() {
     }
   }, [auth]);
 
-  const role = decodedToken?.role?.toLowerCase() ?? "admin";
-  const roleCfg = ROLE_CONFIG[role] ?? ROLE_CONFIG["admin"];
-  const RoleIcon = roleCfg.icon;
-  const initials = getInitials(
-    decodedToken?.email.split("@")[0],
-    decodedToken?.email,
-  );
+  const role       = decodedToken?.role?.toLowerCase() ?? "admin";
+  const roleCfg    = ROLE_CONFIG[role] ?? ROLE_CONFIG["admin"];
+  const RoleIcon   = roleCfg.icon;
+  const initials   = getInitials(decodedToken?.email.split("@")[0], decodedToken?.email);
   const maskedMail = maskEmail(decodedToken?.email?.toLowerCase() ?? "");
 
   const dayName = time.toLocaleDateString("en-US", { weekday: "short" });
-  const dateStr = time.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  const timeStr = time.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  const sidebarWidth = isMobile
-  ? "0px"   
-  : state === "collapsed"
-    ? SIDEBAR_WIDTH_ICON
-    : SIDEBAR_WIDTH;
-
-  console.log("sidebarWidth: ", sidebarWidth);
-  console.log("state: ", state);
+  const dateStr = time.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const timeStr = time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
   return (
-   <div className="flex w-full min-h-screen">
-    <AppSidebar data={data} />
+    <>
+      <AppSidebar data={data} />
+      <SidebarInset>
 
-    <div className="flex flex-col flex-1 min-h-screen">
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-0 border-b bg-background/95 backdrop-blur-sm px-3 w-full shadow-[0_1px_0_0_hsl(var(--border))]">
+
           {/* Left: trigger + breadcrumb */}
           <div className="flex items-center gap-2 min-w-0">
             <SidebarTrigger className="-ml-1 h-8 w-8 rounded-md hover:bg-muted transition-colors" />
@@ -262,6 +224,7 @@ export default function AdminMainPage() {
 
           {/* Right: clock · role badge · notifications · user menu · theme */}
           <div className="flex items-center gap-1.5">
+
             {/* Live clock — hidden on small screens */}
             <div className="hidden lg:flex flex-col items-end mr-1">
               <span className="text-[11px] font-semibold leading-none text-foreground">
@@ -272,10 +235,7 @@ export default function AdminMainPage() {
               </span>
             </div>
 
-            <Separator
-              orientation="vertical"
-              className="h-5 mx-1 hidden lg:block"
-            />
+            <Separator orientation="vertical" className="h-5 mx-1 hidden lg:block" />
 
             {/* Role badge */}
             <Badge
@@ -287,7 +247,7 @@ export default function AdminMainPage() {
             </Badge>
 
             {/* Notification bell — placeholder */}
-            {/* Notifications */}
+             {/* Notifications */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -341,19 +301,13 @@ export default function AdminMainPage() {
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden sm:block text-xs font-semibold max-w-[100px] truncate">
-                    {decodedToken?.email?.split("@")[0] ||
-                      decodedToken?.email?.split("@")[0] ||
-                      "Admin"}
+                    {decodedToken?.email?.split("@")[0] || decodedToken?.email?.split("@")[0] || "Admin"}
                   </span>
                   <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
                 </Button>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent
-                align="end"
-                className="w-56 rounded-xl shadow-lg border"
-                sideOffset={8}
-              >
+              <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg border" sideOffset={8}>
                 {/* User info header */}
                 <div className="flex items-center gap-3 px-3 py-2.5">
                   <Avatar className="h-9 w-9 border-2 border-primary/20">
@@ -415,8 +369,12 @@ export default function AdminMainPage() {
           </div>
         </header>
 
-        <Outlet />
-      </div>
-    </div>
+        {/* ── Page content ───────────────────────────────────────────────── */}
+        <main className="flex-1 overflow-auto">
+          <Outlet />
+        </main>
+
+      </SidebarInset>
+    </>
   );
 }

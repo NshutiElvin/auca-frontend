@@ -46,7 +46,7 @@ export default function Profile() {
       return (
         isGettingStudent ? <div className="flex justify-center align-middle"><Loader className={"h-5 w-5 animate-spin"}/></div>
         :
-    <div className="container mx-auto space-y-6 px-4 py-10">
+    <div className="space-y-6 px-4 py-10">
     {currentStudent&&<div>  <ProfileHeader {...currentStudent}/>
     <ProfileContent {...currentStudent}/></div>}
     </div>
