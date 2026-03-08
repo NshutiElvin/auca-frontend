@@ -192,6 +192,10 @@ export default function AdminMainPage() {
   ? "var(--sidebar-width-icon)" 
   : "var(--sidebar-width)";
 
+  console.log("sidebarWidth: ", sidebarWidth)
+  console.log("state: ", state)
+
+
   return (
     <div>
       <AppSidebar data={data} />
