@@ -2,7 +2,7 @@ import { LogoIcon } from "./Icons";
 
 export const Footer = () => {
   return (
-    <footer id="footer "  className="flex justify-center py-24 px-2 w-full">
+    <footer id="footer "  className="flex flex-col items-center justify-center py-24 px-2 w-full">
       <hr className="w-11/12 mx-auto" />
       <div className="flex justify-center items-center">
         <section className="container py-20 grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-x-12 gap-y-8 ">
