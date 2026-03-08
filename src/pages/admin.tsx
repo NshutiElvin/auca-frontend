@@ -227,7 +227,7 @@ export default function AdminMainPage() {
   console.log("state: ", state);
 
   return (
-  <div className="flex">   {/* ← add flex here */}
+  <div >   {/* ← add flex here */}
     <AppSidebar data={data} />
     <div
       style={{ width: `calc(100vw - ${sidebarWidth})` }}
