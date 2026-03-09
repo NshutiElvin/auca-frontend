@@ -265,7 +265,7 @@ export const ClaimDetailPage: React.FC = () => {
         </div>
       </div>
       {/* Responses list */}
-      <div>
+      <div className="w-full">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-semibold text-foreground">Responses</h2>
           <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
