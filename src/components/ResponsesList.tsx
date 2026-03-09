@@ -120,26 +120,28 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
     return roleColors[role.toLowerCase()] || 'bg-gray-100 text-gray-800 border-gray-300';
   };
 
-  // Generate a consistent soft color per user for their bubble
+  // Theme-based bubble colors
   const getBubbleStyle = (role: string, isInternal: boolean) => {
     if (isInternal) return 'bg-indigo-50 border border-indigo-100';
+    
+    // Using theme colors consistently
     const roleMap: Record<string, string> = {
-      'admin':      'bg-rose-50 border border-rose-100',
-      'manager':    'bg-sky-50 border border-sky-100',
-      'supervisor': 'bg-violet-50 border border-violet-100',
-      'employee':   'bg-emerald-50 border border-emerald-100',
+      'admin':      'bg-primary-50 border border-primary-200',      // Primary theme color
+      'manager':    'bg-secondary-50 border border-secondary-200',  // Secondary theme color
+      'supervisor': 'bg-accent-50 border border-accent-200',        // Accent theme color
+      'employee':   'bg-muted-50 border border-muted-200',          // Muted theme color
     };
-    return roleMap[role?.toLowerCase()] || 'bg-gray-50 border border-gray-200';
+    return roleMap[role?.toLowerCase()] || 'bg-background border border-border';
   };
 
   if (visibleResponses.length === 0 && !searchQuery && filterBy === 'all') {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
-        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
-          <MessageSquare className="h-7 w-7 text-gray-300" />
+      <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+        <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
+          <MessageSquare className="h-7 w-7 text-muted-foreground/50" />
         </div>
-        <p className="font-medium text-gray-500">No responses yet</p>
-        <p className="text-sm text-gray-400">Be the first to respond to this claim!</p>
+        <p className="font-medium text-foreground/60">No responses yet</p>
+        <p className="text-sm text-muted-foreground">Be the first to respond to this claim!</p>
       </div>
     );
   }
@@ -149,17 +151,17 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-wrap">
-          <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-gray-500" />
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
             Responses
-            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5">
+            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-medium px-2 py-0.5">
               {visibleResponses.length}
             </span>
           </h3>
 
           {isAdmin && (
             <div className="flex gap-1.5">
-              <Badge variant="outline" className="text-[11px] gap-1 text-gray-500">
+              <Badge variant="outline" className="text-[11px] gap-1 text-muted-foreground">
                 <TrendingUp className="h-3 w-3" />
                 {stats.total}
               </Badge>
@@ -177,7 +179,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => setShowFilters(!showFilters)}
-          className="gap-1.5 text-xs text-gray-500 hover:text-gray-800"
+          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
           <Filter className="h-3.5 w-3.5" />
           {showFilters ? 'Hide' : 'Filter'}
@@ -186,27 +188,27 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
 
       {/* ── Filters ── */}
       {showFilters && (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <div className="rounded-xl border border-border bg-muted/50 p-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Search</label>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   placeholder="Search responses..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 h-8 text-sm bg-white"
+                  className="pl-8 h-8 text-sm bg-background"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Sort</label>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sort</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="w-full h-8 px-3 border border-gray-200 rounded-md text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                className="w-full h-8 px-3 border border-border rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -216,11 +218,11 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
 
             {isAdmin && (
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Filter</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Filter</label>
                 <select
                   value={filterBy}
                   onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                  className="w-full h-8 px-3 border border-gray-200 rounded-md text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  className="w-full h-8 px-3 border border-border rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="all">All Responses</option>
                   <option value="internal">Internal Only</option>
@@ -234,13 +236,13 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
 
       {/* ── Empty filtered state ── */}
       {visibleResponses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
-          <Search className="h-8 w-8 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">No responses match your filters</p>
+        <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+          <Search className="h-8 w-8 text-muted-foreground/50" />
+          <p className="text-sm font-medium text-foreground/60">No responses match your filters</p>
           <p className="text-xs">Try adjusting your search or filters</p>
         </div>
       ) : (
-        /* ── Chat thread ── */
+        /* ── Chat thread - All messages on same side ── */
         <ScrollArea className="max-h-[60vh] overflow-y-auto pr-1">
           <div className="flex flex-col gap-5 py-1">
             {visibleResponses.map((response, index) => {
@@ -261,29 +263,29 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
                 <div
                   key={response.id}
                   className={cn(
-                    'flex gap-3 items-end group',
-                    onResponseClick && 'cursor-pointer'
+                    'flex gap-3 items-start group',
+                    onResponseClick && 'cursor-pointer hover:opacity-80 transition-opacity'
                   )}
                   onClick={() => onResponseClick?.(response)}
                 >
-                  {/* Avatar */}
-                  <div className="relative flex-shrink-0 self-end mb-1">
-                    <Avatar className="h-8 w-8 ring-2 ring-white shadow-sm">
+                  {/* Avatar - Always on left */}
+                  <div className="relative flex-shrink-0">
+                    <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
                       <AvatarImage src={response.responder?.avatar} />
-                      <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-purple-500 text-white text-xs font-bold">
-                        {initials}
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs font-bold">
+                        {initials || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     {/* online dot */}
-                    <span className="absolute -bottom-0.5 -right-0.5 block h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
+                    <span className="absolute -bottom-0.5 -right-0.5 block h-2.5 w-2.5 rounded-full bg-success ring-2 ring-background" />
                   </div>
 
-                  {/* Bubble + meta */}
-                  <div className="flex flex-col gap-1 max-w-[82%] sm:max-w-[70%]">
-                    {/* Name row */}
-                    <div className="flex items-center gap-2 flex-wrap px-1">
-                      <span className="text-xs font-semibold text-gray-700">{fullName}</span>
-
+                  {/* Message content - All on right side */}
+                  <div className="flex flex-col gap-1 flex-1">
+                    {/* Name and badges row */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-semibold text-foreground">{fullName || 'Unknown User'}</span>
+                      
                       <Badge
                         variant="outline"
                         className={cn('text-[10px] font-medium py-0 px-1.5 h-4', getRoleBadgeColor(role))}
@@ -305,14 +307,14 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
                       )}
                     </div>
 
-                    {/* Bubble */}
+                    {/* Message bubble - All on same side with consistent styling */}
                     <div
                       className={cn(
-                        'rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm transition-shadow group-hover:shadow-md',
+                        'rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm transition-shadow group-hover:shadow-md max-w-[85%] md:max-w-[75%]',
                         getBubbleStyle(role, !!response.is_internal)
                       )}
                     >
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                         {highlightText(displayText)}
                       </p>
 
@@ -322,7 +324,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
                             e.stopPropagation();
                             toggleExpanded(response.id);
                           }}
-                          className="mt-2 flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+                          className="mt-2 flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                         >
                           {isExpanded ? (
                             <><ChevronUp className="h-3 w-3" /> Show less</>
@@ -334,7 +336,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
                     </div>
 
                     {/* Timestamp */}
-                    <div className="flex items-center gap-2 px-1 text-[11px] text-gray-400">
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       {response.responded_at
                         ? format(new Date(response.responded_at), 'MMM d, yyyy')

@@ -1,9 +1,8 @@
+// src/components/ResponseForm.tsx
 import React, { useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
 import { Loader2, Send, Shield } from 'lucide-react';
 import useToast from '../hooks/useToast';
 import { cn } from '../lib/utils';
@@ -28,13 +27,11 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
   isAdmin = false,
   isDisabled = false,
 }) => {
-  const { register, handleSubmit, formState: { errors }, watch, setValue, reset } = useForm<ResponseFormData>({
-    resolver: zodResolver(responseSchema),
-    defaultValues: {
-      message: '',
-      is_internal: false,
-    },
-  });
+  const { register, handleSubmit, formState: { errors }, watch, setValue, reset } =
+    useForm<ResponseFormData>({
+      resolver: zodResolver(responseSchema),
+      defaultValues: { message: '', is_internal: false },
+    });
 
   const { setToastMessage } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -42,7 +39,6 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
   const isInternal = watch('is_internal');
   const messageValue = watch('message');
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -73,16 +69,16 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
   return (
     <div
       className={cn(
-        'rounded-2xl border bg-white shadow-sm transition-all',
+        'rounded-2xl border bg-card shadow-sm transition-all',
         isInternal
-          ? 'border-indigo-200 ring-1 ring-indigo-100'
-          : 'border-gray-200 focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-gray-200',
-        (isDisabled) && 'opacity-60 pointer-events-none'
+          ? 'border-primary/30 ring-1 ring-primary/20'
+          : 'border-border focus-within:border-border focus-within:ring-1 focus-within:ring-border',
+        isDisabled && 'opacity-60 pointer-events-none'
       )}
     >
       {/* Internal banner */}
       {isAdmin && isInternal && (
-        <div className="flex items-center gap-1.5 px-4 pt-3 text-xs font-medium text-indigo-500">
+        <div className="flex items-center gap-1.5 px-4 pt-3 text-xs font-medium text-primary">
           <Shield className="h-3 w-3" />
           Internal note — only visible to admins
         </div>
@@ -106,15 +102,11 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
           rows={1}
           disabled={isLoading || isDisabled}
           onKeyDown={handleKeyDown}
-          className={cn(
-            'w-full resize-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400',
-            'focus:outline-none focus:ring-0 border-none p-0',
-            'leading-relaxed max-h-40 overflow-y-auto'
-          )}
+          className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 border-none p-0 leading-relaxed max-h-40 overflow-y-auto"
           style={{ height: 'auto' }}
         />
         {errors.message && (
-          <p className="mt-1 text-xs text-red-400">{errors.message.message}</p>
+          <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>
         )}
       </div>
 
@@ -128,24 +120,34 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
             className={cn(
               'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors',
               isInternal
-                ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
-                : 'bg-gray-50 border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300'
+                ? 'bg-primary/10 border-primary/30 text-primary'
+                : 'bg-muted border-border text-muted-foreground hover:text-foreground hover:border-input'
             )}
           >
             <Shield className="h-3 w-3" />
             {isInternal ? 'Internal' : 'Mark internal'}
           </button>
         ) : (
-          <span className="text-[11px] text-gray-400 pl-1">
-            Press <kbd className="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-mono text-gray-500">Enter</kbd> to send · <kbd className="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-mono text-gray-500">Shift+Enter</kbd> for new line
+          <span className="text-[11px] text-muted-foreground pl-1">
+            Press{' '}
+            <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground">
+              Enter
+            </kbd>{' '}
+            to send ·{' '}
+            <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground">
+              Shift+Enter
+            </kbd>{' '}
+            for new line
           </span>
         )}
 
         <div className="flex items-center gap-2">
           {isAdmin && (
-            <span className="text-[11px] text-gray-400 hidden sm:inline">
-              <kbd className="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-mono text-gray-500">Enter</kbd> send ·{' '}
-              <kbd className="rounded bg-gray-100 px-1 py-0.5 text-[10px] font-mono text-gray-500">⇧ Enter</kbd> newline
+            <span className="text-[11px] text-muted-foreground hidden sm:inline">
+              <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground">Enter</kbd>{' '}
+              send ·{' '}
+              <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground">⇧ Enter</kbd>{' '}
+              newline
             </span>
           )}
 
@@ -156,10 +158,8 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-full transition-all',
               messageValue?.trim() && !isLoading
-                ? isInternal
-                  ? 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm'
-                  : 'bg-gray-800 hover:bg-gray-900 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
           >
             {isLoading ? (
