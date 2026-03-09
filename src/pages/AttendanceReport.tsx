@@ -606,7 +606,7 @@ function CourseCard({
             key={e.exam_id}
             className={`text-xs px-2 py-0.5 rounded-full border ${EXAM_STATUS_COLOR[e.status] ?? "bg-gray-100 text-gray-700"}`}
           >
-            {e.group} · {fmtDate(e.date)}
+            {e.group}
           </span>
         ))}
       </div>
