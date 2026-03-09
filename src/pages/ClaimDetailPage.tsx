@@ -99,7 +99,7 @@ export const ClaimDetailPage: React.FC = () => {
   return (
     <div className="h-full flex flex-col w-full">
       {/* Fixed header */}
-      <div className="flex-shrink-0 bg-background border-b sticky top-12 z-10 px-4 py-3 w-full">
+      <div className="flex-shrink-0 bg-background border-b px-4 py-3 w-full">
         <div className="flex items-center gap-3 flex-wrap max-w-7xl mx-auto">
           <button
             onClick={() => navigate(-1)}
@@ -219,7 +219,7 @@ export const ClaimDetailPage: React.FC = () => {
 
         {/* Fixed response form at bottom */}
         <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="w-full px-4 py-4">
             <ResponseForm
               onSubmit={handleAddResponse}
               isLoading={addResponse.isPending}
