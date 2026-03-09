@@ -263,9 +263,7 @@ export const ClaimDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-      {/* Responses list */}
-      <div className="w-full">
+         <div className="w-full">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-semibold text-foreground">Responses</h2>
           <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
@@ -274,6 +272,9 @@ export const ClaimDetailPage: React.FC = () => {
         </div>
         <ResponsesList responses={responses} isAdmin={isAdmin} />
       </div>
+      </div>
+      {/* Responses list */}
+     
 
       {/* ── Mobile status actions ── */}
       {isAdmin && (
