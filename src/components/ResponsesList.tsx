@@ -1,5 +1,5 @@
 // src/components/claims/ResponsesList.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
@@ -16,7 +16,8 @@ import {
   Search,
   MessageSquare,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  ArrowDown
 } from 'lucide-react';
 import { ScrollArea } from './scroll-area';
 import { Input } from './ui/input';
@@ -27,6 +28,7 @@ interface ResponsesListProps {
   isAdmin?: boolean;
   onResponseClick?: (response: ClaimResponse) => void;
   highlightKeywords?: string[];
+  autoScroll?: boolean; // New prop to enable/disable auto-scroll
 }
 
 type SortOption = 'newest' | 'oldest' | 'role';
@@ -36,13 +38,20 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
   responses, 
   isAdmin = false,
   onResponseClick,
-  highlightKeywords = []
+  highlightKeywords = [],
+  autoScroll = true // Default to true for chat-like behavior
 }) => {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedResponses, setExpandedResponses] = useState<Set<number>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  
+  // Refs for scroll handling
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevResponsesLengthRef = useRef(responses.length);
 
   const visibleResponses = useMemo(() => {
     let filtered = isAdmin 
@@ -77,6 +86,53 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
 
     return sorted;
   }, [responses, isAdmin, filterBy, searchQuery, sortBy]);
+
+  // Auto-scroll to bottom when new responses arrive
+  useEffect(() => {
+    if (!autoScroll) return;
+
+    // Check if a new response was added
+    const hasNewResponse = responses.length > prevResponsesLengthRef.current;
+    
+    if (hasNewResponse && sortBy === 'newest' && !searchQuery) {
+      // Only auto-scroll if we're showing newest first and not searching
+      scrollToBottom('smooth');
+    }
+    
+    // Update the ref
+    prevResponsesLengthRef.current = responses.length;
+  }, [responses.length, autoScroll, sortBy, searchQuery]);
+
+  // Scroll to bottom when visibleResponses changes (due to filter/sort changes)
+  useEffect(() => {
+    if (autoScroll && sortBy === 'newest' && !searchQuery && filterBy === 'all') {
+      scrollToBottom('auto');
+    }
+  }, [visibleResponses.length, sortBy, searchQuery, filterBy, autoScroll]);
+
+  // Check if user has scrolled up to show the scroll button
+  useEffect(() => {
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollArea;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+    };
+
+    scrollArea.addEventListener('scroll', handleScroll);
+    return () => scrollArea.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior, 
+        block: 'end' 
+      });
+    }
+  };
 
   const stats = useMemo(() => ({
     total: responses.length,
@@ -117,7 +173,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
       'supervisor': 'bg-purple-100 text-purple-800 border-purple-300',
       'employee': 'bg-green-100 text-green-800 border-green-300',
     };
-    return roleColors[role.toLowerCase()] || 'bg-gray-100 text-gray-800 border-gray-300';
+    return roleColors[role.toLowerCase()] || 'bg-muted text-muted-foreground border-border';
   };
 
   // Theme-based bubble colors
@@ -126,10 +182,10 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
     
     // Using theme colors consistently
     const roleMap: Record<string, string> = {
-      'admin':      'bg-primary-50 border border-primary-200',      // Primary theme color
-      'manager':    'bg-secondary-50 border border-secondary-200',  // Secondary theme color
-      'supervisor': 'bg-accent-50 border border-accent-200',        // Accent theme color
-      'employee':   'bg-muted-50 border border-muted-200',          // Muted theme color
+      'admin':      'bg-primary-50 border border-primary-200',
+      'manager':    'bg-secondary-50 border border-secondary-200',
+      'supervisor': 'bg-accent-50 border border-accent-200',
+      'employee':   'bg-muted border border-border',
     };
     return roleMap[role?.toLowerCase()] || 'bg-background border border-border';
   };
@@ -147,7 +203,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 relative">
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-wrap">
@@ -242,117 +298,144 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
           <p className="text-xs">Try adjusting your search or filters</p>
         </div>
       ) : (
-        /* ── Chat thread - All messages on same side ── */
-        <ScrollArea className="max-h-[60vh] overflow-y-auto pr-1">
-          <div className="flex flex-col gap-5 py-1">
-            {visibleResponses.map((response, index) => {
-              const isExpanded = expandedResponses.has(response.id);
-              const responseText = response?.response_text || response?.message || '';
-              const shouldTruncate = responseText.length > 200;
-              const displayText = isExpanded || !shouldTruncate 
-                ? responseText 
-                : responseText.slice(0, 200) + '…';
+        /* ── Chat thread with scroll handling ── */
+        <div className="relative">
+          <ScrollArea 
+            ref={scrollAreaRef}
+            className="max-h-[60vh] overflow-y-auto pr-1 rounded-lg"
+          >
+            <div className="flex flex-col gap-5 py-4 px-2">
+              {visibleResponses.map((response, index) => {
+                const isExpanded = expandedResponses.has(response.id);
+                const responseText = response?.response_text || response?.message || '';
+                const shouldTruncate = responseText.length > 200;
+                const displayText = isExpanded || !shouldTruncate 
+                  ? responseText 
+                  : responseText.slice(0, 200) + '…';
 
-              const firstName = response.responder?.first_name || '';
-              const lastName  = response.responder?.last_name  || 'Unknown';
-              const fullName  = `${firstName} ${lastName}`.trim();
-              const initials  = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-              const role      = response.responder?.role || 'user';
+                const firstName = response.responder?.first_name || '';
+                const lastName  = response.responder?.last_name  || 'Unknown';
+                const fullName  = `${firstName} ${lastName}`.trim();
+                const initials  = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+                const role      = response.responder?.role || 'user';
 
-              return (
-                <div
-                  key={response.id}
-                  className={cn(
-                    'flex gap-3 items-start group',
-                    onResponseClick && 'cursor-pointer hover:opacity-80 transition-opacity'
-                  )}
-                  onClick={() => onResponseClick?.(response)}
-                >
-                  {/* Avatar - Always on left */}
-                  <div className="relative flex-shrink-0">
-                    <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
-                      <AvatarImage src={response.responder?.avatar} />
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs font-bold">
-                        {initials || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    {/* online dot */}
-                    <span className="absolute -bottom-0.5 -right-0.5 block h-2.5 w-2.5 rounded-full bg-success ring-2 ring-background" />
-                  </div>
-
-                  {/* Message content - All on right side */}
-                  <div className="flex flex-col gap-1 flex-1">
-                    {/* Name and badges row */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-semibold text-foreground">{fullName || 'Unknown User'}</span>
-                      
-                      <Badge
-                        variant="outline"
-                        className={cn('text-[10px] font-medium py-0 px-1.5 h-4', getRoleBadgeColor(role))}
-                      >
-                        {role}
-                      </Badge>
-
-                      {response.is_internal && (
-                        <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-indigo-300 text-indigo-600 bg-indigo-50">
-                          <Shield className="h-2.5 w-2.5 mr-0.5" />
-                          Internal
-                        </Badge>
-                      )}
-
-                      {index === 0 && (
-                        <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-emerald-300 text-emerald-600 bg-emerald-50">
-                          Latest
-                        </Badge>
-                      )}
+                return (
+                  <div
+                    key={response.id}
+                    className={cn(
+                      'flex gap-3 items-start group animate-in fade-in slide-in-from-bottom-2 duration-300',
+                      onResponseClick && 'cursor-pointer hover:opacity-80 transition-opacity'
+                    )}
+                    onClick={() => onResponseClick?.(response)}
+                  >
+                    {/* Avatar - Always on left */}
+                    <div className="relative flex-shrink-0">
+                      <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
+                        <AvatarImage src={response.responder?.avatar} />
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xs font-bold">
+                          {initials || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      {/* online dot */}
+                      <span className="absolute -bottom-0.5 -right-0.5 block h-2.5 w-2.5 rounded-full bg-success ring-2 ring-background" />
                     </div>
 
-                    {/* Message bubble - All on same side with consistent styling */}
-                    <div
-                      className={cn(
-                        'rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm transition-shadow group-hover:shadow-md max-w-[85%] md:max-w-[75%]',
-                        getBubbleStyle(role, !!response.is_internal)
-                      )}
-                    >
-                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                        {highlightText(displayText)}
-                      </p>
-
-                      {shouldTruncate && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleExpanded(response.id);
-                          }}
-                          className="mt-2 flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    {/* Message content - All on right side */}
+                    <div className="flex flex-col gap-1 flex-1">
+                      {/* Name and badges row */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-semibold text-foreground">{fullName || 'Unknown User'}</span>
+                        
+                        <Badge
+                          variant="outline"
+                          className={cn('text-[10px] font-medium py-0 px-1.5 h-4', getRoleBadgeColor(role))}
                         >
-                          {isExpanded ? (
-                            <><ChevronUp className="h-3 w-3" /> Show less</>
-                          ) : (
-                            <><ChevronDown className="h-3 w-3" /> Show more</>
-                          )}
-                        </button>
-                      )}
-                    </div>
+                          {role}
+                        </Badge>
 
-                    {/* Timestamp */}
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {response.responded_at
-                        ? format(new Date(response.responded_at), 'MMM d, yyyy')
-                        : 'Unknown date'}
-                      <span>·</span>
-                      <Clock className="h-3 w-3" />
-                      {response.responded_at
-                        ? formatDistanceToNow(new Date(response.responded_at), { addSuffix: true })
-                        : 'Unknown time'}
+                        {response.is_internal && (
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-indigo-300 text-indigo-600 bg-indigo-50">
+                            <Shield className="h-2.5 w-2.5 mr-0.5" />
+                            Internal
+                          </Badge>
+                        )}
+
+                        {index === 0 && sortBy === 'newest' && (
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-emerald-300 text-emerald-600 bg-emerald-50">
+                            Latest
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Message bubble */}
+                      <div
+                        className={cn(
+                          'rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm transition-shadow group-hover:shadow-md max-w-[85%] md:max-w-[75%]',
+                          getBubbleStyle(role, !!response.is_internal)
+                        )}
+                      >
+                        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                          {highlightText(displayText)}
+                        </p>
+
+                        {shouldTruncate && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleExpanded(response.id);
+                            }}
+                            className="mt-2 flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                          >
+                            {isExpanded ? (
+                              <><ChevronUp className="h-3 w-3" /> Show less</>
+                            ) : (
+                              <><ChevronDown className="h-3 w-3" /> Show more</>
+                            )}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Timestamp */}
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {response.responded_at
+                          ? format(new Date(response.responded_at), 'MMM d, yyyy')
+                          : 'Unknown date'}
+                        <span>·</span>
+                        <Clock className="h-3 w-3" />
+                        {response.responded_at
+                          ? formatDistanceToNow(new Date(response.responded_at), { addSuffix: true })
+                          : 'Unknown time'}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+                );
+              })}
+              {/* Invisible element to scroll to */}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+
+          {/* Scroll to bottom button */}
+          {showScrollButton && (
+            <Button
+              onClick={() => scrollToBottom('smooth')}
+              className="absolute bottom-4 right-6 h-8 w-8 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
+              size="icon"
+            >
+              <ArrowDown className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* New message indicator (optional) */}
+      {autoScroll && responses.length > prevResponsesLengthRef.current && (
+        <div className="absolute top-20 right-4 animate-bounce">
+          <Badge className="bg-primary text-primary-foreground">
+            New message
+          </Badge>
+        </div>
       )}
     </div>
   );
