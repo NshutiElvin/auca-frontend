@@ -1201,10 +1201,7 @@ export function AttendanceReport() {
                 <h2 className="font-bold text-lg">
                   {selectedCourse.course_code} – {selectedCourse.course_title}
                 </h2>
-                <p className="text-xs text-muted-foreground">
-                  {selectedCourse.exams.length} exam
-                  {selectedCourse.exams.length !== 1 ? "s" : ""}
-                </p>
+               
               </div>
             </div>
 
