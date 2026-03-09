@@ -1,7 +1,12 @@
 // src/pages/ClaimDetailPage.tsx
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
@@ -12,8 +17,16 @@ import {
   useUpdateClaim,
 } from "../hooks/useClaims";
 import {
-  ArrowLeft, Clock, FileText, Calendar,
-  XCircle, CheckCircle, MapPin, Hash, User, Building2,
+  ArrowLeft,
+  Clock,
+  FileText,
+  Calendar,
+  XCircle,
+  CheckCircle,
+  MapPin,
+  Hash,
+  User,
+  Building2,
 } from "lucide-react";
 import { format } from "date-fns";
 import useUser from "../hooks/useUser";
@@ -39,11 +52,17 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => (
   </div>
 );
 
-const STATUS_CONFIG: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-  pending:   { variant: "secondary",   label: "Pending"   },
-  in_review: { variant: "default",     label: "In Review" },
-  resolved:  { variant: "outline",     label: "Resolved"  },
-  rejected:  { variant: "destructive", label: "Rejected"  },
+const STATUS_CONFIG: Record<
+  string,
+  {
+    variant: "default" | "secondary" | "destructive" | "outline";
+    label: string;
+  }
+> = {
+  pending: { variant: "secondary", label: "Pending" },
+  in_review: { variant: "default", label: "In Review" },
+  resolved: { variant: "outline", label: "Resolved" },
+  rejected: { variant: "destructive", label: "Rejected" },
 };
 
 export const ClaimDetailPage: React.FC = () => {
@@ -51,7 +70,9 @@ export const ClaimDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const user = useUser();
   const { data: claim, isLoading } = useClaim(Number(id));
-  const { data: responses = [], refetch: refetchResponses } = useClaimResponses(Number(id));
+  const { data: responses = [], refetch: refetchResponses } = useClaimResponses(
+    Number(id),
+  );
   const { setToastMessage } = useToast();
   const addResponse = useAddResponse();
   const updateClaimStatus = useUpdateClaim();
@@ -66,7 +87,10 @@ export const ClaimDetailPage: React.FC = () => {
     updateClaimStatus.mutateAsync({ id: Number(id), status });
   };
 
-  const handleAddResponse = async (data: { message: string; is_internal?: boolean }) => {
+  const handleAddResponse = async (data: {
+    message: string;
+    is_internal?: boolean;
+  }) => {
     if (!id) return;
     await addResponse.mutateAsync({ claimId: Number(id), ...data });
     await refetchResponses();
@@ -87,23 +111,28 @@ export const ClaimDetailPage: React.FC = () => {
         <p className="text-sm text-muted-foreground mt-1">
           This claim may have been removed or doesn't exist.
         </p>
-        <Button onClick={() => navigate(-1)} variant="outline" className="mt-5 gap-2">
+        <Button
+          onClick={() => navigate(-1)}
+          variant="outline"
+          className="mt-5 gap-2"
+        >
           <ArrowLeft className="h-4 w-4" /> Go Back
         </Button>
       </div>
     );
   }
 
-  const statusCfg = STATUS_CONFIG[claim.status] ?? { variant: "outline" as const, label: claim.status };
+  const statusCfg = STATUS_CONFIG[claim.status] ?? {
+    variant: "outline" as const,
+    label: claim.status,
+  };
 
   return (
     // Outer shell: fill entire viewport height, no overflow
-    <div className="h-[94vh] flex flex-col w-full overflow-hidden">
-
+    <div className="h-[91vh] flex flex-col w-full overflow-hidden">
       {/* ── Scrollable body ── */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-5">
-
           {/* Inline page header (replaces the fixed header) */}
           <div className="flex items-center gap-3 flex-wrap">
             <button
@@ -124,7 +153,6 @@ export const ClaimDetailPage: React.FC = () => {
 
           {/* Two-column layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
             {/* ── Left / main column ── */}
             <div className="lg:col-span-2 space-y-5">
               <Card>
@@ -137,7 +165,8 @@ export const ClaimDetailPage: React.FC = () => {
                     </span>
                     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      {claim.submitted_at && format(new Date(claim.submitted_at), "PP")}
+                      {claim.submitted_at &&
+                        format(new Date(claim.submitted_at), "PP")}
                     </span>
                   </div>
 
@@ -155,28 +184,46 @@ export const ClaimDetailPage: React.FC = () => {
 
                   {/* Info grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <InfoRow icon={<User className="h-3.5 w-3.5" />} label="Student"
-                      value={claim.student_name || `${claim.student.user.first_name} ${claim.student.user.last_name}`} />
-                    <InfoRow icon={<Hash className="h-3.5 w-3.5" />} label="Reg Number" value={claim.student.reg_no} />
-                    <InfoRow icon={<FileText className="h-3.5 w-3.5" />} label="Claim Type" value={claim.claim_type} />
-                    <InfoRow icon={<Building2 className="h-3.5 w-3.5" />} label="Department" value={claim.student.department.name} />
-                    <InfoRow icon={<MapPin className="h-3.5 w-3.5" />} label="Campus" value={claim.student.department.location.name} />
-                    <InfoRow icon={<Clock className="h-3.5 w-3.5" />} label="Status"
-                      value={<span className="capitalize">{claim.status.replace("_", " ")}</span>} />
+                    <InfoRow
+                      icon={<User className="h-3.5 w-3.5" />}
+                      label="Student"
+                      value={
+                        claim.student_name ||
+                        `${claim.student.user.first_name} ${claim.student.user.last_name}`
+                      }
+                    />
+                    <InfoRow
+                      icon={<Hash className="h-3.5 w-3.5" />}
+                      label="Reg Number"
+                      value={claim.student.reg_no}
+                    />
+                    <InfoRow
+                      icon={<FileText className="h-3.5 w-3.5" />}
+                      label="Claim Type"
+                      value={claim.claim_type}
+                    />
+                    <InfoRow
+                      icon={<Building2 className="h-3.5 w-3.5" />}
+                      label="Department"
+                      value={claim.student.department.name}
+                    />
+                    <InfoRow
+                      icon={<MapPin className="h-3.5 w-3.5" />}
+                      label="Campus"
+                      value={claim.student.department.location.name}
+                    />
+                    <InfoRow
+                      icon={<Clock className="h-3.5 w-3.5" />}
+                      label="Status"
+                      value={
+                        <span className="capitalize">
+                          {claim.status.replace("_", " ")}
+                        </span>
+                      }
+                    />
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Responses list */}
-              <div className="lg:col-span-2">
-                <div className="flex items-center gap-2 mb-3">
-                  <h2 className="text-sm font-semibold text-foreground">Responses</h2>
-                  <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-                    {responses.length}
-                  </span>
-                </div>
-                <ResponsesList responses={responses} isAdmin={isAdmin} />
-              </div>
             </div>
 
             {/* ── Right / sidebar column (desktop only) ── */}
@@ -216,6 +263,16 @@ export const ClaimDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+      {/* Responses list */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-semibold text-foreground">Responses</h2>
+          <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+            {responses.length}
+          </span>
+        </div>
+        <ResponsesList responses={responses} isAdmin={isAdmin} />
       </div>
 
       {/* ── Mobile status actions ── */}
@@ -258,12 +315,12 @@ export const ClaimDetailPage: React.FC = () => {
           />
           {isClosed && (
             <p className="text-xs text-center text-muted-foreground mt-2">
-              This claim is {claim.status.replace("_", " ")} — responses are disabled.
+              This claim is {claim.status.replace("_", " ")} — responses are
+              disabled.
             </p>
           )}
         </div>
       </div>
-
     </div>
   );
 };
