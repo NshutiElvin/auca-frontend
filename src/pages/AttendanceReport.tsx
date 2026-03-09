@@ -1054,7 +1054,7 @@ export function AttendanceReport() {
             Monitor exam attendance and cheating incidents
           </p>
         </div>
-        <div className="sm:ml-auto flex items-center gap-2">
+        <div className="sm:ml-auto flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
