@@ -152,8 +152,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
   const isMine = (response: ClaimResponse) => {
     if (!currentUser) return false;
     return (
-      response.responder?.id === currentUser.user_id ||
-      response.responder?.id === currentUser.user_id
+      response.responder?.id == currentUser.user_id  
     );
   };
 
