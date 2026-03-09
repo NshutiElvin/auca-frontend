@@ -1243,14 +1243,14 @@ export function AttendanceReport() {
                     filter: "cheated" as const,
                   },
                 ].map((c) => (
-                  <Button
+                  <div
                     key={c.label}
-                    className={`rounded-lg border px-4 py-3 text-center ${c.color}`}
+                    className={`rounded-lg border px-4 py-3 text-center ${c.color} cursor-pointer`}
                     onClick={() => setAttendanceFilter(c.filter)}
                   >
                     <p className="text-xl font-bold">{c.val}</p>
                     <p className="text-xs font-medium">{c.label}</p>
-                  </Button>
+                  </div>
                 ))}
               </div>
             )}
@@ -1265,15 +1265,7 @@ export function AttendanceReport() {
                   className="pl-9"
                 />
               </div>
-              <Button
-                variant={filterCheated ? "default" : "outline"}
-                size="sm"
-                className="gap-1"
-                onClick={() => setFilterCheated((v) => !v)}
-              >
-                <AlertTriangle className="h-4 w-4" />
-                {filterCheated ? "All Students" : "Cheating Only"}
-              </Button>
+              
             </div>
 
             {loadingAttendance ? (
