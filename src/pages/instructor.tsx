@@ -152,7 +152,9 @@ export default function InstructorMainPage() {
       navigate("/login");
     }
   }, [auth]);
-
+  useEffect(() => {
+    setUnreadCount(notifications.filter((n) => n.is_read == false).length);
+  }, [notifications]);
   return (
     <>
       <AppSidebar data={data} />

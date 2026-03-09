@@ -1,5 +1,6 @@
-import { createContext, useState, useCallback } from "react";
+import { createContext, useState, useCallback, useEffect, useRef } from "react";
 import type { PropsWithChildren } from "react";
+import { useSound, unlockAudio } from "../hooks/useSound"
 
 export interface NotificationData {
   id: number;
@@ -24,18 +25,36 @@ const NotificationContext = createContext<NotificationContextType>({
 
 export const NotificationProvider = ({ children }: PropsWithChildren<{}>) => {
   const [notifications, setNotificationsData] = useState<NotificationData[]>([]);
- 
+  const prevIdsRef = useRef<Set<number>>(new Set());
+
+  const { play: playNotificationSound } = useSound("/sounds/notify.wav", { volume: 0.8 });
+
+  // Unlock AudioContext on first user gesture
+  useEffect(() => {
+    unlockAudio();
+  }, []);
+
+  // Play sound when new notifications arrive
+  useEffect(() => {
+    const prevIds = prevIdsRef.current;
+    const hasNewNotification = notifications.some((n) => !prevIds.has(n.id));
+
+    if (hasNewNotification) {
+      playNotificationSound();
+    }
+
+    // Update tracked IDs
+    prevIdsRef.current = new Set(notifications.map((n) => n.id));
+  }, [notifications, playNotificationSound]);
+
   const clearNotifications = useCallback(() => {
     setNotificationsData([]);
+    prevIdsRef.current = new Set();
   }, []);
 
   const setNotifications = useCallback(
     (data: NotificationData[] | ((prev: NotificationData[]) => NotificationData[])) => {
-      if (typeof data === 'function') {
-        setNotificationsData(data);
-      } else {
-        setNotificationsData(data);
-      }
+      setNotificationsData(data);
     },
     []
   );
