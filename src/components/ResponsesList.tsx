@@ -302,10 +302,10 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
         <div className="relative">
           <ScrollArea 
             ref={scrollAreaRef}
-            className="max-h-[60vh] overflow-y-auto pr-1 rounded-lg"
+            className="max-h-[50vh] overflow-y-auto pr-1 rounded-lg"
           >
             <div className="flex flex-col gap-5 py-4 px-2">
-              {visibleResponses.map((response, index) => {
+              {visibleResponses.reverse().map((response, index) => {
                 const isExpanded = expandedResponses.has(response.id);
                 const responseText = response?.response_text || response?.message || '';
                 const shouldTruncate = responseText.length > 200;

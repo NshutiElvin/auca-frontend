@@ -97,131 +97,172 @@ export const ClaimDetailPage: React.FC = () => {
   const statusCfg = STATUS_CONFIG[claim.status] ?? { variant: "outline" as const, label: claim.status };
 
   return (
-    <div className="w-full mx-auto space-y-5 px-1">
-      {/* Top bar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
-        <Separator orientation="vertical" className="h-5" />
-        <h1 className="text-xl font-bold text-foreground flex-1 truncate">
-          {claim.subject}
-        </h1>
-        <Badge variant={statusCfg.variant} className="rounded-full px-3">
-          {statusCfg.label}
-        </Badge>
+    <div className="h-full flex flex-col">
+      {/* Fixed header */}
+      <div className="flex-shrink-0 bg-background border-b sticky top-20 z-10 px-4 py-3">
+        <div className="flex items-center gap-3 flex-wrap max-w-7xl mx-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+          <Separator orientation="vertical" className="h-5" />
+          <h1 className="text-xl font-bold text-foreground flex-1 truncate">
+            {claim.subject}
+          </h1>
+          <Badge variant={statusCfg.variant} className="rounded-full px-3">
+            {statusCfg.label}
+          </Badge>
+        </div>
       </div>
 
-      {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* Scrollable content with fixed form at bottom */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Main content area - scrollable */}
+        <div className="flex-1 overflow-y-auto px-4 py-5">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* Left column - full width on mobile */}
+              <div className="lg:col-span-2 space-y-5">
+                <Card>
+                  <CardContent className="pt-5 space-y-5">
+                    {/* Meta pills */}
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
+                        <FileText className="h-3.5 w-3.5" />
+                        {claim.claim_type}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {claim.submitted_at && format(new Date(claim.submitted_at), "PP")}
+                      </span>
+                    </div>
 
-        {/* Left */}
-        <div className="lg:col-span-2 space-y-5">
-          <Card>
-            <CardContent className="pt-5 space-y-5">
-              {/* Meta pills */}
-              <div className="flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
-                  <FileText className="h-3.5 w-3.5" />
-                  {claim.claim_type}
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  {claim.submitted_at && format(new Date(claim.submitted_at), "PP")}
-                </span>
+                    {/* Description */}
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-1.5">
+                        Description
+                      </p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                        {claim.description}
+                      </p>
+                    </div>
+
+                    <Separator />
+
+                    {/* Info grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      <InfoRow icon={<User className="h-3.5 w-3.5" />} label="Student"
+                        value={claim.student_name || `${claim.student.user.first_name} ${claim.student.user.last_name}`} />
+                      <InfoRow icon={<Hash className="h-3.5 w-3.5" />} label="Reg Number" value={claim.student.reg_no} />
+                      <InfoRow icon={<FileText className="h-3.5 w-3.5" />} label="Claim Type" value={claim.claim_type} />
+                      <InfoRow icon={<Building2 className="h-3.5 w-3.5" />} label="Department" value={claim.student.department.name} />
+                      <InfoRow icon={<MapPin className="h-3.5 w-3.5" />} label="Campus" value={claim.student.department.location.name} />
+                      <InfoRow icon={<Clock className="h-3.5 w-3.5" />} label="Status"
+                        value={<span className="capitalize">{claim.status.replace("_", " ")}</span>} />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Responses */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <h2 className="text-sm font-semibold text-foreground">Responses</h2>
+                    <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+                      {responses.length}
+                    </span>
+                  </div>
+                  <ResponsesList responses={responses} isAdmin={isAdmin} />
+                </div>
               </div>
 
-              {/* Description */}
-              <div>
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-1.5">
-                  Description
-                </p>
-                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                  {claim.description}
-                </p>
+              {/* Right column - hidden on mobile, visible on desktop */}
+              <div className="hidden lg:block space-y-4">
+                {isAdmin && (
+                  <Card>
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Update Status
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-4 space-y-1">
+                      <button
+                        onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
+                        className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                      >
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        Mark as In Review
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(ClaimStatus.RESOLVED)}
+                        className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                      >
+                        <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                        Mark as Resolved
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(ClaimStatus.REJECTED)}
+                        className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors text-left"
+                      >
+                        <XCircle className="h-4 w-4 text-destructive" />
+                        Mark as Rejected
+                      </button>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
-
-              <Separator />
-
-              {/* Info grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <InfoRow icon={<User className="h-3.5 w-3.5" />} label="Student"
-                  value={claim.student_name || `${claim.student.user.first_name} ${claim.student.user.last_name}`} />
-                <InfoRow icon={<Hash className="h-3.5 w-3.5" />} label="Reg Number" value={claim.student.reg_no} />
-                <InfoRow icon={<FileText className="h-3.5 w-3.5" />} label="Claim Type" value={claim.claim_type} />
-                <InfoRow icon={<Building2 className="h-3.5 w-3.5" />} label="Department" value={claim.student.department.name} />
-                <InfoRow icon={<MapPin className="h-3.5 w-3.5" />} label="Campus" value={claim.student.department.location.name} />
-                <InfoRow icon={<Clock className="h-3.5 w-3.5" />} label="Status"
-                  value={<span className="capitalize">{claim.status.replace("_", " ")}</span>} />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Responses */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-sm font-semibold text-foreground">Responses</h2>
-              <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-                {responses.length}
-              </span>
             </div>
-            <ResponsesList responses={responses} isAdmin={isAdmin} />
           </div>
         </div>
 
-        {/* Right */}
-        <div className="space-y-4">
-          <ResponseForm
-            onSubmit={handleAddResponse}
-            isLoading={addResponse.isPending}
-            isAdmin={isAdmin}
-            isDisabled={isClosed}
-          />
-
-          {isClosed && (
-            <p className="text-xs text-center text-muted-foreground">
-              This claim is {claim.status.replace("_", " ")} — responses are disabled.
-            </p>
-          )}
-
-          {isAdmin && (
-            <Card>
-              <CardHeader className="pb-2 pt-4 px-4">
-                <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                  Update Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-4 space-y-1">
-                <button
-                  onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                >
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  Mark as In Review
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus(ClaimStatus.RESOLVED)}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                >
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  Mark as Resolved
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus(ClaimStatus.REJECTED)}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors text-left"
-                >
-                  <XCircle className="h-4 w-4 text-destructive" />
-                  Mark as Rejected
-                </button>
-              </CardContent>
-            </Card>
-          )}
+        {/* Fixed response form at bottom */}
+        <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <ResponseForm
+              onSubmit={handleAddResponse}
+              isLoading={addResponse.isPending}
+              isAdmin={isAdmin}
+              isDisabled={isClosed}
+            />
+            {isClosed && (
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                This claim is {claim.status.replace("_", " ")} — responses are disabled.
+              </p>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Mobile status actions - visible only on mobile */}
+      {isAdmin && (
+        <div className="lg:hidden flex-shrink-0 border-t bg-background px-4 py-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs bg-accent text-accent-foreground whitespace-nowrap"
+            >
+              <Clock className="h-3.5 w-3.5" />
+              In Review
+            </button>
+            <button
+              onClick={() => handleUpdateStatus(ClaimStatus.RESOLVED)}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs bg-accent text-accent-foreground whitespace-nowrap"
+            >
+              <CheckCircle className="h-3.5 w-3.5" />
+              Resolved
+            </button>
+            <button
+              onClick={() => handleUpdateStatus(ClaimStatus.REJECTED)}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs bg-destructive/10 text-destructive whitespace-nowrap"
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              Rejected
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
