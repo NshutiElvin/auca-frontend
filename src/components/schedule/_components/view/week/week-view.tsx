@@ -534,17 +534,7 @@ export default function WeeklyView({
                                   </div>
                                 ) : (
                                   <div className="text-center py-10 text-muted-foreground">
-                                    <p>No events scheduled for this day</p>
-                                    <Button 
-                                      variant="outline" 
-                                      className="mt-4"
-                                      onClick={() => {
-                                        setOpen(null);
-                                        handleAddEventWeek(idx, detailedHour || "12:00 PM");
-                                      }}
-                                    >
-                                      Add Event
-                                    </Button>
+                                    
                                   </div>
                                 )}
                               </div>
@@ -741,9 +731,7 @@ export default function WeeklyView({
                         key={`day-${dayIndex}-hour-${hourIndex}`}
                         className="col-span-1 border-default-200 h-[64px] relative transition duration-300 cursor-pointer border-r border-b text-center text-sm text-muted-foreground"
                       >
-                        <div className="absolute bg-accent z-40 flex items-center justify-center text-xs opacity-0 transition duration-250 hover:opacity-100 w-full h-full">
-                          Add Event
-                        </div>
+                        
                       </div>
                     ))}
                   </div>

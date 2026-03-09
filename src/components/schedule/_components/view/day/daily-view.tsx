@@ -403,9 +403,7 @@ export default function DailyView({
                     key={`hour-${index}`}
                     className="cursor-pointer w-full relative border-b  hover:bg-default-200/50  transition duration-300  p-4 h-[64px] text-left text-sm text-muted-foreground border-default-200"
                   >
-                    <div className="absolute bg-accent flex items-center justify-center text-xs opacity-0 transition left-0 top-0 duration-250 hover:opacity-100 w-full h-full">
-                      Add Event
-                    </div>
+                   
                   </div>
                 ))}
                 <AnimatePresence initial={false}>
