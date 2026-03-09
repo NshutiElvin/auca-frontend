@@ -758,6 +758,7 @@ export function AttendanceReport() {
     React.useState<CourseSummary | null>(null);
   const [courseAttendance, setCourseAttendance] =
     React.useState<CourseAttendanceData | null>(null);
+
   const [loadingAttendance, setLoadingAttendance] = React.useState(false);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [filterCheated, setFilterCheated] = React.useState(false);
@@ -772,6 +773,24 @@ export function AttendanceReport() {
       })),
     );
   }, [courseAttendance]);
+
+    const[attendanceFilter, setAttendanceFilter]= React.useState<"all"| "cheated"| "signed_out" |"present" | "absent">("all");
+  const filteredAttendance= React.useMemo(()=>{
+    switch(attendanceFilter){
+      case "cheated":
+        return flatRows.filter((s) => s.cheated);
+      case "signed_out":
+        return flatRows.filter((s) => !s.signin && s.signout);
+      case "present":
+        return flatRows.filter((s) => s.signin && s.signout);
+      case "absent":
+        return flatRows.filter((s) => !s.signin && !s.cheated);
+      default:
+        return flatRows;
+    }
+
+
+  },[flatRows, attendanceFilter])
 
   const [reviewDialog, setReviewDialog] = React.useState<{
     open: boolean;
@@ -1197,35 +1216,41 @@ export function AttendanceReport() {
                     label: "Total",
                     val: courseAttendance.summary.total,
                     color: "bg-slate-100",
+                    filter: "all" as const,
                   },
                   {
                     label: "Present",
                     val: courseAttendance.summary.signed_in,
                     color: "bg-green-50 text-green-800",
+                    filter: "present" as const,
                   },
                   {
                     label: "Absent",
                     val: courseAttendance.summary.absent,
                     color: "bg-red-50 text-red-700",
+                    filter: "absent" as const,
                   },
                   {
                     label: "Signed Out",
                     val: courseAttendance.summary.signed_out,
                     color: "bg-teal-50 text-teal-700",
+                    filter: "signed_out" as const,
                   },
                   {
                     label: "Cheating",
                     val: courseAttendance.summary.cheating_reports,
                     color: "bg-amber-50 text-amber-700",
+                    filter: "cheated" as const,
                   },
                 ].map((c) => (
-                  <div
+                  <Button
                     key={c.label}
                     className={`rounded-lg border px-4 py-3 text-center ${c.color}`}
+                    onClick={() => setAttendanceFilter(c.filter)}
                   >
                     <p className="text-xl font-bold">{c.val}</p>
                     <p className="text-xs font-medium">{c.label}</p>
-                  </div>
+                  </Button>
                 ))}
               </div>
             )}
@@ -1257,7 +1282,7 @@ export function AttendanceReport() {
               </div>
             ) : courseAttendance ? (
               <FlatAttendanceTable
-                rows={flatRows}
+                rows={filteredAttendance}
                 columns={columns}
                 filterCheated={filterCheated}
                 globalFilter={globalFilter}
