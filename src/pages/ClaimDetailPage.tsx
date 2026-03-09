@@ -36,6 +36,7 @@ import { ResponseForm } from "../components/ResponseForm";
 import { ResponsesList } from "../components/ResponsesList";
 import useToast from "../hooks/useToast";
 import { ClaimStatus } from "../lib/types";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
 interface InfoRowProps {
   icon: React.ReactNode;
@@ -203,8 +204,8 @@ export const ClaimDetailPage: React.FC = () => {
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 ml-1"
             aria-label={expanded ? "Collapse details" : "Expand details"}
           >
-            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            <span className="hidden sm:inline">{expanded ? "Less" : "Details"}</span>
+             
+             <DotsHorizontalIcon/>
           </button>
         </div>
 
