@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import { AppSidebar } from "../components/app-sidebar";
 import {
   Breadcrumb,
@@ -17,25 +17,17 @@ import {
 import {
   BookOpen,
   CalendarClock,
-  CalendarDays,
-  ClipboardList,
-  FileQuestion,
+  CalendarDays, FileQuestion,
   GraduationCap,
   LogOut,
   LucideHistory,
-  LucideLayoutDashboard,
-  Settings,
-  Table2,
+  LucideLayoutDashboard, Table2,
   UploadCloud,
-  User,
-  User2Icon,
-  UserCog,
+  User, UserCog,
   Users,
   Bell,
   ChevronDown,
-  Shield,
-  Sparkles,
-  ListCheck,
+  Shield, ListCheck
 } from "lucide-react";
 
 import {
@@ -43,26 +35,27 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
+  DropdownMenuTrigger
 } from "../components/ui/dropdown-menu";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { jwtDecode } from "jwt-decode";
 import useAuth from "../hooks/useAuth";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import useToast from "../hooks/useToast";
 import { useNavigate } from "react-router-dom";
 import { DecodedToken } from "../../types";
 import { NotificationList } from "./notifications-list";
 import useNotifications from "../hooks/useNotifications";
 import { NotificationData } from "../contexts/NotificationContext";
-import LocationContext from "../contexts/LocationContext";
 import { ModeToggle } from "../components/mode-toggle";
-import { motion } from "framer-motion";
 import useUserAxios from "../hooks/useUserAxios";
-import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../components/ui/popover";
 
 const data = {
   versions: ["1.0.1"],
@@ -71,31 +64,29 @@ const data = {
       title: "Admin Portal",
       url: "#",
       items: [
-        { title: "Dashboard",        url: "dashboard",    icon: LucideLayoutDashboard },
-        { title: "Auto Timetable",   url: "schedules",    icon: CalendarClock },
-        { title: "Manual Timetable", url: "manual",       icon: CalendarDays },
-        { title: "Courses",          url: "courses",      icon: BookOpen },
-        { title: "Students Exams",   url: "allocations",  icon: Users },
-        { title: "Sitting Plan",     url: "occupancies",  icon: Table2 },
-        { title: "Recent Timetables",url: "timetables",   icon: LucideHistory },
-        { title: "Uploads",          url: "Uploads",      icon: UploadCloud },
-        { title: "Claims",           url: "claims",       icon: ListCheck },
-        { title: "Report",           url: "report",       icon: FileQuestion },
+        { title: "Dashboard", url: "dashboard", icon: LucideLayoutDashboard },
+        { title: "Auto Timetable", url: "schedules", icon: CalendarClock },
+        { title: "Manual Timetable", url: "manual", icon: CalendarDays },
+        { title: "Courses", url: "courses", icon: BookOpen },
+        { title: "Students Exams", url: "allocations", icon: Users },
+        { title: "Sitting Plan", url: "occupancies", icon: Table2 },
+        { title: "Recent Timetables", url: "timetables", icon: LucideHistory },
+        { title: "Uploads", url: "Uploads", icon: UploadCloud },
+        { title: "Claims", url: "claims", icon: ListCheck },
+        { title: "Report", url: "report", icon: FileQuestion },
       ],
     },
     {
       title: "Users",
       url: "#",
-      items: [
-        { title: "Users", url: "users", icon: UserCog },
-      ],
+      items: [{ title: "Users", url: "users", icon: UserCog }],
     },
     {
       title: "Authentication",
       url: "#",
       items: [
         { title: "Profile", url: "profile", icon: User },
-        { title: "Logout",  url: "/Logout",  icon: LogOut },
+        { title: "Logout", url: "/Logout", icon: LogOut },
       ],
     },
   ],
@@ -125,11 +116,24 @@ function getInitials(name?: string, email?: string): string {
   return "AD";
 }
 
-const ROLE_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  admin:      { label: "Admin",      color: "bg-blue-100 text-blue-800 border-blue-200",    icon: Shield },
-  instructor: { label: "Instructor", color: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: GraduationCap },
-  student:    { label: "Student",    color: "bg-violet-100 text-violet-800 border-violet-200", icon: User },
-};
+const ROLE_CONFIG: Record<string, { label: string; color: string; icon: any }> =
+  {
+    admin: {
+      label: "Admin",
+      color: "bg-blue-100 text-blue-800 border-blue-200",
+      icon: Shield,
+    },
+    instructor: {
+      label: "Instructor",
+      color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+      icon: GraduationCap,
+    },
+    student: {
+      label: "Student",
+      color: "bg-violet-100 text-violet-800 border-violet-200",
+      icon: User,
+    },
+  };
 
 export default function AdminMainPage() {
   const { parentUrl, url } = useSidebar();
@@ -139,19 +143,24 @@ export default function AdminMainPage() {
   const { setToastMessage } = useToast();
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const { notifications, setNotifications } = useNotifications();
-   const axios = useUserAxios();
+  const axios = useUserAxios();
+  const handleNotificationAction = (id: number) => {
+    setNotifications((prev: NotificationData[]) =>
+      prev.filter((n) => n.id !== id),
+    );
+  };
 
-   const markAllAsRead = async () => {
-      try {
-        await axios.post("/api/notifications/mark_all_as_read/");
-        setUnreadCount(0);
-        setNotifications(
-          notifications.map((n: NotificationData) => ({ ...n, is_read: true })),
-        );
-      } catch (error) {
-        console.error("Error marking notifications as read:", error);
-      }
-    };
+  const markAllAsRead = async () => {
+    try {
+      await axios.post("/api/notifications/mark_all_as_read/");
+      setUnreadCount(0);
+      setNotifications(
+        notifications.map((n: NotificationData) => ({ ...n, is_read: true })),
+      );
+    } catch (error) {
+      console.error("Error marking notifications as read:", error);
+    }
+  };
 
   // Current time for the header clock
   const [time, setTime] = useState(new Date());
@@ -160,7 +169,7 @@ export default function AdminMainPage() {
     return () => clearInterval(t);
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     setUnreadCount(notifications.filter((n) => n.is_read == false).length);
   }, [notifications]);
 
@@ -177,24 +186,32 @@ export default function AdminMainPage() {
     }
   }, [auth]);
 
-  const role       = decodedToken?.role?.toLowerCase() ?? "admin";
-  const roleCfg    = ROLE_CONFIG[role] ?? ROLE_CONFIG["admin"];
-  const RoleIcon   = roleCfg.icon;
-  const initials   = getInitials(decodedToken?.email.split("@")[0], decodedToken?.email);
+  const role = decodedToken?.role?.toLowerCase() ?? "admin";
+  const roleCfg = ROLE_CONFIG[role] ?? ROLE_CONFIG["admin"];
+  const RoleIcon = roleCfg.icon;
+  const initials = getInitials(
+    decodedToken?.email.split("@")[0],
+    decodedToken?.email,
+  );
   const maskedMail = maskEmail(decodedToken?.email?.toLowerCase() ?? "");
 
   const dayName = time.toLocaleDateString("en-US", { weekday: "short" });
-  const dateStr = time.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const timeStr = time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = time.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timeStr = time.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
     <>
-      <AppSidebar data={data}  variant="sidebar"/>
-      <SidebarInset >
-
+      <AppSidebar data={data} variant="sidebar" />
+      <SidebarInset>
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-0 border-b bg-background/95 backdrop-blur-sm px-3 w-full shadow-[0_1px_0_0_hsl(var(--border))]">
-
           {/* Left: trigger + breadcrumb */}
           <div className="flex items-center gap-2 min-w-0">
             <SidebarTrigger className="-ml-1 h-8 w-8 rounded-md hover:bg-muted transition-colors" />
@@ -224,7 +241,6 @@ export default function AdminMainPage() {
 
           {/* Right: clock · role badge · notifications · user menu · theme */}
           <div className="flex items-center gap-1.5">
-
             {/* Live clock — hidden on small screens */}
             <div className="hidden lg:flex flex-col items-end mr-1">
               <span className="text-[11px] font-semibold leading-none text-foreground">
@@ -235,7 +251,10 @@ export default function AdminMainPage() {
               </span>
             </div>
 
-            <Separator orientation="vertical" className="h-5 mx-1 hidden lg:block" />
+            <Separator
+              orientation="vertical"
+              className="h-5 mx-1 hidden lg:block"
+            />
 
             {/* Role badge */}
             <Badge
@@ -247,7 +266,7 @@ export default function AdminMainPage() {
             </Badge>
 
             {/* Notification bell — placeholder */}
-             {/* Notifications */}
+            {/* Notifications */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -279,7 +298,17 @@ export default function AdminMainPage() {
                     </Button>
                   )}
                 </div>
-                <NotificationList notifications={notifications} />
+                <NotificationList
+                  notifications={notifications}
+                  onDismiss={handleNotificationAction}
+                  onMarkRead={(id) =>
+                    setNotifications((prev: NotificationData[]) =>
+                      prev.map((n) =>
+                        n.id === id ? { ...n, is_read: true } : n,
+                      ),
+                    )
+                  }
+                />
               </PopoverContent>
             </Popover>
 
@@ -301,13 +330,19 @@ export default function AdminMainPage() {
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden sm:block text-xs font-semibold max-w-[100px] truncate">
-                    {decodedToken?.email?.split("@")[0] || decodedToken?.email?.split("@")[0] || "Admin"}
+                    {decodedToken?.email?.split("@")[0] ||
+                      decodedToken?.email?.split("@")[0] ||
+                      "Admin"}
                   </span>
                   <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
                 </Button>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg border" sideOffset={8}>
+              <DropdownMenuContent
+                align="end"
+                className="w-56 rounded-xl shadow-lg border"
+                sideOffset={8}
+              >
                 {/* User info header */}
                 <div className="flex items-center gap-3 px-3 py-2.5">
                   <Avatar className="h-9 w-9 border-2 border-primary/20">
@@ -343,16 +378,6 @@ export default function AdminMainPage() {
                   </Link>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/admin/settings"
-                    className="flex items-center gap-2 cursor-pointer rounded-lg mx-1 px-2"
-                  >
-                    <Settings className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem asChild>
@@ -373,7 +398,6 @@ export default function AdminMainPage() {
         <main className="flex-1 overflow-auto m-8">
           <Outlet />
         </main>
-
       </SidebarInset>
     </>
   );

@@ -160,6 +160,11 @@ export default function StudentMainPage() {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const { notifications, setNotifications } = useNotifications();
   const axios = useUserAxios();
+  const handleNotificationAction = (id: number) => {
+    setNotifications((prev: NotificationData[]) =>
+      prev.filter((n) => n.id !== id),
+    );
+  };
 
   const markAllAsRead = async () => {
     try {
@@ -196,7 +201,10 @@ export default function StudentMainPage() {
           {/* Left: Sidebar trigger + breadcrumb */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <SidebarTrigger className="-ml-1 h-8 w-8 shrink-0" />
-            <Separator orientation="vertical" className="h-4 shrink-0 opacity-50" />
+            <Separator
+              orientation="vertical"
+              className="h-4 shrink-0 opacity-50"
+            />
 
             <Breadcrumb className="min-w-0">
               <BreadcrumbList className="flex-nowrap">
@@ -263,7 +271,17 @@ export default function StudentMainPage() {
                     </Button>
                   )}
                 </div>
-                <NotificationList notifications={notifications} />
+                <NotificationList
+                  notifications={notifications}
+                  onDismiss={handleNotificationAction}
+                  onMarkRead={(id) =>
+                    setNotifications((prev: NotificationData[]) =>
+                      prev.map((n) =>
+                        n.id === id ? { ...n, is_read: true } : n,
+                      ),
+                    )
+                  }
+                />
               </PopoverContent>
             </Popover>
 
