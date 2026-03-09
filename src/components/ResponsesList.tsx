@@ -132,7 +132,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
     keywords.forEach((kw) => {
       html = html.replace(
         new RegExp(`(${kw})`, 'gi'),
-        '<mark class="bg-yellow-200 rounded px-0.5">$1</mark>',
+        '<mark class="bg-yellow-200 text-wrap rounded px-0.5">$1</mark>',
       );
     });
     return <span dangerouslySetInnerHTML={{ __html: html }} />;

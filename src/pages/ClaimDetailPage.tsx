@@ -41,13 +41,13 @@ interface InfoRowProps {
   value: React.ReactNode;
 }
 const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => (
-  <div className="flex items-start gap-2.5">
+  <div className="flex items-start gap-2">
     <span className="mt-0.5 text-muted-foreground flex-shrink-0">{icon}</span>
     <div className="min-w-0">
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium leading-none mb-0.5">
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium leading-none mb-0.5">
         {label}
       </p>
-      <p className="text-sm text-foreground font-medium truncate">{value}</p>
+      <p className="text-xs text-foreground font-medium truncate">{value}</p>
     </div>
   </div>
 );
@@ -128,43 +128,58 @@ export const ClaimDetailPage: React.FC = () => {
   };
 
   return (
-    // Outer shell: fill entire viewport height, no overflow
     <div className="h-[90vh] flex flex-col w-full overflow-hidden">
-      {/* ── Scrollable body ── */}
-      <div className="flex-1 overflow-y-auto  whitespace-nowrap scrollbar-hide">
-        <div className="p-4 space-y-5">
-          {/* Inline page header (replaces the fixed header) */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-            <Separator orientation="vertical" className="h-5" />
-            <h1 className="text-xl font-bold text-foreground flex-1 truncate">
-              {claim.subject}
-            </h1>
-            <Badge variant={statusCfg.variant} className="rounded-full px-3">
-              {statusCfg.label}
-            </Badge>
+      {/* ── Compact sticky header ── */}
+      <div className="flex-shrink-0 border-b bg-background px-4 py-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+          <Separator orientation="vertical" className="h-4 flex-shrink-0" />
+          <h1 className="text-sm font-semibold text-foreground truncate flex-1 min-w-0">
+            {claim.subject}
+          </h1>
+          <Badge
+            variant={statusCfg.variant}
+            className="rounded-full px-2.5 py-0.5 text-xs flex-shrink-0"
+          >
+            {statusCfg.label}
+          </Badge>
+          {/* Meta pills — desktop only, inline in header */}
+          <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+              <FileText className="h-3 w-3" />
+              {claim.claim_type}
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+              <Calendar className="h-3 w-3" />
+              {claim.submitted_at && format(new Date(claim.submitted_at), "PP")}
+            </span>
           </div>
+        </div>
+      </div>
 
+      {/* ── Scrollable body ── */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
+        <div className="p-4 space-y-4">
           {/* Two-column layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* ── Left / main column ── */}
-            <div className="lg:col-span-2 space-y-5">
+            <div className="lg:col-span-2">
               <Card>
-                <CardContent className="pt-5 space-y-5">
-                  {/* Meta pills */}
-                  <div className="flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
-                      <FileText className="h-3.5 w-3.5" />
+                <CardContent className="pt-4 pb-4 space-y-3">
+                  {/* Mobile-only meta pills */}
+                  <div className="flex flex-wrap gap-1.5 sm:hidden">
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+                      <FileText className="h-3 w-3" />
                       {claim.claim_type}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
-                      <Calendar className="h-3.5 w-3.5" />
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+                      <Calendar className="h-3 w-3" />
                       {claim.submitted_at &&
                         format(new Date(claim.submitted_at), "PP")}
                     </span>
@@ -172,7 +187,7 @@ export const ClaimDetailPage: React.FC = () => {
 
                   {/* Description */}
                   <div>
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-1.5">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-1">
                       Description
                     </p>
                     <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
@@ -182,8 +197,8 @@ export const ClaimDetailPage: React.FC = () => {
 
                   <Separator />
 
-                  {/* Info grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {/* Info grid — compact */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <InfoRow
                       icon={<User className="h-3.5 w-3.5" />}
                       label="Student"
@@ -226,16 +241,16 @@ export const ClaimDetailPage: React.FC = () => {
               </Card>
             </div>
 
-            {/* ── Right / sidebar column (desktop only) ── */}
-            <div className="hidden lg:block space-y-4">
+            {/* ── Right / sidebar (desktop only) ── */}
+            <div className="hidden lg:block">
               {isAdmin && (
                 <Card>
-                  <CardHeader className="pb-2 pt-4 px-4">
+                  <CardHeader className="pb-1.5 pt-3 px-4">
                     <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                       Update Status
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="px-3 pb-4 space-y-1">
+                  <CardContent className="px-3 pb-3 space-y-0.5">
                     <button
                       onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
                       className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-left"
@@ -262,24 +277,26 @@ export const ClaimDetailPage: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* ── Responses — full width, gets the most vertical room ── */}
+          <div className="w-full">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-sm font-semibold text-foreground">
+                Responses
+              </h2>
+              <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+                {responses.length}
+              </span>
+            </div>
+            <ResponsesList responses={responses} isAdmin={isAdmin} />
+          </div>
         </div>
-         <div className="w-full">
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-foreground">Responses</h2>
-          <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-            {responses.length}
-          </span>
-        </div>
-        <ResponsesList responses={responses} isAdmin={isAdmin} />
       </div>
-      </div>
-      {/* Responses list */}
-     
 
       {/* ── Mobile status actions ── */}
       {isAdmin && (
-        <div className="lg:hidden flex-shrink-0 border-t bg-background px-4 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto  whitespace-nowrap scrollbar-hide pb-1">
+        <div className="lg:hidden flex-shrink-0 border-t bg-background px-4 py-2">
+          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
             <button
               onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
               className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs bg-accent text-accent-foreground whitespace-nowrap"
@@ -305,9 +322,9 @@ export const ClaimDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* ── Response form — always pinned to bottom ── */}
+      {/* ── Response form — pinned to bottom ── */}
       <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full">
-        <div className="w-full px-4 py-4">
+        <div className="w-full px-4 py-3">
           <ResponseForm
             onSubmit={handleAddResponse}
             isLoading={addResponse.isPending}
@@ -315,7 +332,7 @@ export const ClaimDetailPage: React.FC = () => {
             isDisabled={isClosed}
           />
           {isClosed && (
-            <p className="text-xs text-center text-muted-foreground mt-2">
+            <p className="text-xs text-center text-muted-foreground mt-1.5">
               This claim is {claim.status.replace("_", " ")} — responses are
               disabled.
             </p>
