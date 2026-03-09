@@ -197,6 +197,7 @@ export const ClaimDetailPage: React.FC = () => {
             onSubmit={handleAddResponse}
             isLoading={addResponse.isPending}
             isAdmin={user?.role === "admin"}
+            isDisabled={claim.status == ClaimStatus.RESOLVED || claim.status == ClaimStatus.REJECTED}
           />
 
           {user?.role === "admin" && (

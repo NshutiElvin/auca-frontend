@@ -49,14 +49,12 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
       ? responses 
       : responses.filter(r => !r.is_internal);
 
-    // Apply filter
     if (filterBy === 'internal') {
       filtered = filtered.filter(r => r.is_internal);
     } else if (filterBy === 'external') {
       filtered = filtered.filter(r => !r.is_internal);
     }
 
-    // Apply search
     if (searchQuery) {
       filtered = filtered.filter(r => 
         r.response_text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -67,7 +65,6 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
       );
     }
 
-    // Apply sort
     const sorted = [...filtered].sort((a, b) => {
       if (sortBy === 'newest') {
         return new Date(b.responded_at || 0).getTime() - new Date(a.responded_at || 0).getTime();
@@ -107,7 +104,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
     
     keywords.forEach(keyword => {
       const regex = new RegExp(`(${keyword})`, 'gi');
-      highlighted = highlighted.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
+      highlighted = highlighted.replace(regex, '<mark class="bg-yellow-200 rounded px-0.5">$1</mark>');
     });
     
     return <span dangerouslySetInnerHTML={{ __html: highlighted }} />;
@@ -123,41 +120,53 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
     return roleColors[role.toLowerCase()] || 'bg-gray-100 text-gray-800 border-gray-300';
   };
 
+  // Generate a consistent soft color per user for their bubble
+  const getBubbleStyle = (role: string, isInternal: boolean) => {
+    if (isInternal) return 'bg-indigo-50 border border-indigo-100';
+    const roleMap: Record<string, string> = {
+      'admin':      'bg-rose-50 border border-rose-100',
+      'manager':    'bg-sky-50 border border-sky-100',
+      'supervisor': 'bg-violet-50 border border-violet-100',
+      'employee':   'bg-emerald-50 border border-emerald-100',
+    };
+    return roleMap[role?.toLowerCase()] || 'bg-gray-50 border border-gray-200';
+  };
+
   if (visibleResponses.length === 0 && !searchQuery && filterBy === 'all') {
     return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <MessageSquare className="h-12 w-12 t mb-4" />
-          <p className=" font-medium mb-1">No responses yet</p>
-          <p className=" text-sm">Be the first to respond to this claim!</p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
+        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+          <MessageSquare className="h-7 w-7 text-gray-300" />
+        </div>
+        <p className="font-medium text-gray-500">No responses yet</p>
+        <p className="text-sm text-gray-400">Be the first to respond to this claim!</p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header with Stats */}
+    <div className="flex flex-col gap-4">
+      {/* ── Header ── */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
+        <div className="flex items-center gap-3 flex-wrap">
+          <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-gray-500" />
             Responses
-            <Badge variant="secondary" className="ml-2">
+            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5">
               {visibleResponses.length}
-            </Badge>
+            </span>
           </h3>
-          
+
           {isAdmin && (
-            <div className="flex gap-2">
-              <Badge variant="outline" className="text-xs">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                {stats.total} Total
+            <div className="flex gap-1.5">
+              <Badge variant="outline" className="text-[11px] gap-1 text-gray-500">
+                <TrendingUp className="h-3 w-3" />
+                {stats.total}
               </Badge>
-              <Badge variant="outline" className="text-xs border-blue-300 text-blue-700">
+              <Badge variant="outline" className="text-[11px] border-indigo-300 text-indigo-600">
                 {stats.internal} Internal
               </Badge>
-              <Badge variant="outline" className="text-xs border-green-300 text-green-700">
+              <Badge variant="outline" className="text-[11px] border-emerald-300 text-emerald-600">
                 {stats.external} External
               </Badge>
             </div>
@@ -168,189 +177,176 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => setShowFilters(!showFilters)}
-          className="gap-2"
+          className="gap-1.5 text-xs text-gray-500 hover:text-gray-800"
         >
-          <Filter className="h-4 w-4" />
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
+          <Filter className="h-3.5 w-3.5" />
+          {showFilters ? 'Hide' : 'Filter'}
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* ── Filters ── */}
       {showFilters && (
-        <Card className="">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Search */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 " />
-                  <Input
-                    placeholder="Search responses..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Search</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <Input
+                  placeholder="Search responses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 text-sm bg-white"
+                />
               </div>
+            </div>
 
-              {/* Sort */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Sort By</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Sort</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="w-full h-8 px-3 border border-gray-200 rounded-md text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="role">By Role</option>
+              </select>
+            </div>
+
+            {isAdmin && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Filter</label>
                 <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="w-full px-3 py-2 border rounded-md text-sm bg-background"
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                  className="w-full h-8 px-3 border border-gray-200 rounded-md text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="role">By Role</option>
+                  <option value="all">All Responses</option>
+                  <option value="internal">Internal Only</option>
+                  <option value="external">External Only</option>
                 </select>
               </div>
-
-              {/* Filter */}
-              {isAdmin && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Filter</label>
-                  <select
-                    value={filterBy}
-                    onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                    className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-                  >
-                    <option value="all">All Responses</option>
-                    <option value="internal">Internal Only</option>
-                    <option value="external">External Only</option>
-                  </select>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* Responses List */}
+      {/* ── Empty filtered state ── */}
       {visibleResponses.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <Search className="h-10 w-10  mb-3" />
-            <p className=" font-medium">No responses match your filters</p>
-            <p className=" text-sm">Try adjusting your search or filters</p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
+          <Search className="h-8 w-8 text-gray-300" />
+          <p className="text-sm font-medium text-gray-500">No responses match your filters</p>
+          <p className="text-xs">Try adjusting your search or filters</p>
+        </div>
       ) : (
-        <ScrollArea className="max-h-[60vh] pr-4 overflow-y-scroll">
-          <div className="space-y-3">
+        /* ── Chat thread ── */
+        <ScrollArea className="max-h-[60vh] overflow-y-auto pr-1">
+          <div className="flex flex-col gap-5 py-1">
             {visibleResponses.map((response, index) => {
               const isExpanded = expandedResponses.has(response.id);
               const responseText = response?.response_text || response?.message || '';
               const shouldTruncate = responseText.length > 200;
               const displayText = isExpanded || !shouldTruncate 
                 ? responseText 
-                : responseText.slice(0, 200) + '...';
+                : responseText.slice(0, 200) + '…';
+
+              const firstName = response.responder?.first_name || '';
+              const lastName  = response.responder?.last_name  || 'Unknown';
+              const fullName  = `${firstName} ${lastName}`.trim();
+              const initials  = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+              const role      = response.responder?.role || 'user';
 
               return (
-                <Card 
-                  key={response.id} 
+                <div
+                  key={response.id}
                   className={cn(
-                    'transition-all duration-200 hover:shadow-md',
-                    response.is_internal && 'border-dashed bg-gradient-to-r  to-transparent',
+                    'flex gap-3 items-end group',
                     onResponseClick && 'cursor-pointer'
                   )}
                   onClick={() => onResponseClick?.(response)}
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3 flex-1">
-                        {/* Avatar with online indicator */}
-                        <div className="relative">
-                          <Avatar className="h-10 w-10 border-2 shadow-sm">
-                            <AvatarImage src={response.responder?.avatar} />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold">
-                              {(response.responder?.first_name?.charAt(0) || '') + 
-                               (response.responder?.last_name?.charAt(0) || 'U')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white" />
-                        </div>
+                  {/* Avatar */}
+                  <div className="relative flex-shrink-0 self-end mb-1">
+                    <Avatar className="h-8 w-8 ring-2 ring-white shadow-sm">
+                      <AvatarImage src={response.responder?.avatar} />
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-purple-500 text-white text-xs font-bold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    {/* online dot */}
+                    <span className="absolute -bottom-0.5 -right-0.5 block h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
+                  </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <CardTitle className="text-sm font-semibold">
-                              {`${response.responder?.first_name || ''} ${response.responder?.last_name || 'Unknown User'}`.trim()}
-                            </CardTitle>
-                            
-                            <Badge 
-                              variant="outline" 
-                              className={cn("text-xs font-medium", getRoleBadgeColor(response.responder?.role || ''))}
-                            >
-                              {response.responder?.role || 'User'}
-                            </Badge>
+                  {/* Bubble + meta */}
+                  <div className="flex flex-col gap-1 max-w-[82%] sm:max-w-[70%]">
+                    {/* Name row */}
+                    <div className="flex items-center gap-2 flex-wrap px-1">
+                      <span className="text-xs font-semibold text-gray-700">{fullName}</span>
 
-                            {response.is_internal && (
-                              <Badge variant="outline" className="text-xs border-blue-400 text-blue-700 bg-blue-50">
-                                <Shield className="h-3 w-3 mr-1" />
-                                Internal
-                              </Badge>
-                            )}
+                      <Badge
+                        variant="outline"
+                        className={cn('text-[10px] font-medium py-0 px-1.5 h-4', getRoleBadgeColor(role))}
+                      >
+                        {role}
+                      </Badge>
 
-                            {index === 0 && (
-                              <Badge variant="outline" className="text-xs border-green-400 text-green-700 bg-green-50">
-                                Latest
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {response.responded_at
-                                ? format(new Date(response.responded_at), 'MMM d, yyyy')
-                                : 'Unknown date'}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {response.responded_at
-                                ? formatDistanceToNow(new Date(response.responded_at), { addSuffix: true })
-                                : 'Unknown time'}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      {response.is_internal && (
+                        <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-indigo-300 text-indigo-600 bg-indigo-50">
+                          <Shield className="h-2.5 w-2.5 mr-0.5" />
+                          Internal
+                        </Badge>
+                      )}
+
+                      {index === 0 && (
+                        <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-emerald-300 text-emerald-600 bg-emerald-50">
+                          Latest
+                        </Badge>
+                      )}
                     </div>
-                  </CardHeader>
 
-                  <CardContent className="space-y-3">
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-sm  whitespace-pre-wrap leading-relaxed">
+                    {/* Bubble */}
+                    <div
+                      className={cn(
+                        'rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm transition-shadow group-hover:shadow-md',
+                        getBubbleStyle(role, !!response.is_internal)
+                      )}
+                    >
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                         {highlightText(displayText)}
                       </p>
+
+                      {shouldTruncate && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpanded(response.id);
+                          }}
+                          className="mt-2 flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+                        >
+                          {isExpanded ? (
+                            <><ChevronUp className="h-3 w-3" /> Show less</>
+                          ) : (
+                            <><ChevronDown className="h-3 w-3" /> Show more</>
+                          )}
+                        </button>
+                      )}
                     </div>
 
-                    {shouldTruncate && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleExpanded(response.id);
-                        }}
-                        className="gap-2 text-xs h-8"
-                      >
-                        {isExpanded ? (
-                          <>
-                            <ChevronUp className="h-3 w-3" />
-                            Show Less
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="h-3 w-3" />
-                            Show More
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
+                    {/* Timestamp */}
+                    <div className="flex items-center gap-2 px-1 text-[11px] text-gray-400">
+                      <Calendar className="h-3 w-3" />
+                      {response.responded_at
+                        ? format(new Date(response.responded_at), 'MMM d, yyyy')
+                        : 'Unknown date'}
+                      <span>·</span>
+                      <Clock className="h-3 w-3" />
+                      {response.responded_at
+                        ? formatDistanceToNow(new Date(response.responded_at), { addSuffix: true })
+                        : 'Unknown time'}
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
