@@ -575,9 +575,7 @@ function CourseCard({
             {course.course_title}
           </p>
         </div>
-        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-          {course.exams.length} exam{course.exams.length !== 1 ? "s" : ""}
-        </span>
+        
       </div>
       <div className="mb-3">
         <div className="flex justify-between text-xs mb-1">
