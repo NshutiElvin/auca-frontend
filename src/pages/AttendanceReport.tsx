@@ -774,13 +774,14 @@ export function AttendanceReport() {
     );
   }, [courseAttendance]);
 
-    const[attendanceFilter, setAttendanceFilter]= React.useState<"all"| "cheated"| "signed_out" |"present" | "absent">("all");
-  const filteredAttendance= React.useMemo(()=>{
-    switch(attendanceFilter){
+  const [attendanceFilter, setAttendanceFilter] = React.useState<
+    "all" | "cheated" | "present" | "absent"
+  >("all");
+  const filteredAttendance = React.useMemo(() => {
+    switch (attendanceFilter) {
       case "cheated":
         return flatRows.filter((s) => s.cheated);
-      case "signed_out":
-        return flatRows.filter((s) => !s.signin && s.signout);
+
       case "present":
         return flatRows.filter((s) => s.signin && s.signout);
       case "absent":
@@ -788,9 +789,7 @@ export function AttendanceReport() {
       default:
         return flatRows;
     }
-
-
-  },[flatRows, attendanceFilter])
+  }, [flatRows, attendanceFilter]);
 
   const [reviewDialog, setReviewDialog] = React.useState<{
     open: boolean;
@@ -1230,12 +1229,7 @@ export function AttendanceReport() {
                     color: "bg-red-50 text-red-700",
                     filter: "absent" as const,
                   },
-                  {
-                    label: "Signed Out",
-                    val: courseAttendance.summary.signed_out,
-                    color: "bg-teal-50 text-teal-700",
-                    filter: "signed_out" as const,
-                  },
+
                   {
                     label: "Cheating",
                     val: courseAttendance.summary.cheating_reports,
@@ -1265,7 +1259,6 @@ export function AttendanceReport() {
                   className="pl-9"
                 />
               </div>
-              
             </div>
 
             {loadingAttendance ? (
