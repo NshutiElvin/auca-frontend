@@ -1209,7 +1209,7 @@ export function AttendanceReport() {
             </div>
 
             {courseAttendance && (
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                 {[
                   {
                     label: "Total",
