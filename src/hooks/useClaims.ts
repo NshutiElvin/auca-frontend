@@ -97,5 +97,7 @@ export const useClaimResponses = (claimId?: number) => {
       return response.data.data;
     },
     enabled: !!claimId,
+    refetchInterval: 10_000,         
+    refetchIntervalInBackground: true,  
   });
 };
