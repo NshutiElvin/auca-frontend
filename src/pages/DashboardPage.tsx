@@ -56,30 +56,41 @@ import LocationContext from "../contexts/LocationContext";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const dayData = payload[0].payload;
-    const totalSubmissions = dayData.submissionsTotal;
-    const exams = dayData.originalData.submissions;
+  if (!active || !payload?.length) return null;
 
-    return (
-      <div className="bg-background border border-border p-3 rounded-lg shadow-lg min-w-[180px]">
-        <p className="font-semibold text-foreground text-sm mb-1">{label}</p>
-        <p className="text-xs text-muted-foreground mb-2">
-          Total:{" "}
-          <span className="text-foreground font-medium">{totalSubmissions}</span>
-        </p>
-        <div className="max-h-48 overflow-y-auto space-y-0.5">
+  const dayData = payload[0]?.payload;
+  if (!dayData) return null;
+
+  const totalSubmissions = dayData.submissionsTotal ?? 0;
+  // originalData stores the raw dayData object; exams are under the `exams` key
+  const exams: any[] = dayData.originalData?.exams ?? [];
+
+  return (
+    <div className="bg-background border border-border p-3 rounded-lg shadow-lg min-w-[180px]">
+      <p className="font-semibold text-foreground text-sm mb-1">{label}</p>
+      <p className="text-xs text-muted-foreground mb-2">
+        Total:{" "}
+        <span className="text-foreground font-medium">{totalSubmissions}</span>
+      </p>
+      {exams.length > 0 && (
+        <div className="max-h-48 overflow-y-auto space-y-0.5 border-t border-border pt-2 mt-1">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1">
+            Exams
+          </p>
           {exams.map((exam: any, index: number) => (
             <div key={index} className="flex justify-between items-center gap-3 text-xs">
-              <span className="text-muted-foreground truncate max-w-[150px]">{exam.name}</span>
-              <span className="text-foreground font-medium flex-shrink-0">{exam.student_count}</span>
+              <span className="text-muted-foreground truncate max-w-[150px]">
+                {exam.name ?? `Exam ${index + 1}`}
+              </span>
+              <span className="text-foreground font-medium flex-shrink-0">
+                {exam.student_count ?? 0}
+              </span>
             </div>
           ))}
         </div>
-      </div>
-    );
-  }
-  return null;
+      )}
+    </div>
+  );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -213,13 +224,16 @@ const DashboardPage = () => {
     })) || [];
 
   const areaData =
-    (dashboardData.weekly_exams_by_day as any[])?.map((dayData: any) => ({
-      day: dayData.day,
-      submissionsTotal: (dayData.exams ?? []).reduce(
-        (sum: number, exam: any) => sum + exam.student_count, 0
-      ),
-      originalData: dayData,
-    })) || [];
+    (dashboardData.weekly_exams_by_day as any[])?.map((dayData: any) => {
+      const exams: any[] = Array.isArray(dayData?.exams) ? dayData.exams : [];
+      return {
+        day: dayData?.day ?? '',
+        submissionsTotal: exams.reduce(
+          (sum: number, exam: any) => sum + (exam?.student_count ?? 0), 0
+        ),
+        originalData: { ...dayData, exams },
+      };
+    }) ?? [];
 
   const pieData = [
     { name: "Completed",  value: dashboardData.completed_percentage  },
