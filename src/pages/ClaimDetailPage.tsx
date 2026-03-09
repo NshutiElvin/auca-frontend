@@ -129,7 +129,7 @@ export const ClaimDetailPage: React.FC = () => {
 
   return (
     // Outer shell: fill entire viewport height, no overflow
-    <div className="h-[91vh] flex flex-col w-full overflow-hidden">
+    <div className="h-[90vh] flex flex-col w-full overflow-hidden">
       {/* ── Scrollable body ── */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-5">
