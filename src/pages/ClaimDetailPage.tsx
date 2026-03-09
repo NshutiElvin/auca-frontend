@@ -131,7 +131,7 @@ export const ClaimDetailPage: React.FC = () => {
     // Outer shell: fill entire viewport height, no overflow
     <div className="h-[90vh] flex flex-col w-full overflow-hidden">
       {/* ── Scrollable body ── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto  whitespace-nowrap scrollbar-hide">
         <div className="p-4 space-y-5">
           {/* Inline page header (replaces the fixed header) */}
           <div className="flex items-center gap-3 flex-wrap">
@@ -279,7 +279,7 @@ export const ClaimDetailPage: React.FC = () => {
       {/* ── Mobile status actions ── */}
       {isAdmin && (
         <div className="lg:hidden flex-shrink-0 border-t bg-background px-4 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 overflow-x-auto  whitespace-nowrap scrollbar-hide pb-1">
             <button
               onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
               className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs bg-accent text-accent-foreground whitespace-nowrap"

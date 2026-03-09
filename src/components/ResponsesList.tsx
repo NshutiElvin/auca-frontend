@@ -278,7 +278,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex flex-col gap-4 overflow-y-auto max-h-[55vh] w-full py-3 px-1"
+            className="flex flex-col gap-4 overflow-y-auto  whitespace-nowrap scrollbar-hide max-h-[55vh] w-full py-3 px-1"
           >
             {visibleResponses.map((response) => {
               const mine = isMine(response);

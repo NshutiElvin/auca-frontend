@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import tailwindcssAnimate from "tailwindcss-animate";
+
 import { fontFamily } from "tailwindcss/defaultTheme";
 
 export default {
@@ -78,5 +79,5 @@ export default {
       display: ['group-data'], // <---- Add this line
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [tailwindcssAnimate,  require('tailwind-scrollbar-hide')],
 };
