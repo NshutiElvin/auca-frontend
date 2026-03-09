@@ -1234,7 +1234,7 @@ export function AttendanceReport() {
                 ].map((c) => (
                   <div
                     key={c.label}
-                    className={`rounded-lg border px-4 py-3 text-center ${c.color} cursor-pointer`}
+                    className={`rounded-lg border px-4 py-3 text-center ${c.color} cursor-pointer ${attendanceFilter === c.filter && "border-primary"}`}
                     onClick={() => setAttendanceFilter(c.filter)}
                   >
                     <p className="text-xl font-bold">{c.val}</p>
