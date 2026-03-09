@@ -119,10 +119,10 @@ export const ClaimDetailPage: React.FC = () => {
       </div>
 
       {/* Scrollable content with fixed form at bottom */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0 w-full">
         {/* Main content area - scrollable */}
         <div className="flex-1 overflow-y-auto px-4 py-5">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
               {/* Left column - full width on mobile */}
               <div className="lg:col-span-2 space-y-5">
