@@ -168,7 +168,7 @@ export const ClaimDetailPage: React.FC = () => {
 
                 {/* Responses */}
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-3 w-full">
                     <h2 className="text-sm font-semibold text-foreground">Responses</h2>
                     <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
                       {responses.length}
@@ -218,7 +218,7 @@ export const ClaimDetailPage: React.FC = () => {
         </div>
 
         {/* Fixed response form at bottom */}
-        <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky bottom-0 w-full z-50">
           <div className="w-full px-4 py-4">
             <ResponseForm
               onSubmit={handleAddResponse}

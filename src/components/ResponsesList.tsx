@@ -203,7 +203,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-4 relative">
+    <div className="flex flex-col gap-4 relative w-full">
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-wrap">
@@ -305,7 +305,7 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
             className="max-h-[50vh] overflow-y-auto pr-1 rounded-lg"
           >
             <div className="flex flex-col gap-5 py-4 px-2">
-              {visibleResponses.reverse().map((response, index) => {
+              {visibleResponses.map((response, index) => {
                 const isExpanded = expandedResponses.has(response.id);
                 const responseText = response?.response_text || response?.message || '';
                 const shouldTruncate = responseText.length > 200;
