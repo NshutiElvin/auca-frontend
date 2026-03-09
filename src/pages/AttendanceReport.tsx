@@ -487,7 +487,7 @@ function LightboxContent({ evidence }: { evidence: Evidence }) {
   );
 }
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
+// WITH THIS:
 function StatCard({
   label,
   value,
@@ -507,13 +507,17 @@ function StatCard({
       animate={{ opacity: 1, y: 0 }}
       className={`rounded-xl border p-5 flex items-center gap-4 ${color}`}
     >
-      <div className="rounded-lg p-2 bg-white/60">
-        <Icon className="h-6 w-6" />
+      <div className="rounded-lg p-2.5 bg-background/40 dark:bg-background/20 shadow-sm border border-border/30">
+        <Icon className="h-5 w-5" />
       </div>
-      <div>
-        <p className="text-2xl font-bold">{value.toLocaleString()}</p>
-        <p className="text-sm font-medium">{label}</p>
-        {sub && <p className="text-xs opacity-70">{sub}</p>}
+      <div className="min-w-0">
+        <p className="text-2xl font-bold leading-none">
+          {value.toLocaleString()}
+        </p>
+        <p className="text-xs font-semibold uppercase tracking-wide mt-1 opacity-80">
+          {label}
+        </p>
+        {sub && <p className="text-[11px] mt-0.5 opacity-60">{sub}</p>}
       </div>
     </motion.div>
   );
@@ -532,19 +536,19 @@ function SummaryPills({
 }) {
   const pct = total > 0 ? Math.round((signed_in / total) * 100) : 0;
   return (
-    <div className="flex flex-wrap gap-2 text-xs">
-      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+    <div className="flex flex-wrap gap-1.5 text-xs">
+      <span className="bg-muted text-muted-foreground border border-border/60 px-2 py-0.5 rounded-full font-medium">
         {total} total
       </span>
-      <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-        <UserCheck className="h-3 w-3" /> {signed_in} present ({pct}%)
+      <span className="bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+        <UserCheck className="h-3 w-3" /> {signed_in} ({pct}%)
       </span>
-      <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-        <UserX className="h-3 w-3" /> {absent} absent
+      <span className="bg-rose-500/10 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+        <UserX className="h-3 w-3" /> {absent}
       </span>
       {cheating_reports > 0 && (
-        <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-          <AlertTriangle className="h-3 w-3" /> {cheating_reports} cheating
+        <span className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20 dark:border-amber-500/30 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" /> {cheating_reports}
         </span>
       )}
     </div>
@@ -575,7 +579,6 @@ function CourseCard({
             {course.course_title}
           </p>
         </div>
-        
       </div>
       <div className="mb-3">
         <div className="flex justify-between text-xs mb-1">
@@ -1095,39 +1098,38 @@ export function AttendanceReport() {
         </div>
       </div>
 
-      {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <StatCard
             label="Total Students"
             value={stats.total_students}
             icon={Users}
-            color="bg-blue-50  text-blue-800  border-blue-200"
+            color="bg-primary/10 dark:bg-primary/20 text-primary border-primary/20 dark:border-primary/30"
           />
           <StatCard
             label="Signed In"
             value={stats.signed_in}
             icon={UserCheck}
-            color="bg-green-50 text-green-800 border-green-200"
+            color="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30"
             sub={`${Math.round((stats.signed_in / (stats.total_students || 1)) * 100)}% attendance`}
           />
           <StatCard
             label="Signed Out"
             value={stats.signed_out}
             icon={UserCheck}
-            color="bg-teal-50  text-teal-800  border-teal-200"
+            color="bg-teal-500/10 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400 border-teal-500/20 dark:border-teal-500/30"
           />
           <StatCard
             label="Absent"
             value={stats.absent}
             icon={UserX}
-            color="bg-red-50   text-red-800   border-red-200"
+            color="bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/20 dark:border-rose-500/30"
           />
           <StatCard
             label="Cheating Reports"
             value={stats.cheating_reports}
             icon={ShieldAlert}
-            color="bg-amber-50 text-amber-800 border-amber-200"
+            color="bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30"
           />
         </div>
       )}
@@ -1199,51 +1201,57 @@ export function AttendanceReport() {
                 <h2 className="font-bold text-lg">
                   {selectedCourse.course_code} – {selectedCourse.course_title}
                 </h2>
-               
               </div>
             </div>
-
+            // WITH THIS:
             {courseAttendance && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                 {[
                   {
                     label: "Total",
                     val: courseAttendance.summary.total,
-                    color: "bg-slate-100",
+                    base: "bg-primary/8 dark:bg-primary/15 text-primary border-primary/15 dark:border-primary/25",
+                    active: "ring-2 ring-primary ring-offset-1 border-primary",
                     filter: "all" as const,
                   },
                   {
                     label: "Present",
                     val: courseAttendance.summary.signed_in,
-                    color: "bg-green-50 text-green-800",
+                    base: "bg-emerald-500/8 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/15 dark:border-emerald-500/25",
+                    active:
+                      "ring-2 ring-emerald-500 ring-offset-1 border-emerald-500",
                     filter: "present" as const,
                   },
                   {
                     label: "Absent",
                     val: courseAttendance.summary.absent,
-                    color: "bg-red-50 text-red-700",
+                    base: "bg-rose-500/8 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/15 dark:border-rose-500/25",
+                    active:
+                      "ring-2 ring-rose-500 ring-offset-1 border-rose-500",
                     filter: "absent" as const,
                   },
-
                   {
                     label: "Cheating",
                     val: courseAttendance.summary.cheating_reports,
-                    color: "bg-amber-50 text-amber-700",
+                    base: "bg-amber-500/8 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/15 dark:border-amber-500/25",
+                    active:
+                      "ring-2 ring-amber-500 ring-offset-1 border-amber-500",
                     filter: "cheated" as const,
                   },
                 ].map((c) => (
                   <div
                     key={c.label}
-                    className={`rounded-lg border px-4 py-3 text-center ${c.color} cursor-pointer ${attendanceFilter === c.filter && "border-primary"}`}
+                    className={`rounded-xl border px-4 py-3 text-center cursor-pointer transition-all duration-150 select-none ${c.base} ${attendanceFilter === c.filter ? c.active : "hover:brightness-95 dark:hover:brightness-110"}`}
                     onClick={() => setAttendanceFilter(c.filter)}
                   >
                     <p className="text-xl font-bold">{c.val}</p>
-                    <p className="text-xs font-medium">{c.label}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide mt-0.5 opacity-75">
+                      {c.label}
+                    </p>
                   </div>
                 ))}
               </div>
             )}
-
             <div className="flex flex-wrap gap-2 mb-4">
               <div className="relative flex-1 min-w-[200px] max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1255,7 +1263,6 @@ export function AttendanceReport() {
                 />
               </div>
             </div>
-
             {loadingAttendance ? (
               <div className="flex justify-center py-16">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
