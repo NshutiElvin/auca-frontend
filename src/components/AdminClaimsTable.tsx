@@ -1,3 +1,4 @@
+// src/components/AdminClaimsTable.tsx
 import React, { useState } from 'react';
 import {
   flexRender,
@@ -28,14 +29,14 @@ import {
   DialogTrigger,
 } from './ui/dialog';
 import { format } from 'date-fns';
-import { 
-  ChevronDown, 
-  ChevronRight, 
-  Eye, 
-  MoreVertical, 
-  Search, 
+import {
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  MoreVertical,
+  Search,
   Download,
-  List
+  List,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -55,131 +56,116 @@ interface AdminClaimsTableProps {
   isLoading?: boolean;
 }
 
-export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({ 
-  claims, 
+const STATUS_BADGE: Record<ClaimStatus, string> = {
+  [ClaimStatus.PENDING]:   'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 ring-1 ring-inset ring-yellow-500/20',
+  [ClaimStatus.IN_REVIEW]: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-500/20',
+  [ClaimStatus.RESOLVED]:  'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20',
+  [ClaimStatus.REJECTED]:  'bg-red-500/10 text-red-500 ring-1 ring-inset ring-red-500/20',
+};
+
+export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
+  claims,
   onUpdateStatus,
-  isLoading = false 
+  isLoading = false,
 }) => {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'submitted_at', desc: true }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
-  const [grouping, setGrouping] = useState<GroupingState>([]); // Fixed: Changed from ['student_name'] to empty array
+  const [grouping, setGrouping] = useState<GroupingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [isViewAllOpen, setIsViewAllOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Fixed: Helper function to get student name consistently
-  const getStudentName = (claim: StudentClaim): string => {
-    return claim.student_name || 
-      (claim.student?.user ? `${claim.student.user.first_name} ${claim.student.user.last_name}` : 'Unknown Student');
-  };
+  const getStudentName = (claim: StudentClaim): string =>
+    claim.student_name ||
+    (claim.student?.user
+      ? `${claim.student.user.first_name} ${claim.student.user.last_name}`
+      : 'Unknown Student');
 
   const columns: ColumnDef<StudentClaim>[] = [
     {
       accessorKey: 'id',
-      header: 'ID',
-      cell: ({ row }) => <div className="font-medium">#{row.getValue('id')}</div>,
-      // Fixed: Added aggregation for grouped rows
+      header: '#',
+      cell: ({ row }) => (
+        <span className="text-xs text-muted-foreground tabular-nums font-medium">
+          #{row.getValue('id')}
+        </span>
+      ),
       aggregationFn: 'count',
-      aggregatedCell: () => <span>Count</span>,
+      aggregatedCell: () => null,
     },
     {
       accessorKey: 'subject',
       header: 'Subject',
       cell: ({ row }) => (
-        <div className="max-w-[200px] truncate" title={row.getValue('subject')}>
+        <span
+          className="block max-w-[200px] truncate text-sm font-medium text-foreground"
+          title={row.getValue('subject')}
+        >
           {row.getValue('subject')}
-        </div>
+        </span>
       ),
-      // Fixed: Added aggregation for grouped rows
-      aggregationFn: (columnId, leafRows) => {
-        return `${leafRows.length} subjects`;
-      },
-      aggregatedCell: ({ getValue }) => {
-        const value = getValue() as string;
-        return <span className="text-muted-foreground">{value}</span>;
-      },
+      aggregationFn: (_, leafRows) => `${leafRows.length} claims`,
+      aggregatedCell: ({ getValue }) => (
+        <span className="text-xs text-muted-foreground">{getValue() as string}</span>
+      ),
     },
     {
       accessorKey: 'claim_type',
       header: 'Type',
       cell: ({ row }) => (
-        <Badge variant="outline">
+        <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground">
           {row.getValue('claim_type')}
-        </Badge>
+        </span>
       ),
-      // Fixed: Proper aggregation for claim_type
       aggregationFn: (columnId, leafRows) => {
-        const types = leafRows.map(row => row.getValue(columnId));
-        const uniqueTypes = [...new Set(types)];
-        return uniqueTypes.join(', ');
+        const types = [...new Set(leafRows.map(r => r.getValue(columnId)))];
+        return types.join(', ');
       },
-      aggregatedCell: ({ getValue }) => {
-        const value = getValue() as string;
-        return <Badge variant="secondary">{value}</Badge>;
-      },
+      aggregatedCell: ({ getValue }) => (
+        <span className="text-xs text-muted-foreground">{getValue() as string}</span>
+      ),
     },
     {
-      // Fixed: Using accessorFn for computed student name
       id: 'student_name',
       accessorFn: (row) => getStudentName(row),
       header: 'Student',
-      cell: ({ getValue }) => {
-        const studentName = getValue() as string;
-        return <div className="font-medium">{studentName}</div>;
-      },
-      // Fixed: Added aggregation for grouped rows
+      cell: ({ getValue }) => (
+        <span className="text-sm text-foreground font-medium">{getValue() as string}</span>
+      ),
       aggregationFn: 'count',
-      aggregatedCell: ({ row }) => {
-        return (
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">{row.groupingValue as string}</span>
-            <Badge variant="secondary">{row.subRows.length}</Badge>
-          </div>
-        );
-      },
+      aggregatedCell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground uppercase flex-shrink-0">
+            {String(row.groupingValue ?? '').split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
+          </span>
+          <span className="text-sm font-semibold text-foreground">{row.groupingValue as string}</span>
+          <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+            {row.subRows.length}
+          </span>
+        </div>
+      ),
     },
     {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => {
         const status = row.getValue('status') as ClaimStatus;
-        const colors = {
-          [ClaimStatus.PENDING]: 'bg-yellow-500',
-          [ClaimStatus.IN_REVIEW]: 'bg-blue-500',
-          [ClaimStatus.RESOLVED]: 'bg-green-500',
-          [ClaimStatus.REJECTED]: 'bg-red-500',
-        };
-        
         return (
-          <Badge className={`${colors[status]} text-white hover:${colors[status]}`}>
-            {status.replace(/_/g, ' ').toUpperCase()}
-          </Badge>
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[status] ?? ''}`}>
+            {status.replace(/_/g, ' ')}
+          </span>
         );
       },
-      // Fixed: Proper aggregation for status
       aggregationFn: (columnId, leafRows) => {
-        const statuses = leafRows.map(row => row.getValue(columnId));
-        const uniqueStatuses = [...new Set(statuses)];
-        if (uniqueStatuses.length === 1) return uniqueStatuses[0];
-        return 'mixed';
+        const statuses = [...new Set(leafRows.map(r => r.getValue(columnId)))];
+        return statuses.length === 1 ? statuses[0] : 'mixed';
       },
       aggregatedCell: ({ getValue }) => {
-        const status = getValue() as string;
-        if (status === 'mixed') {
-          return <Badge variant="secondary">Mixed Status</Badge>;
-        }
-        const colors = {
-          [ClaimStatus.PENDING]: 'bg-yellow-500',
-          [ClaimStatus.IN_REVIEW]: 'bg-blue-500',
-          [ClaimStatus.RESOLVED]: 'bg-green-500',
-          [ClaimStatus.REJECTED]: 'bg-red-500',
-        };
-        return (
-          <Badge className={`${colors[status as ClaimStatus]} text-white`}>
-            {status.replace(/_/g, ' ').toUpperCase()}
-          </Badge>
-        );
+        const v = getValue() as string;
+        return v === 'mixed'
+          ? <span className="text-xs text-muted-foreground">Mixed</span>
+          : <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[v as ClaimStatus] ?? ''}`}>{v.replace(/_/g, ' ')}</span>;
       },
     },
     {
@@ -187,58 +173,54 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
       header: 'Submitted',
       cell: ({ row }) => {
         const date = row.getValue('submitted_at');
-        return date ? format(new Date(date as string), 'PP') : 'N/A';
+        return (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {date ? format(new Date(date as string), 'PP') : '—'}
+          </span>
+        );
       },
-      // Fixed: Added aggregation for dates
       aggregationFn: (columnId, leafRows) => {
-        const dates = leafRows.map(row => row.getValue(columnId)).filter(Boolean);
-        if (dates.length === 0) return 'No dates';
-        const latestDate = new Date(Math.max(...dates.map(d => new Date(d as string).getTime())));
-        return `Latest: ${format(latestDate, 'PP')}`;
+        const dates = leafRows.map(r => r.getValue(columnId)).filter(Boolean);
+        if (!dates.length) return '—';
+        return format(new Date(Math.max(...dates.map(d => new Date(d as string).getTime()))), 'PP');
       },
-      aggregatedCell: ({ getValue }) => {
-        const value = getValue() as string;
-        return <span className="text-muted-foreground">{value}</span>;
-      },
+      aggregatedCell: ({ getValue }) => (
+        <span className="text-xs text-muted-foreground">{getValue() as string}</span>
+      ),
     },
     {
       id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
         const claim = row.original;
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground">
                 <span className="sr-only">Open menu</span>
-                <MoreVertical className="h-4 w-4" />
+                <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigate(`/admin/claims/${claim.id}`)}>
-                <Eye className="h-4 w-4 mr-2" />
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
+              <DropdownMenuItem className="text-xs" onClick={() => navigate(`/admin/claims/${claim.id}`)}>
+                <Eye className="h-3.5 w-3.5 mr-2" />
                 View Details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.IN_REVIEW)}>
+              <DropdownMenuItem className="text-xs" onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.IN_REVIEW)}>
                 Mark as In Review
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.RESOLVED)}>
+              <DropdownMenuItem className="text-xs" onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.RESOLVED)}>
                 Mark as Resolved
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.REJECTED)}
-                className="text-red-600"
-              >
+              <DropdownMenuItem className="text-xs text-destructive focus:text-destructive" onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.REJECTED)}>
                 Mark as Rejected
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
       },
-      // Fixed: Added aggregation for actions column (returns null for grouped rows)
       aggregationFn: () => null,
       aggregatedCell: () => null,
     },
@@ -258,180 +240,135 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
     getFilteredRowModel: getFilteredRowModel(),
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    // Fixed: Added default column settings
-    defaultColumn: {
-      aggregationFn: 'count', // Default aggregation function
-    },
-    state: {
-      sorting,
-      columnFilters,
-      globalFilter,
-      grouping,
-      expanded,
-    },
+    defaultColumn: { aggregationFn: 'count' },
+    state: { sorting, columnFilters, globalFilter, grouping, expanded },
   });
 
   const exportToExcel = () => {
-    // Fixed: Use consistent student name function
     const exportData = claims.map(claim => ({
       ID: claim.id,
       Subject: claim.subject,
       Type: claim.claim_type,
       Student: getStudentName(claim),
-      'Registration Number': claim.student?.reg_no || 'N/A',
-      Department: claim.student?.department?.name || 'N/A',
-      Status: claim.status.replace(/_/g, ' ').toUpperCase(),
-      Submitted: claim.submitted_at ? format(new Date(claim.submitted_at), 'PP') : 'N/A',
+      'Reg Number': claim.student?.reg_no || '—',
+      Department: claim.student?.department?.name || '—',
+      Status: claim.status.replace(/_/g, ' '),
+      Submitted: claim.submitted_at ? format(new Date(claim.submitted_at), 'PP') : '—',
       Description: claim.description || '',
     }));
-
     const ws = XLSX.utils.json_to_sheet(exportData);
-    
-    ws['!cols'] = [
-      { wch: 8 },  // ID
-      { wch: 30 }, // Subject
-      { wch: 15 }, // Type
-      { wch: 25 }, // Student
-      { wch: 15 }, // Registration Number
-      { wch: 20 }, // Department
-      { wch: 15 }, // Status
-      { wch: 15 }, // Submitted
-      { wch: 50 }, // Description
-    ];
-
+    ws['!cols'] = [8, 30, 15, 25, 15, 20, 15, 15, 50].map(wch => ({ wch }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Claims');
-    XLSX.writeFile(wb, `claims_export_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    XLSX.writeFile(wb, `claims_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex justify-center items-center h-48">
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-muted border-t-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center space-x-2 flex-1 min-w-[200px]">
-          <Search className="h-4 w-4 text-gray-500" />
+    <div className="space-y-3">
+
+      {/* ── Toolbar ── */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[180px] max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search claims..."
+            placeholder="Search claims…"
             value={globalFilter ?? ''}
-            onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-sm"
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="pl-8 h-8 text-sm bg-muted border-transparent focus:border-border focus:bg-background"
           />
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Select
-            value={table.getColumn('status')?.getFilterValue() as string || 'all'}
-            onValueChange={(value) => {
-              if (value === 'all') {
-                table.getColumn('status')?.setFilterValue(undefined);
-              } else {
-                table.getColumn('status')?.setFilterValue(value);
-              }
-            }}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {Object.values(ClaimStatus).map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status.replace(/_/g, ' ').toUpperCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Group by */}
           <Select
             value={grouping.length > 0 ? grouping[0] : 'none'}
-            onValueChange={(value) => setGrouping(value === 'none' ? [] : [value])}
+            onValueChange={(v) => setGrouping(v === 'none' ? [] : [v])}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="h-8 w-[150px] text-xs">
               <SelectValue placeholder="Group by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">No Grouping</SelectItem>
-              <SelectItem value="status">Group by Status</SelectItem>
-              <SelectItem value="claim_type">Group by Type</SelectItem>
-              <SelectItem value="student_name">Group by Student</SelectItem>
+              <SelectItem value="none" className="text-xs">No grouping</SelectItem>
+              <SelectItem value="status" className="text-xs">By Status</SelectItem>
+              <SelectItem value="claim_type" className="text-xs">By Type</SelectItem>
+              <SelectItem value="student_name" className="text-xs">By Student</SelectItem>
             </SelectContent>
           </Select>
 
+          {/* View All dialog */}
           <Dialog open={isViewAllOpen} onOpenChange={setIsViewAllOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <List className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                <List className="h-3.5 w-3.5" />
                 View All
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>All Claims ({claims.length})</DialogTitle>
-                <DialogDescription>
-                  Complete list of all student claims in the system
+                <DialogTitle className="text-base">All Claims ({claims.length})</DialogTitle>
+                <DialogDescription className="text-xs">
+                  Complete list of all student claims
                 </DialogDescription>
               </DialogHeader>
-              <div className="rounded-md border mt-4">
+              <div className="rounded-md border mt-3">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Submitted</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="text-xs">#</TableHead>
+                      <TableHead className="text-xs">Subject</TableHead>
+                      <TableHead className="text-xs">Type</TableHead>
+                      <TableHead className="text-xs">Student</TableHead>
+                      <TableHead className="text-xs">Status</TableHead>
+                      <TableHead className="text-xs">Submitted</TableHead>
+                      <TableHead className="text-xs w-10" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {claims.length > 0 ? (
                       claims.map((claim) => (
                         <TableRow key={claim.id}>
-                          <TableCell className="font-medium">#{claim.id}</TableCell>
-                          <TableCell className="max-w-[200px] truncate" title={claim.subject}>
+                          <TableCell className="text-xs text-muted-foreground">#{claim.id}</TableCell>
+                          <TableCell className="max-w-[180px] truncate text-sm" title={claim.subject}>
                             {claim.subject}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">{claim.claim_type}</Badge>
+                            <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
+                              {claim.claim_type}
+                            </span>
                           </TableCell>
+                          <TableCell className="text-sm">{getStudentName(claim)}</TableCell>
                           <TableCell>
-                            {getStudentName(claim)}
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[claim.status] ?? ''}`}>
+                              {claim.status.replace(/_/g, ' ')}
+                            </span>
                           </TableCell>
-                          <TableCell>
-                            <Badge className={`${
-                              claim.status === ClaimStatus.PENDING ? 'bg-yellow-500' :
-                              claim.status === ClaimStatus.IN_REVIEW ? 'bg-blue-500' :
-                              claim.status === ClaimStatus.RESOLVED ? 'bg-green-500' :
-                              'bg-red-500'
-                            } text-white`}>
-                              {claim.status.replace(/_/g, ' ').toUpperCase()}
-                            </Badge>
+                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                            {claim.submitted_at ? format(new Date(claim.submitted_at), 'PP') : '—'}
                           </TableCell>
-                          <TableCell>{claim.submitted_at ? format(new Date(claim.submitted_at), 'PP') : 'N/A'}</TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                setIsViewAllOpen(false);
-                                navigate(`/admin/claims/${claim.id}`);
-                              }}
+                              className="h-7 w-7 p-0 text-muted-foreground"
+                              onClick={() => { setIsViewAllOpen(false); navigate(`/admin/claims/${claim.id}`); }}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-3.5 w-3.5" />
                             </Button>
                           </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-20 text-center text-sm text-muted-foreground">
                           No claims found.
                         </TableCell>
                       </TableRow>
@@ -442,26 +379,25 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
             </DialogContent>
           </Dialog>
 
-          <Button onClick={exportToExcel} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export Excel
+          {/* Export */}
+          <Button onClick={exportToExcel} variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+            <Download className="h-3.5 w-3.5" />
+            Export
           </Button>
         </div>
       </div>
 
-      <div className="rounded-md border">
+      {/* ── Table ── */}
+      <div className="rounded-lg border overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-muted/40 hover:bg-muted/40">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide h-9">
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -470,30 +406,27 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow 
+                <TableRow
                   key={row.id}
-                  className={row.getIsGrouped() ? 'bg-muted/50' : ''}
+                  className={`
+                    ${row.getIsGrouped() ? 'bg-muted/20 hover:bg-muted/30' : 'hover:bg-muted/30'}
+                    transition-colors
+                  `}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="py-2.5">
                       {cell.getIsGrouped() ? (
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
                             onClick={row.getToggleExpandedHandler()}
-                            className="p-0 h-6 w-6"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            {row.getIsExpanded() ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                          </Button>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                            {row.getIsExpanded()
+                              ? <ChevronDown className="h-3.5 w-3.5" />
+                              : <ChevronRight className="h-3.5 w-3.5" />
+                            }
+                          </button>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </div>
                       ) : cell.getIsAggregated() ? (
                         flexRender(
@@ -501,10 +434,7 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                           cell.getContext()
                         )
                       ) : cell.getIsPlaceholder() ? null : (
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )
+                        flexRender(cell.column.columnDef.cell, cell.getContext())
                       )}
                     </TableCell>
                   ))}
@@ -512,7 +442,7 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell colSpan={columns.length} className="h-24 text-center text-sm text-muted-foreground">
                   No claims found.
                 </TableCell>
               </TableRow>
@@ -521,25 +451,37 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-500">
-          Showing {table.getRowModel().rows.length} of {claims.length} claims
-          {grouping.length > 0 && ` (grouped by ${grouping[0].replace('_', ' ')})`}
-        </div>
-        <div className="flex items-center space-x-2">
+      {/* ── Footer ── */}
+      <div className="flex items-center justify-between pt-1">
+        <span className="text-xs text-muted-foreground">
+          Showing{' '}
+          <span className="font-medium text-foreground">{table.getRowModel().rows.length}</span>
+          {' '}of{' '}
+          <span className="font-medium text-foreground">{claims.length}</span>
+          {' '}claim{claims.length !== 1 ? 's' : ''}
+          {grouping.length > 0 && (
+            <span className="text-muted-foreground"> · grouped by {grouping[0].replace('_', ' ')}</span>
+          )}
+        </span>
+        <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="h-7 px-2.5 text-xs"
           >
-            Previous
+            Prev
           </Button>
+          <span className="text-xs text-muted-foreground tabular-nums px-1">
+            {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+          </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="h-7 px-2.5 text-xs"
           >
             Next
           </Button>
