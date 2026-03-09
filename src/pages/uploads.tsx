@@ -344,7 +344,6 @@ const BulkUpload = () => {
 
   return (
      <div className="w-full space-y-4">
-      <div className="max-w-6xl mx-auto px-6 py-8">
 
         {/* Header */}
         <div className="mb-10 space-y-2 flex justify-between items-center flex-wrap">
@@ -705,7 +704,6 @@ const BulkUpload = () => {
             </p>
           </div>
         )}
-      </div>
     </div>
   );
 };
