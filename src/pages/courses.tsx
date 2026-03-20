@@ -735,7 +735,7 @@ export function CoursesPage() {
                         <select
                           value={section.time}
                           onChange={(e) => updateSplitSection(section.id, { time: e.target.value })}
-                          className="flex-1 text-xs bg-transparent outline-none cursor-pointer"
+                          className="flex-1 text-xs bg-background outline-none cursor-pointer"
                         >
                           {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
@@ -745,7 +745,7 @@ export function CoursesPage() {
                         <select
                           value={section.instructorId}
                           onChange={(e) => updateSplitSection(section.id, { instructorId: e.target.value })}
-                          className="flex-1 text-xs bg-transparent outline-none cursor-pointer truncate"
+                          className="flex-1 text-xs bg-background outline-none cursor-pointer"
                         >
                           <option value="">No instructor</option>
                           {instructors.map((ins) => (
