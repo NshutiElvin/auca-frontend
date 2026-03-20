@@ -672,7 +672,7 @@ export function CoursesPage() {
           Split Groups Dialog (drag & drop)
       ════════════════════════════════════════ */}
       <Dialog open={isSplitDialogOpen} onOpenChange={(open) => { if (!open) handleCloseSplitDialog(); }}>
-        <DialogContent className="sm:max-w-[95vw] lg:max-w-[1100px] h-[90vh] flex flex-col overflow-hidden p-0">
+        <DialogContent className="min-w-[80vw] lg:max-w-[1100px] h-[90vh] flex flex-col overflow-hidden p-0">
           {/* Header */}
           <DialogHeader className="px-6 py-4 border-b shrink-0">
             <DialogTitle className="text-lg">
@@ -711,7 +711,7 @@ export function CoursesPage() {
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 overflow-hidden flex">
+          <div className="flex-1  flex flex-wrap">
             {/* Sections */}
             <div className="flex-1 overflow-x-auto overflow-y-hidden">
               <div
