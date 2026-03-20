@@ -554,7 +554,7 @@ export function CoursesPage() {
                   <select
                     value={bulkTime}
                     onChange={(e) => setBulkTime(e.target.value)}
-                    className="p-2 border rounded-md bg-background text-sm"
+                    className="p-2 border rounded-md text-sm"
                   >
                     <option value="__keep__">Keep existing</option>
                     {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -565,7 +565,7 @@ export function CoursesPage() {
                   <select
                     value={bulkInstructor}
                     onChange={(e) => setBulkInstructor(e.target.value)}
-                    className="p-2 border rounded-md bg-background text-sm"
+                    className="p-2 border rounded-md text-sm"
                   >
                     <option value="__keep__">Keep existing</option>
                     {instructors.map((ins) => (
@@ -633,7 +633,7 @@ export function CoursesPage() {
                               e.target.value,
                             )
                           }
-                          className="p-2 border rounded-md bg-background"
+                          className="p-2 border rounded-md"
                         >
                           <option value="" disabled>Select Instructor</option>
                           {instructors.map((ins) => (
@@ -648,7 +648,7 @@ export function CoursesPage() {
                           onChange={(e) =>
                             updateCourseGroupTimes(group.id, Number(selectedCourse?.id), e.target.value, group.instructor?.id ?? null)
                           }
-                          className="p-2 border rounded-md bg-background"
+                          className="p-2 border rounded-md"
                         >
                           <option disabled>Select Time</option>
                           {TIME_SLOTS.map((time) => <option key={time} value={time}>{time}</option>)}
@@ -811,7 +811,7 @@ export function CoursesPage() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t bg-background shrink-0 flex items-center justify-between">
+          <div className="px-6 py-4 border-t shrink-0 flex items-center justify-between">
             <div className="flex flex-wrap gap-2">
               {splitSections.map((s) => (
                 <span key={s.id} className={`text-xs px-2 py-0.5 rounded border font-medium ${SLOT_BADGE[s.time] || "bg-gray-100 text-gray-600 border-gray-300"}`}>
