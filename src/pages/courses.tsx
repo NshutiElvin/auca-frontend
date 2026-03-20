@@ -742,10 +742,11 @@ export function CoursesPage() {
                         </select>
                       </div>
                       <div className="flex items-center gap-1">
+                        <User className="w-3 h-3 shrink-0 opacity-60" />
                         <select
                           value={section.instructorId}
                           onChange={(e) => updateSplitSection(section.id, { instructorId: e.target.value })}
-                          className="flex-1 text-xs bg-background  outline-none cursor-pointer truncate"
+                          className="flex-1 text-xs bg-background outline-none cursor-pointer"
                         >
                           <option value="">No instructor</option>
                           {instructors.map((ins) => (
