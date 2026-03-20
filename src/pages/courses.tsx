@@ -81,17 +81,23 @@ interface SplitSection {
 
 const TIME_SLOTS = ["Morning", "Afternoon", "Evening"];
 
+// These use Tailwind color utilities intentionally (section header backgrounds),
+// not theme tokens — they are decorative accent colors, not UI chrome.
 const SLOT_COLORS: Record<string, string> = {
-  Morning: "bg-amber-50 border-amber-200 text-amber-800",
-  Afternoon: "bg-sky-50 border-sky-200 text-sky-800",
-  Evening: "bg-violet-50 border-violet-200 text-violet-800",
+  Morning: "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300",
+  Afternoon: "bg-sky-50 border-sky-200 text-sky-800 dark:bg-sky-950/40 dark:border-sky-800 dark:text-sky-300",
+  Evening: "bg-violet-50 border-violet-200 text-violet-800 dark:bg-violet-950/40 dark:border-violet-800 dark:text-violet-300",
 };
 
 const SLOT_BADGE: Record<string, string> = {
-  Morning: "bg-amber-100 text-amber-700 border-amber-300",
-  Afternoon: "bg-sky-100 text-sky-700 border-sky-300",
-  Evening: "bg-violet-100 text-violet-700 border-violet-300",
+  Morning: "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700",
+  Afternoon: "bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/40 dark:text-sky-300 dark:border-sky-700",
+  Evening: "bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700",
 };
+
+// Shared class for every bare <select> — wires it into the shadcn theme tokens
+const SELECT_CLS =
+  "p-2 rounded-md border border-input bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 cursor-pointer";
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 
@@ -461,7 +467,7 @@ export function CoursesPage() {
       draggable
       onDragStart={() => onDragStart(group.id, fromSectionId)}
       onDragEnd={() => { dragRef.current = null; setDragOverSectionId(null); setDragOverUnassigned(false); }}
-      className="flex items-center gap-2 px-3 py-2 bg-white border rounded-md shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow select-none"
+      className="flex items-center gap-2 px-3 py-2 bg-card text-card-foreground border border-border rounded-md shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow select-none"
     >
       <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
       <div className="flex-1 min-w-0">
@@ -542,7 +548,7 @@ export function CoursesPage() {
           </DialogHeader>
 
           {/* Bulk Actions Panel */}
-          <div className="shrink-0 border rounded-md p-3 bg-muted/40 space-y-3">
+          <div className="shrink-0 border border-border rounded-md p-3 bg-muted/40 space-y-3">
             {/* SELECT ALL */}
             <div>
               <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">
@@ -550,23 +556,15 @@ export function CoursesPage() {
               </p>
               <div className="flex flex-wrap items-end gap-3">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs">Time Slot</span>
-                  <select
-                    value={bulkTime}
-                    onChange={(e) => setBulkTime(e.target.value)}
-                    className="p-2 border rounded-md text-sm"
-                  >
+                  <span className="text-xs text-foreground">Time Slot</span>
+                  <select value={bulkTime} onChange={(e) => setBulkTime(e.target.value)} className={SELECT_CLS}>
                     <option value="__keep__">Keep existing</option>
                     {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs">Instructor</span>
-                  <select
-                    value={bulkInstructor}
-                    onChange={(e) => setBulkInstructor(e.target.value)}
-                    className="p-2 border rounded-md text-sm"
-                  >
+                  <span className="text-xs text-foreground">Instructor</span>
+                  <select value={bulkInstructor} onChange={(e) => setBulkInstructor(e.target.value)} className={SELECT_CLS}>
                     <option value="__keep__">Keep existing</option>
                     {instructors.map((ins) => (
                       <option key={ins.id} value={ins.id}>{ins.first_name} {ins.last_name}</option>
@@ -584,7 +582,7 @@ export function CoursesPage() {
               </div>
             </div>
 
-            <div className="border-t" />
+            <div className="border-t border-border" />
 
             {/* SPLIT */}
             <div>
@@ -613,17 +611,17 @@ export function CoursesPage() {
             ) : selectedCourseGroups.length > 0 ? (
               <ul className="space-y-2">
                 {selectedCourseGroups.map((group, idx) => (
-                  <li key={group.id} className="p-4 border rounded-md">
+                  <li key={group.id} className="p-4 border border-border rounded-md bg-card">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <span className="text-sm text-muted-foreground">Group #{idx + 1}</span>
-                        <h3 className="text-lg font-semibold">{group.group_name}</h3>
+                        <h3 className="text-lg font-semibold text-card-foreground">{group.group_name}</h3>
                         {group.instructor && (
                           <Badge>{group.instructor.first_name} {group.instructor.last_name}</Badge>
                         )}
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm">Instructor</span>
+                        <span className="text-sm text-foreground">Instructor</span>
                         <select
                           defaultValue={group.instructor?.id ?? ""}
                           onChange={(e) =>
@@ -633,7 +631,7 @@ export function CoursesPage() {
                               e.target.value,
                             )
                           }
-                          className="p-2 border rounded-md"
+                          className={SELECT_CLS}
                         >
                           <option value="" disabled>Select Instructor</option>
                           {instructors.map((ins) => (
@@ -642,13 +640,13 @@ export function CoursesPage() {
                         </select>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm">Time Slot</span>
+                        <span className="text-sm text-foreground">Time Slot</span>
                         <select
                           defaultValue={Object.keys(timeMap).find((key) => timeMap[key].start_time === group.start_time) ?? "Morning"}
                           onChange={(e) =>
                             updateCourseGroupTimes(group.id, Number(selectedCourse?.id), e.target.value, group.instructor?.id ?? null)
                           }
-                          className="p-2 border rounded-md"
+                          className={SELECT_CLS}
                         >
                           <option disabled>Select Time</option>
                           {TIME_SLOTS.map((time) => <option key={time} value={time}>{time}</option>)}
@@ -674,7 +672,7 @@ export function CoursesPage() {
       <Dialog open={isSplitDialogOpen} onOpenChange={(open) => { if (!open) handleCloseSplitDialog(); }}>
         <DialogContent className="min-w-[80vw] lg:max-w-[1100px] h-[90vh] flex flex-col overflow-hidden p-0">
           {/* Header */}
-          <DialogHeader className="px-6 py-4 border-b shrink-0">
+          <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
             <DialogTitle className="text-lg">
               Split Groups — <span className="text-muted-foreground font-normal">{selectedCourse?.title}</span>
             </DialogTitle>
@@ -684,7 +682,7 @@ export function CoursesPage() {
           </DialogHeader>
 
           {/* Toolbar */}
-          <div className="px-6 py-3 border-b bg-muted/30 shrink-0 flex flex-wrap items-center gap-2">
+          <div className="px-6 py-3 border-b border-border bg-muted/30 shrink-0 flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={addSplitSection}>
               <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Section
             </Button>
@@ -705,17 +703,17 @@ export function CoursesPage() {
               <Users className="w-4 h-4" />
               {selectedCourseGroups.length} total · {splitSections.length} section{splitSections.length !== 1 ? "s" : ""}
               {splitUnassigned.length > 0 && (
-                <span className="text-red-500 font-medium">· {splitUnassigned.length} unassigned</span>
+                <span className="text-destructive font-medium">· {splitUnassigned.length} unassigned</span>
               )}
             </div>
           </div>
 
           {/* Canvas */}
-          <div className="flex-1  flex flex-wrap">
-            {/* Sections */}
-            <div className="flex-1 flex-wrap">
+          <div className="flex-1 flex overflow-hidden">
+            {/* Sections scroll area */}
+            <div className="flex-1 overflow-x-auto overflow-y-hidden">
               <div
-                className="flex gap-4 p-4 h-full flex-wrap"
+                className="flex gap-4 p-4 h-full"
                 style={{ minWidth: `${Math.max(splitSections.length, 1) * 260}px` }}
               >
                 {splitSections.map((section) => (
@@ -726,19 +724,19 @@ export function CoursesPage() {
                     onDragLeave={() => setDragOverSectionId(null)}
                     onDrop={() => onDropToSection(section.id)}
                   >
-                    {/* Section header */}
-                    <div className={`rounded-t-lg border-2 p-3 transition-colors ${dragOverSectionId === section.id ? "border-primary bg-primary/5" : SLOT_COLORS[section.time] || "bg-gray-50 border-gray-200"}`}>
+                    {/* Section header — decorative slot color, selects use transparent bg to inherit */}
+                    <div className={`rounded-t-lg border-2 p-3 transition-colors ${dragOverSectionId === section.id ? "border-primary bg-primary/10" : SLOT_COLORS[section.time] || "bg-muted border-border"}`}>
                       <input
                         value={section.label}
                         onChange={(e) => updateSplitSection(section.id, { label: e.target.value })}
-                        className="w-full  font-semibold text-sm mb-2 outline-none border-b border-transparent focus:border-current"
+                        className="w-full bg-transparent font-semibold text-sm mb-2 outline-none border-b border-transparent focus:border-current placeholder:text-inherit"
                       />
                       <div className="flex items-center gap-1 mb-1.5">
                         <Clock className="w-3 h-3 shrink-0 opacity-60" />
                         <select
                           value={section.time}
                           onChange={(e) => updateSplitSection(section.id, { time: e.target.value })}
-                          className="flex-1 text-xs  outline-none cursor-pointer"
+                          className="flex-1 text-xs bg-transparent outline-none cursor-pointer"
                         >
                           {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
@@ -748,7 +746,7 @@ export function CoursesPage() {
                         <select
                           value={section.instructorId}
                           onChange={(e) => updateSplitSection(section.id, { instructorId: e.target.value })}
-                          className="flex-1 text-xs  outline-none cursor-pointer truncate"
+                          className="flex-1 text-xs bg-transparent outline-none cursor-pointer truncate"
                         >
                           <option value="">No instructor</option>
                           {instructors.map((ins) => (
@@ -758,10 +756,10 @@ export function CoursesPage() {
                       </div>
                     </div>
 
-                    {/* Groups */}
-                    <div className={`flex-1 border-2 border-t-0 rounded-b-lg p-2 space-y-1.5 overflow-y-auto min-h-[120px] transition-colors ${dragOverSectionId === section.id ? "border-primary bg-primary/5" : "border-gray-200 bg-gray-50/50"}`}>
+                    {/* Groups drop zone */}
+                    <div className={`flex-1 border-2 border-t-0 rounded-b-lg p-2 space-y-1.5 overflow-y-auto min-h-[120px] transition-colors ${dragOverSectionId === section.id ? "border-primary bg-primary/5" : "border-border bg-muted/20"}`}>
                       {section.groups.length === 0 ? (
-                        <div className="flex items-center justify-center h-16 text-xs text-muted-foreground border border-dashed rounded-md">
+                        <div className="flex items-center justify-center h-16 text-xs text-muted-foreground border border-dashed border-border rounded-md">
                           Drop groups here
                         </div>
                       ) : (
@@ -769,10 +767,10 @@ export function CoursesPage() {
                       )}
                     </div>
 
-                    {/* Footer */}
+                    {/* Section footer */}
                     <div className="flex items-center justify-between mt-1.5">
                       <span className="text-xs text-muted-foreground">{section.groups.length} group{section.groups.length !== 1 ? "s" : ""}</span>
-                      <button onClick={() => removeSplitSection(section.id)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-0.5 transition-colors">
+                      <button onClick={() => removeSplitSection(section.id)} className="text-xs text-destructive/70 hover:text-destructive flex items-center gap-0.5 transition-colors">
                         <Trash2 className="w-3 h-3" /> Remove
                       </button>
                     </div>
@@ -789,18 +787,18 @@ export function CoursesPage() {
 
             {/* Unassigned sidebar */}
             <div
-              className={`w-52 shrink-0 border-l flex flex-col transition-colors ${dragOverUnassigned ? "bg-red-50 border-red-200" : "bg-muted/20"}`}
+              className={`w-52 shrink-0 border-l border-border flex flex-col transition-colors ${dragOverUnassigned ? "bg-destructive/5 border-destructive/30" : "bg-muted/10"}`}
               onDragOver={(e) => { e.preventDefault(); setDragOverUnassigned(true); }}
               onDragLeave={() => setDragOverUnassigned(false)}
               onDrop={onDropToUnassigned}
             >
-              <div className="px-3 py-2.5 border-b shrink-0">
+              <div className="px-3 py-2.5 border-b border-border shrink-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Unassigned</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{splitUnassigned.length} group{splitUnassigned.length !== 1 ? "s" : ""}</p>
               </div>
               <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
                 {splitUnassigned.length === 0 ? (
-                  <div className="flex items-center justify-center h-16 text-xs text-muted-foreground border border-dashed rounded-md mt-1">
+                  <div className="flex items-center justify-center h-16 text-xs text-muted-foreground border border-dashed border-border rounded-md mt-1">
                     All assigned ✓
                   </div>
                 ) : (
@@ -811,10 +809,10 @@ export function CoursesPage() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t shrink-0 flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-border bg-background shrink-0 flex items-center justify-between">
             <div className="flex flex-wrap gap-2">
               {splitSections.map((s) => (
-                <span key={s.id} className={`text-xs px-2 py-0.5 rounded border font-medium ${SLOT_BADGE[s.time] || "bg-gray-100 text-gray-600 border-gray-300"}`}>
+                <span key={s.id} className={`text-xs px-2 py-0.5 rounded border font-medium ${SLOT_BADGE[s.time] || "bg-muted text-muted-foreground border-border"}`}>
                   {s.label}: {s.groups.length}g · {s.time}
                 </span>
               ))}
@@ -904,7 +902,7 @@ export function CoursesPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
