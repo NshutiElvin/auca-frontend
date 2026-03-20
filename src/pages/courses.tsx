@@ -713,9 +713,9 @@ export function CoursesPage() {
           {/* Canvas */}
           <div className="flex-1  flex flex-wrap">
             {/* Sections */}
-            <div className="flex-1 overflow-x-auto overflow-y-hidden">
+            <div className="flex-1 flex-wrap">
               <div
-                className="flex gap-4 p-4 h-full"
+                className="flex gap-4 p-4 h-full flex-wrap"
                 style={{ minWidth: `${Math.max(splitSections.length, 1) * 260}px` }}
               >
                 {splitSections.map((section) => (
