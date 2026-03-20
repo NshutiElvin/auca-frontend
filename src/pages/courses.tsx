@@ -536,7 +536,7 @@ export function CoursesPage() {
           Manage Groups Dialog
       ════════════════════════════════════════ */}
       <Dialog open={isGroupsDialogOpen} onOpenChange={(open) => { if (!open) handleCloseManageDialog(); }}>
-        <DialogContent className="sm:max-w-[800px] h-[80vh] flex flex-col overflow-hidden">
+        <DialogContent className="min-w-[60vw] h-[80vh] flex flex-col overflow-hidden">
           <DialogHeader className="shrink-0">
             <DialogTitle>Manage Groups & Instructors for {selectedCourse?.title}</DialogTitle>
           </DialogHeader>
