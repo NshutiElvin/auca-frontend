@@ -81,12 +81,11 @@ interface SplitSection {
 
 const TIME_SLOTS = ["Morning", "Afternoon", "Evening"];
 
-// These use Tailwind color utilities intentionally (section header backgrounds),
-// not theme tokens — they are decorative accent colors, not UI chrome.
-const SLOT_COLORS: Record<string, string> = {
-  Morning: "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300",
-  Afternoon: "bg-sky-50 border-sky-200 text-sky-800 dark:bg-sky-950/40 dark:border-sky-800 dark:text-sky-300",
-  Evening: "bg-violet-50 border-violet-200 text-violet-800 dark:bg-violet-950/40 dark:border-violet-800 dark:text-violet-300",
+// Only the border is slot-specific — bg and text always come from the theme
+const SLOT_BORDER: Record<string, string> = {
+  Morning: "border-amber-400 dark:border-amber-600",
+  Afternoon: "border-sky-400 dark:border-sky-600",
+  Evening: "border-violet-400 dark:border-violet-600",
 };
 
 const SLOT_BADGE: Record<string, string> = {
@@ -725,7 +724,7 @@ export function CoursesPage() {
                     onDrop={() => onDropToSection(section.id)}
                   >
                     {/* Section header — decorative slot color, selects use transparent bg to inherit */}
-                    <div className={`rounded-t-lg border-2 p-3 transition-colors ${dragOverSectionId === section.id ? "border-primary bg-primary/10" : SLOT_COLORS[section.time] || "bg-muted border-border"}`}>
+                    <div className={`rounded-t-lg border-2 p-3 transition-colors bg-card text-foreground ${dragOverSectionId === section.id ? "border-primary" : SLOT_BORDER[section.time] || "border-border"}`}>
                       <input
                         value={section.label}
                         onChange={(e) => updateSplitSection(section.id, { label: e.target.value })}
@@ -736,7 +735,7 @@ export function CoursesPage() {
                         <select
                           value={section.time}
                           onChange={(e) => updateSplitSection(section.id, { time: e.target.value })}
-                          className="flex-1 text-xs bg-background outline-none cursor-pointer"
+                          className="flex-1 text-xs bg-transparent outline-none cursor-pointer"
                         >
                           {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
@@ -746,7 +745,7 @@ export function CoursesPage() {
                         <select
                           value={section.instructorId}
                           onChange={(e) => updateSplitSection(section.id, { instructorId: e.target.value })}
-                          className="flex-1 text-xs bg-background outline-none cursor-pointer"
+                          className="flex-1 text-xs bg-transparent outline-none cursor-pointer truncate"
                         >
                           <option value="">No instructor</option>
                           {instructors.map((ins) => (
@@ -757,7 +756,7 @@ export function CoursesPage() {
                     </div>
 
                     {/* Groups drop zone */}
-                    <div className={`flex-1 border-2 border-t-0 rounded-b-lg p-2 space-y-1.5 overflow-y-auto min-h-[120px] transition-colors ${dragOverSectionId === section.id ? "border-primary bg-primary/5" : "border-border bg-muted/20"}`}>
+                    <div className={`flex-1 border-2 border-t-0 rounded-b-lg p-2 space-y-1.5 overflow-y-auto min-h-[120px] transition-colors ${dragOverSectionId === section.id ? "border-primary bg-primary/5" : `${SLOT_BORDER[section.time] || "border-border"} bg-muted/20`}`}>
                       {section.groups.length === 0 ? (
                         <div className="flex items-center justify-center h-16 text-xs text-muted-foreground border border-dashed border-border rounded-md">
                           Drop groups here
