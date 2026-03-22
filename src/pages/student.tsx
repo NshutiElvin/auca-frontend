@@ -120,7 +120,7 @@ export default function StudentMainPage() {
             ...(hasPermission(Permissions.VIEW_STUDENTCLAIM)
             ? [
                 {
-                  title: "Claims",
+                  title: "Student Claims",
                   url: "student-claims",
                   icon: QuestionMarkIcon,
                 },

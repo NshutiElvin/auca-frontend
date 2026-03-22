@@ -262,7 +262,7 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
               user.role === "admin" ? (
                 <DropdownMenuItem
                   className="text-xs"
-                  onClick={() => navigate(`/admin/claims/${claim.id}`)}
+                  onClick={() => navigate(`/${user.role}/claims/${claim.id}`)}
                 >
                   View Details
                 </DropdownMenuItem>
