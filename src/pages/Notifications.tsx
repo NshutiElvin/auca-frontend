@@ -273,7 +273,7 @@ export const NotificationsPage: React.FC = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-2">
 
       {/* Header */}
       <div className="flex items-center justify-between">
