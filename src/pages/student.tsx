@@ -16,6 +16,7 @@ import {
 } from "../components/ui/sidebar";
 import {
   Bell,
+  BellDotIcon,
   BellIcon,
   BookOpen,
   Calendar,
@@ -133,6 +134,11 @@ export default function StudentMainPage() {
             url: "claims",
             icon: FileQuestion,
           },
+           {
+          title: "Notifications",
+          url: "notifications",
+          icon:BellDotIcon,
+        },
         ],
       },
       {

@@ -49,6 +49,7 @@ import { StudentClaims } from "./pages/StudentClaims";
 import { NewClaimPage } from "./pages/newClaim";
 import { AttendanceReport } from "./pages/AttendanceReport";
 import { InstructorExamsPage } from "./pages/instructorExams";
+import { NotificationsPage } from "./pages/Notifications";
 
 const App = () => {
   return (
@@ -150,6 +151,7 @@ const App = () => {
                                     element={<StudentsPage />}
                                   />
                                   <Route path="profile" element={<Profile />} />
+                                  <Route path="notifications" element={<NotificationsPage/>}/>
                                 </Route>
                               </Route>
 
@@ -204,6 +206,7 @@ const App = () => {
                                     path="all-exams"
                                     element={<ExamsPage />}
                                   />
+                                  <Route path="notifications" element={<NotificationsPage/>}/>
                                 
                                 </Route>
                               </Route>
@@ -228,6 +231,7 @@ const App = () => {
                                   />
                                   <Route path="exams" element={<InstructorExamsPage />} />
                                   <Route path="profile" element={<Profile />} />
+                                  <Route path="notifications" element={<NotificationsPage/>}/>
                                 </Route>
                               </Route>
                             </Route>

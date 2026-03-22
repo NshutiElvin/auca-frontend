@@ -17,17 +17,22 @@ import {
 import {
   BookOpen,
   CalendarClock,
-  CalendarDays, FileQuestion,
+  CalendarDays,
+  FileQuestion,
   GraduationCap,
   LogOut,
   LucideHistory,
-  LucideLayoutDashboard, Table2,
+  LucideLayoutDashboard,
+  Table2,
   UploadCloud,
-  User, UserCog,
+  User,
+  UserCog,
   Users,
   Bell,
   ChevronDown,
-  Shield, ListCheck
+  Shield,
+  ListCheck,
+  BellDotIcon,
 } from "lucide-react";
 
 import {
@@ -35,7 +40,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -74,6 +79,11 @@ const data = {
         { title: "Uploads", url: "Uploads", icon: UploadCloud },
         { title: "Claims", url: "claims", icon: ListCheck },
         { title: "Report", url: "report", icon: FileQuestion },
+        {
+          title: "Notifications",
+          url: "notifications",
+          icon: BellDotIcon,
+        },
       ],
     },
     {

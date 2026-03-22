@@ -26,6 +26,7 @@ import {
   Bell,
   User2Icon,
   Users,
+  BellDotIcon,
 } from "lucide-react";
 
 import {
@@ -76,6 +77,11 @@ const data = {
           title: "Exams",
           url: "exams",
           icon: ClipboardList,
+        },
+         {
+          title: "Notifications",
+          url: "notifications",
+          icon:BellDotIcon,
         },
       ],
     },
