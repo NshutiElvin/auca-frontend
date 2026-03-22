@@ -130,11 +130,11 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
         ) : (
           <span className="text-[11px]  pl-1">
             Press{' '}
-            <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono  ">
+            <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono  ">
               Enter
             </kbd>{' '}
             to send ·{' '}
-            <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono ">
+            <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono ">
               Shift+Enter
             </kbd>{' '}
             for new line
@@ -144,9 +144,9 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
         <div className="flex items-center gap-2">
           {isAdmin && (
             <span className="text-[11px]  hidden sm:inline">
-              <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono ">Enter</kbd>{' '}
+              <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono ">Enter</kbd>{' '}
               send ·{' '}
-              <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono ">⇧ Enter</kbd>{' '}
+              <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono ">⇧ Enter</kbd>{' '}
               newline
             </span>
           )}

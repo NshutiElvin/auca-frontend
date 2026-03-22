@@ -302,7 +302,6 @@ export const ClaimDetailPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleUpdateStatus(ClaimStatus.RESOLVED)}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs bg-muted text-foreground whitespace-nowrap flex-shrink-0"
                 >
                   <Badge>
                     <CheckCircle className="h-3 w-3" /> Resolve
@@ -310,7 +309,6 @@ export const ClaimDetailPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleUpdateStatus(ClaimStatus.REJECTED)}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs bg-destructive/10 text-destructive whitespace-nowrap flex-shrink-0"
                 >
                   <Badge variant={"destructive"}>
                     <XCircle className="h-3 w-3" /> Reject
