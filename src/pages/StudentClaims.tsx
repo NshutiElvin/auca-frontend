@@ -167,13 +167,13 @@ export const StudentClaims: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredClaims.map((claim) => (
                 <div className="flex justify-start space-1">
-                  {hasPermission(Permissions.VIEW_CLAIMRESPONSE) && (
-                    <Badge
-                      variant="default"
-                      className="absolute top-2 right-2"
-                    >
-                      {claim.student.user.id===user.user_id ? "Mine" : claim.student.user.first_name + " " + claim.student.user.last_name}
-
+                  {hasPermission(Permissions.VIEW_STUDENTCLAIM) && (
+                    <Badge variant="default" className="relative top-2 right-2">
+                      {claim.student.user.id === user.user_id
+                        ? "Mine"
+                        : claim.student.user.first_name +
+                          " " +
+                          claim.student.user.last_name}
                     </Badge>
                   )}
                   <ClaimCard key={claim.id} claim={claim} variant="student" />
