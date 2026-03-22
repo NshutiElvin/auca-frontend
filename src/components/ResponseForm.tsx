@@ -1,14 +1,14 @@
 // src/components/ResponseForm.tsx
-import React, { useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Loader2, Send, Shield } from 'lucide-react';
-import useToast from '../hooks/useToast';
-import { cn } from '../lib/utils';
+import React, { useRef, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Badge, Loader2, Send, Shield } from "lucide-react";
+import useToast from "../hooks/useToast";
+import { cn } from "../lib/utils";
 
 const responseSchema = z.object({
-  message: z.string().min(1, 'Response message is required'),
+  message: z.string().min(1, "Response message is required"),
   is_internal: z.boolean(),
 });
 
@@ -27,38 +27,47 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
   isAdmin = false,
   isDisabled = false,
 }) => {
-  const { register, handleSubmit, formState: { errors }, watch, setValue, reset } =
-    useForm<ResponseFormData>({
-      resolver: zodResolver(responseSchema),
-      defaultValues: { message: '', is_internal: false },
-    });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    setValue,
+    reset,
+  } = useForm<ResponseFormData>({
+    resolver: zodResolver(responseSchema),
+    defaultValues: { message: "", is_internal: false },
+  });
 
   const { setToastMessage } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const { ref: registerRef, ...registerRest } = register('message');
-  const isInternal = watch('is_internal');
-  const messageValue = watch('message');
+  const { ref: registerRef, ...registerRest } = register("message");
+  const isInternal = watch("is_internal");
+  const messageValue = watch("message");
 
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 160) + "px";
   }, [messageValue]);
 
   const handleFormSubmit = async (data: ResponseFormData) => {
     try {
       await onSubmit(data);
-      setToastMessage({ message: 'Response added successfully', variant: 'success' });
+      setToastMessage({
+        message: "Response added successfully",
+        variant: "success",
+      });
       reset();
-      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (!isLoading && !isDisabled && messageValue?.trim()) {
         handleSubmit(handleFormSubmit)();
@@ -69,11 +78,11 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
   return (
     <div
       className={cn(
-        'rounded-2xl border bg-card shadow-sm transition-all',
+        "rounded-2xl border bg-card shadow-sm transition-all",
         isInternal
-          ? 'border-primary/30 ring-1 ring-primary/20'
-          : 'border-border focus-within:border-border focus-within:ring-1 focus-within:ring-border',
-        isDisabled && 'opacity-60 pointer-events-none'
+          ? "border-primary/30 ring-1 ring-primary/20"
+          : "border-border focus-within:border-border focus-within:ring-1 focus-within:ring-border",
+        isDisabled && "opacity-60 pointer-events-none",
       )}
     >
       {/* Internal banner */}
@@ -90,23 +99,27 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
           {...registerRest}
           ref={(el) => {
             registerRef(el);
-            (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+            (
+              textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>
+            ).current = el;
           }}
           placeholder={
             isDisabled
-              ? 'Responses are disabled for this claim'
+              ? "Responses are disabled for this claim"
               : isAdmin
-              ? 'Write an official response…'
-              : 'Write a comment…'
+                ? "Write an official response…"
+                : "Write a comment…"
           }
           rows={1}
           disabled={isLoading || isDisabled}
           onKeyDown={handleKeyDown}
           className="w-full resize-none bg-transparent text-sm text-foreground placeholder: focus:outline-none focus:ring-0 border-none p-0 leading-relaxed max-h-40 overflow-y-auto"
-          style={{ height: 'auto' }}
+          style={{ height: "auto" }}
         />
         {errors.message && (
-          <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>
+          <p className="mt-1 text-xs text-destructive">
+            {errors.message.message}
+          </p>
         )}
       </div>
 
@@ -116,37 +129,41 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
         {isAdmin ? (
           <button
             type="button"
-            onClick={() => setValue('is_internal', !isInternal)}
+            onClick={() => setValue("is_internal", !isInternal)}
             className={cn(
-              'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors',
+              "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors",
               isInternal
-                ? 'bg-primary/10 border-primary/30 text-primary'
-                : 'bg-muted border-border  hover:text-foreground hover:border-input'
+                ? "bg-primary/10 border-primary/30 text-primary"
+                : "bg-muted border-border  hover:text-foreground hover:border-input",
             )}
           >
             <Shield className="h-3 w-3" />
-            {isInternal ? 'Internal' : 'Mark internal'}
+            {isInternal ? "Internal" : "Mark internal"}
           </button>
         ) : (
           <span className="text-[11px]  pl-1">
-            Press{' '}
-            <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono  ">
-              Enter
-            </kbd>{' '}
-            to send ·{' '}
-            <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono ">
-              Shift+Enter
-            </kbd>{' '}
-            for new line
+            Press{" "}
+            <kbd>
+              <Badge>Enter</Badge>
+            </kbd>{" "}
+            <Badge> to send · </Badge>
+            <kbd>
+              <Badge> Shift+Enter</Badge>
+            </kbd>{" "}
+            <Badge>for new line</Badge>
           </span>
         )}
 
         <div className="flex items-center gap-2">
           {isAdmin && (
             <span className="text-[11px]  hidden sm:inline">
-              <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono ">Enter</kbd>{' '}
-              send ·{' '}
-              <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono ">⇧ Enter</kbd>{' '}
+              <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono ">
+                Enter
+              </kbd>{" "}
+              send ·{" "}
+              <kbd className="rounded bg-primary px-1 py-0.5 text-[10px] font-mono ">
+                ⇧ Enter
+              </kbd>{" "}
               newline
             </span>
           )}
@@ -156,10 +173,10 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
             onClick={handleSubmit(handleFormSubmit)}
             disabled={isLoading || isDisabled || !messageValue?.trim()}
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full transition-all',
+              "flex h-8 w-8 items-center justify-center rounded-full transition-all",
               messageValue?.trim() && !isLoading
-                ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
-                : 'bg-muted  cursor-not-allowed'
+                ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                : "bg-muted  cursor-not-allowed",
             )}
           >
             {isLoading ? (
