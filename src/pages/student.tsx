@@ -117,15 +117,7 @@ export default function StudentMainPage() {
                 },
               ]
             : []),
-            ...(hasPermission(Permissions.VIEW_STUDENTCLAIM)
-            ? [
-                {
-                  title: "Student Claims",
-                  url: "student-claims",
-                  icon: QuestionMarkIcon,
-                },
-              ]
-            : []),
+           
           ...(hasPermission(Permissions.VIEW_COURSE)
             ? [
                 {
