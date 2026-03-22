@@ -166,7 +166,7 @@ export const StudentClaims: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredClaims.map((claim) => (
-                <div className="flex justify-start space-1">
+                <div className="flex justify-start ml-0.5">
                   {hasPermission(Permissions.VIEW_STUDENTCLAIM) && (
                     <Badge variant="default" className="relative top-2 right-2">
                       {claim.student.user.id === user.user_id
