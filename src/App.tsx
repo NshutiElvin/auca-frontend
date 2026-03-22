@@ -203,6 +203,10 @@ const App = () => {
                                     path="all-exams"
                                     element={<ExamsPage />}
                                   />
+                                  <Route
+                                  path="student-claims"
+                                    element={<AdminClaimsPage />}
+                                  />
                                 </Route>
                               </Route>
 

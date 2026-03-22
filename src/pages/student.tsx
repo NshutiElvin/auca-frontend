@@ -58,6 +58,7 @@ import useNotifications from "../hooks/useNotifications";
 import { NotificationData } from "../contexts/NotificationContext";
 import { Permissions } from "../lib/permissions";
 import { hasPermission } from "../hooks/hasPermission";
+import { QuestionMarkIcon } from "@radix-ui/react-icons";
 
 function maskEmail(email: string): string {
   if (email.length <= 0) return "";
@@ -113,6 +114,15 @@ export default function StudentMainPage() {
                   title: "Manual Timetable",
                   url: "manual",
                   icon: Calendar,
+                },
+              ]
+            : []),
+            ...(hasPermission(Permissions.VIEW_STUDENTCLAIM)
+            ? [
+                {
+                  title: "Claims",
+                  url: "student-claims",
+                  icon: QuestionMarkIcon,
                 },
               ]
             : []),

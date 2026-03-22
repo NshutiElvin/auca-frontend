@@ -1,5 +1,5 @@
 // src/components/AdminClaimsTable.tsx
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -14,12 +14,25 @@ import {
   ColumnFiltersState,
   GroupingState,
   ExpandedState,
-} from '@tanstack/react-table';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Badge } from './ui/badge';
+} from "@tanstack/react-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Badge } from "./ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -27,8 +40,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from './ui/dialog';
-import { format } from 'date-fns';
+} from "./ui/dialog";
+import { format } from "date-fns";
 import {
   ChevronDown,
   ChevronRight,
@@ -37,8 +50,8 @@ import {
   Search,
   Download,
   List,
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,9 +59,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
-import { ClaimStatus, StudentClaim } from '../lib/types';
-import * as XLSX from 'xlsx';
+} from "./ui/dropdown-menu";
+import { hasPermission } from "../hooks/hasPermission";
+import { Permissions } from "../lib/permissions";
+import useUser from "../hooks/useUser";
+import { ClaimStatus, StudentClaim } from "../lib/types";
+import * as XLSX from "xlsx";
 
 interface AdminClaimsTableProps {
   claims: StudentClaim[];
@@ -57,10 +73,14 @@ interface AdminClaimsTableProps {
 }
 
 const STATUS_BADGE: Record<ClaimStatus, string> = {
-  [ClaimStatus.PENDING]:   'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 ring-1 ring-inset ring-yellow-500/20',
-  [ClaimStatus.IN_REVIEW]: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-500/20',
-  [ClaimStatus.RESOLVED]:  'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20',
-  [ClaimStatus.REJECTED]:  'bg-red-500/10 text-red-500 ring-1 ring-inset ring-red-500/20',
+  [ClaimStatus.PENDING]:
+    "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 ring-1 ring-inset ring-yellow-500/20",
+  [ClaimStatus.IN_REVIEW]:
+    "bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-500/20",
+  [ClaimStatus.RESOLVED]:
+    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20",
+  [ClaimStatus.REJECTED]:
+    "bg-red-500/10 text-red-500 ring-1 ring-inset ring-red-500/20",
 };
 
 export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
@@ -68,78 +88,93 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
   onUpdateStatus,
   isLoading = false,
 }) => {
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'submitted_at', desc: true }]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "submitted_at", desc: true },
+  ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const [globalFilter, setGlobalFilter] = useState("");
   const [grouping, setGrouping] = useState<GroupingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [isViewAllOpen, setIsViewAllOpen] = useState(false);
+  const user = useUser();
   const navigate = useNavigate();
 
   const getStudentName = (claim: StudentClaim): string =>
     claim.student_name ||
     (claim.student?.user
       ? `${claim.student.user.first_name} ${claim.student.user.last_name}`
-      : 'Unknown Student');
+      : "Unknown Student");
 
   const columns: ColumnDef<StudentClaim>[] = [
     {
-      accessorKey: 'id',
-      header: '#',
+      accessorKey: "id",
+      header: "#",
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground tabular-nums font-medium">
-          #{row.getValue('id')}
+          #{row.getValue("id")}
         </span>
       ),
-      aggregationFn: 'count',
+      aggregationFn: "count",
       aggregatedCell: () => null,
     },
     {
-      accessorKey: 'subject',
-      header: 'Subject',
+      accessorKey: "subject",
+      header: "Subject",
       cell: ({ row }) => (
         <span
           className="block max-w-[200px] truncate text-sm font-medium text-foreground"
-          title={row.getValue('subject')}
+          title={row.getValue("subject")}
         >
-          {row.getValue('subject')}
+          {row.getValue("subject")}
         </span>
       ),
       aggregationFn: (_, leafRows) => `${leafRows.length} claims`,
       aggregatedCell: ({ getValue }) => (
-        <span className="text-xs text-muted-foreground">{getValue() as string}</span>
+        <span className="text-xs text-muted-foreground">
+          {getValue() as string}
+        </span>
       ),
     },
     {
-      accessorKey: 'claim_type',
-      header: 'Type',
+      accessorKey: "claim_type",
+      header: "Type",
       cell: ({ row }) => (
         <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground">
-          {row.getValue('claim_type')}
+          {row.getValue("claim_type")}
         </span>
       ),
       aggregationFn: (columnId, leafRows) => {
-        const types = [...new Set(leafRows.map(r => r.getValue(columnId)))];
-        return types.join(', ');
+        const types = [...new Set(leafRows.map((r) => r.getValue(columnId)))];
+        return types.join(", ");
       },
       aggregatedCell: ({ getValue }) => (
-        <span className="text-xs text-muted-foreground">{getValue() as string}</span>
+        <span className="text-xs text-muted-foreground">
+          {getValue() as string}
+        </span>
       ),
     },
     {
-      id: 'student_name',
+      id: "student_name",
       accessorFn: (row) => getStudentName(row),
-      header: 'Student',
+      header: "Student",
       cell: ({ getValue }) => (
-        <span className="text-sm text-foreground font-medium">{getValue() as string}</span>
+        <span className="text-sm text-foreground font-medium">
+          {getValue() as string}
+        </span>
       ),
-      aggregationFn: 'count',
+      aggregationFn: "count",
       aggregatedCell: ({ row }) => (
         <div className="flex items-center gap-2">
           <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground uppercase flex-shrink-0">
-            {String(row.groupingValue ?? '').split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
+            {String(row.groupingValue ?? "")
+              .split(" ")
+              .map((w: string) => w[0])
+              .slice(0, 2)
+              .join("")}
           </span>
-          <span className="text-sm font-semibold text-foreground">{row.groupingValue as string}</span>
+          <span className="text-sm font-semibold text-foreground">
+            {row.groupingValue as string}
+          </span>
           <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
             {row.subRows.length}
           </span>
@@ -147,76 +182,125 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
       ),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
+      accessorKey: "status",
+      header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue('status') as ClaimStatus;
+        const status = row.getValue("status") as ClaimStatus;
         return (
-          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[status] ?? ''}`}>
-            {status.replace(/_/g, ' ')}
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[status] ?? ""}`}
+          >
+            {status.replace(/_/g, " ")}
           </span>
         );
       },
       aggregationFn: (columnId, leafRows) => {
-        const statuses = [...new Set(leafRows.map(r => r.getValue(columnId)))];
-        return statuses.length === 1 ? statuses[0] : 'mixed';
+        const statuses = [
+          ...new Set(leafRows.map((r) => r.getValue(columnId))),
+        ];
+        return statuses.length === 1 ? statuses[0] : "mixed";
       },
       aggregatedCell: ({ getValue }) => {
         const v = getValue() as string;
-        return v === 'mixed'
-          ? <span className="text-xs text-muted-foreground">Mixed</span>
-          : <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[v as ClaimStatus] ?? ''}`}>{v.replace(/_/g, ' ')}</span>;
+        return v === "mixed" ? (
+          <span className="text-xs text-muted-foreground">Mixed</span>
+        ) : (
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[v as ClaimStatus] ?? ""}`}
+          >
+            {v.replace(/_/g, " ")}
+          </span>
+        );
       },
     },
     {
-      accessorKey: 'submitted_at',
-      header: 'Submitted',
+      accessorKey: "submitted_at",
+      header: "Submitted",
       cell: ({ row }) => {
-        const date = row.getValue('submitted_at');
+        const date = row.getValue("submitted_at");
         return (
           <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {date ? format(new Date(date as string), 'PP') : '—'}
+            {date ? format(new Date(date as string), "PP") : "—"}
           </span>
         );
       },
       aggregationFn: (columnId, leafRows) => {
-        const dates = leafRows.map(r => r.getValue(columnId)).filter(Boolean);
-        if (!dates.length) return '—';
-        return format(new Date(Math.max(...dates.map(d => new Date(d as string).getTime()))), 'PP');
+        const dates = leafRows.map((r) => r.getValue(columnId)).filter(Boolean);
+        if (!dates.length) return "—";
+        return format(
+          new Date(
+            Math.max(...dates.map((d) => new Date(d as string).getTime())),
+          ),
+          "PP",
+        );
       },
       aggregatedCell: ({ getValue }) => (
-        <span className="text-xs text-muted-foreground">{getValue() as string}</span>
+        <span className="text-xs text-muted-foreground">
+          {getValue() as string}
+        </span>
       ),
     },
     {
-      id: 'actions',
+      id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
         const claim = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+              >
                 <span className="sr-only">Open menu</span>
                 <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
-              <DropdownMenuItem className="text-xs" onClick={() => navigate(`/admin/claims/${claim.id}`)}>
-                <Eye className="h-3.5 w-3.5 mr-2" />
-                View Details
-              </DropdownMenuItem>
+              {hasPermission(Permissions.VIEW_STUDENTCLAIM) ||
+              user.role === "admin" ? (
+                <DropdownMenuItem
+                  className="text-xs"
+                  onClick={() => navigate(`/admin/claims/${claim.id}`)}
+                >
+                  View Details
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-xs" onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.IN_REVIEW)}>
-                Mark as In Review
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs" onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.RESOLVED)}>
-                Mark as Resolved
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs text-destructive focus:text-destructive" onClick={() => onUpdateStatus?.(claim.id, ClaimStatus.REJECTED)}>
-                Mark as Rejected
-              </DropdownMenuItem>
+              {hasPermission(Permissions.CHANGE_CLAIMRESPONSE) ||
+              user.role === "admin" ? (
+                <DropdownMenuItem
+                  className="text-xs"
+                  onClick={() =>
+                    onUpdateStatus?.(claim.id, ClaimStatus.IN_REVIEW)
+                  }
+                >
+                  Mark as In Review
+                </DropdownMenuItem>
+              ) : null}
+              {hasPermission(Permissions.CHANGE_CLAIMRESPONSE) ||
+              user.role === "admin" ? (
+                <DropdownMenuItem
+                  className="text-xs"
+                  onClick={() =>
+                    onUpdateStatus?.(claim.id, ClaimStatus.RESOLVED)
+                  }
+                >
+                  Mark as Resolved
+                </DropdownMenuItem>
+              ) : null}
+              {hasPermission(Permissions.CHANGE_CLAIMRESPONSE) ||
+              user.role === "admin" ? (
+                <DropdownMenuItem
+                  className="text-xs"
+                  onClick={() =>
+                    onUpdateStatus?.(claim.id, ClaimStatus.REJECTED)
+                  }
+                >
+                  Mark as Rejected
+                </DropdownMenuItem>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -240,27 +324,29 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
     getFilteredRowModel: getFilteredRowModel(),
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    defaultColumn: { aggregationFn: 'count' },
+    defaultColumn: { aggregationFn: "count" },
     state: { sorting, columnFilters, globalFilter, grouping, expanded },
   });
 
   const exportToExcel = () => {
-    const exportData = claims.map(claim => ({
+    const exportData = claims.map((claim) => ({
       ID: claim.id,
       Subject: claim.subject,
       Type: claim.claim_type,
       Student: getStudentName(claim),
-      'Reg Number': claim.student?.reg_no || '—',
-      Department: claim.student?.department?.name || '—',
-      Status: claim.status.replace(/_/g, ' '),
-      Submitted: claim.submitted_at ? format(new Date(claim.submitted_at), 'PP') : '—',
-      Description: claim.description || '',
+      "Reg Number": claim.student?.reg_no || "—",
+      Department: claim.student?.department?.name || "—",
+      Status: claim.status.replace(/_/g, " "),
+      Submitted: claim.submitted_at
+        ? format(new Date(claim.submitted_at), "PP")
+        : "—",
+      Description: claim.description || "",
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
-    ws['!cols'] = [8, 30, 15, 25, 15, 20, 15, 15, 50].map(wch => ({ wch }));
+    ws["!cols"] = [8, 30, 15, 25, 15, 20, 15, 15, 50].map((wch) => ({ wch }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Claims');
-    XLSX.writeFile(wb, `claims_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Claims");
+    XLSX.writeFile(wb, `claims_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 
   if (isLoading) {
@@ -273,7 +359,6 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
 
   return (
     <div className="space-y-3">
-
       {/* ── Toolbar ── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         {/* Search */}
@@ -281,7 +366,7 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Search claims…"
-            value={globalFilter ?? ''}
+            value={globalFilter ?? ""}
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="pl-8 h-8 text-sm bg-muted border-transparent focus:border-border focus:bg-background"
           />
@@ -290,31 +375,45 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
         <div className="flex items-center gap-2 flex-wrap">
           {/* Group by */}
           <Select
-            value={grouping.length > 0 ? grouping[0] : 'none'}
-            onValueChange={(v) => setGrouping(v === 'none' ? [] : [v])}
+            value={grouping.length > 0 ? grouping[0] : "none"}
+            onValueChange={(v) => setGrouping(v === "none" ? [] : [v])}
           >
             <SelectTrigger className="h-8 w-[150px] text-xs">
               <SelectValue placeholder="Group by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none" className="text-xs">No grouping</SelectItem>
-              <SelectItem value="status" className="text-xs">By Status</SelectItem>
-              <SelectItem value="claim_type" className="text-xs">By Type</SelectItem>
-              <SelectItem value="student_name" className="text-xs">By Student</SelectItem>
+              <SelectItem value="none" className="text-xs">
+                No grouping
+              </SelectItem>
+              <SelectItem value="status" className="text-xs">
+                By Status
+              </SelectItem>
+              <SelectItem value="claim_type" className="text-xs">
+                By Type
+              </SelectItem>
+              <SelectItem value="student_name" className="text-xs">
+                By Student
+              </SelectItem>
             </SelectContent>
           </Select>
 
           {/* View All dialog */}
           <Dialog open={isViewAllOpen} onOpenChange={setIsViewAllOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+              >
                 <List className="h-3.5 w-3.5" />
                 View All
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-base">All Claims ({claims.length})</DialogTitle>
+                <DialogTitle className="text-base">
+                  All Claims ({claims.length})
+                </DialogTitle>
                 <DialogDescription className="text-xs">
                   Complete list of all student claims
                 </DialogDescription>
@@ -336,8 +435,13 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                     {claims.length > 0 ? (
                       claims.map((claim) => (
                         <TableRow key={claim.id}>
-                          <TableCell className="text-xs text-muted-foreground">#{claim.id}</TableCell>
-                          <TableCell className="max-w-[180px] truncate text-sm" title={claim.subject}>
+                          <TableCell className="text-xs text-muted-foreground">
+                            #{claim.id}
+                          </TableCell>
+                          <TableCell
+                            className="max-w-[180px] truncate text-sm"
+                            title={claim.subject}
+                          >
                             {claim.subject}
                           </TableCell>
                           <TableCell>
@@ -345,21 +449,30 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                               {claim.claim_type}
                             </span>
                           </TableCell>
-                          <TableCell className="text-sm">{getStudentName(claim)}</TableCell>
+                          <TableCell className="text-sm">
+                            {getStudentName(claim)}
+                          </TableCell>
                           <TableCell>
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[claim.status] ?? ''}`}>
-                              {claim.status.replace(/_/g, ' ')}
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[claim.status] ?? ""}`}
+                            >
+                              {claim.status.replace(/_/g, " ")}
                             </span>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                            {claim.submitted_at ? format(new Date(claim.submitted_at), 'PP') : '—'}
+                            {claim.submitted_at
+                              ? format(new Date(claim.submitted_at), "PP")
+                              : "—"}
                           </TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-7 w-7 p-0 text-muted-foreground"
-                              onClick={() => { setIsViewAllOpen(false); navigate(`/admin/claims/${claim.id}`); }}
+                              onClick={() => {
+                                setIsViewAllOpen(false);
+                                navigate(`/admin/claims/${claim.id}`);
+                              }}
                             >
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
@@ -368,7 +481,10 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-20 text-center text-sm text-muted-foreground">
+                        <TableCell
+                          colSpan={7}
+                          className="h-20 text-center text-sm text-muted-foreground"
+                        >
                           No claims found.
                         </TableCell>
                       </TableRow>
@@ -380,7 +496,12 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
           </Dialog>
 
           {/* Export */}
-          <Button onClick={exportToExcel} variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+          <Button
+            onClick={exportToExcel}
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1.5"
+          >
             <Download className="h-3.5 w-3.5" />
             Export
           </Button>
@@ -392,12 +513,21 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-muted/40 hover:bg-muted/40">
+              <TableRow
+                key={headerGroup.id}
+                className="bg-muted/40 hover:bg-muted/40"
+              >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide h-9">
+                  <TableHead
+                    key={header.id}
+                    className="text-xs font-semibold text-muted-foreground uppercase tracking-wide h-9"
+                  >
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -409,7 +539,7 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                 <TableRow
                   key={row.id}
                   className={`
-                    ${row.getIsGrouped() ? 'bg-muted/20 hover:bg-muted/30' : 'hover:bg-muted/30'}
+                    ${row.getIsGrouped() ? "bg-muted/20 hover:bg-muted/30" : "hover:bg-muted/30"}
                     transition-colors
                   `}
                 >
@@ -421,20 +551,28 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
                             onClick={row.getToggleExpandedHandler()}
                             className="text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            {row.getIsExpanded()
-                              ? <ChevronDown className="h-3.5 w-3.5" />
-                              : <ChevronRight className="h-3.5 w-3.5" />
-                            }
+                            {row.getIsExpanded() ? (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            )}
                           </button>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </div>
                       ) : cell.getIsAggregated() ? (
                         flexRender(
-                          cell.column.columnDef.aggregatedCell ?? cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.column.columnDef.aggregatedCell ??
+                            cell.column.columnDef.cell,
+                          cell.getContext(),
                         )
                       ) : cell.getIsPlaceholder() ? null : (
-                        flexRender(cell.column.columnDef.cell, cell.getContext())
+                        flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )
                       )}
                     </TableCell>
                   ))}
@@ -442,7 +580,10 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-sm text-muted-foreground"
+                >
                   No claims found.
                 </TableCell>
               </TableRow>
@@ -454,13 +595,18 @@ export const AdminClaimsTable: React.FC<AdminClaimsTableProps> = ({
       {/* ── Footer ── */}
       <div className="flex items-center justify-between pt-1">
         <span className="text-xs text-muted-foreground">
-          Showing{' '}
-          <span className="font-medium text-foreground">{table.getRowModel().rows.length}</span>
-          {' '}of{' '}
-          <span className="font-medium text-foreground">{claims.length}</span>
-          {' '}claim{claims.length !== 1 ? 's' : ''}
+          Showing{" "}
+          <span className="font-medium text-foreground">
+            {table.getRowModel().rows.length}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium text-foreground">{claims.length}</span>{" "}
+          claim{claims.length !== 1 ? "s" : ""}
           {grouping.length > 0 && (
-            <span className="text-muted-foreground"> · grouped by {grouping[0].replace('_', ' ')}</span>
+            <span className="text-muted-foreground">
+              {" "}
+              · grouped by {grouping[0].replace("_", " ")}
+            </span>
           )}
         </span>
         <div className="flex items-center gap-1.5">
