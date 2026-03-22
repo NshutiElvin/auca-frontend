@@ -169,27 +169,27 @@ export const ClaimDetailPage: React.FC = () => {
 
               {/* Inline meta — desktop */}
               <div className="hidden md:flex items-center gap-1.5 flex-shrink-0">
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+                <Badge>
                   <User className="h-3 w-3" />
                   {claim.student_name ||
                     `${claim.student.user.first_name} ${claim.student.user.last_name}`}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+                </Badge>
+                <Badge>
                   <Hash className="h-3 w-3" />
                   {claim.student.reg_no}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+                </Badge>
+                <Badge>
                   <FileText className="h-3 w-3" />
                   {claim.claim_type}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+                </Badge>
+                <Badge>
                   <Building2 className="h-3 w-3" />
                   {claim.student.department.name}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-full px-2.5 py-0.5">
+                </Badge>
+                <Badge>
                   <MapPin className="h-3 w-3" />
                   {claim.student.department.location.name}
-                </span>
+                </Badge>
               </div>
 
               {/* Admin actions — desktop inline */}
