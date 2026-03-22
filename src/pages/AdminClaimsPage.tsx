@@ -120,6 +120,8 @@ export const AdminClaimsPage: React.FC = () => {
     }
     return map;
   }, [allClaims]);
+  console.log(hasPermission(Permissions.VIEW_STUDENTCLAIM))
+  console.log(user.role)
 console.log((!hasPermission(Permissions.VIEW_STUDENTCLAIM) || user.role !== "admin") ? "No permission" : "Has permission");
 
   return (
