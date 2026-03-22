@@ -3,9 +3,10 @@ import React, { useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Badge, Loader2, Send, Shield } from "lucide-react";
+import {  Loader2, Send, Shield } from "lucide-react";
 import useToast from "../hooks/useToast";
 import { cn } from "../lib/utils";
+import { Badge } from "./ui/badge";
 
 const responseSchema = z.object({
   message: z.string().min(1, "Response message is required"),
