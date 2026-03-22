@@ -460,8 +460,8 @@ export function UsersPage() {
   });
 
   const uniqueRoles = React.useMemo(() => {
-    const roles = data.map((item) => item.role).filter(Boolean);
-    return Array.from(new Set(roles));
+    // const roles = data.map((item) => item.role).filter(Boolean);
+    return  ["instructor", "admin", "student"];
   }, [data]);
 
   const handleSearch = useDebouncedCallback(async () => {
@@ -831,7 +831,7 @@ export function UsersPage() {
 
       {/* Add/Edit User Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="min-w-[60vw]">
           <DialogHeader className="p-5 pb-3">
             <DialogTitle className="font-semibold text-lg">
               {editingUser ? "Edit User" : "Add New User"}
@@ -988,7 +988,7 @@ export function UsersPage() {
 
       {/* View User Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="min-w-[60vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="p-5 pb-3">
             <DialogTitle className="font-semibold text-lg flex items-center">
               <User className="h-5 w-5 mr-2" />
