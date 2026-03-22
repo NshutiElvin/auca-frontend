@@ -122,11 +122,11 @@ export const AdminClaimsPage: React.FC = () => {
   }, [allClaims]);
   console.log(hasPermission(Permissions.VIEW_STUDENTCLAIM))
   console.log(user.role)
-console.log((!hasPermission(Permissions.VIEW_STUDENTCLAIM) || user.role !== "admin") ? "No permission" : "Has permission");
+console.log((!hasPermission(Permissions.VIEW_STUDENTCLAIM) && user.role !== "admin") ? "No permission" : "Has permission");
 
   return (
     <>
-      {(!hasPermission(Permissions.VIEW_STUDENTCLAIM) || user.role !== "admin") ? (
+      {(!hasPermission(Permissions.VIEW_STUDENTCLAIM) && user.role !== "admin") ? (
         <div className="flex items-center justify-center h-full">
           <p className="text-muted-foreground">
             You do not have permission to view this page.

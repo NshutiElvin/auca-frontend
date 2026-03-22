@@ -135,8 +135,8 @@ export const ClaimDetailPage: React.FC = () => {
 
   return (
     <>
-      {!hasPermission(Permissions.VIEW_STUDENTCLAIM) ||
-      user.role !== "admin" ||claim.student.user.id !== user.user_id ? (
+      {(!hasPermission(Permissions.VIEW_STUDENTCLAIM) &&
+      user.role !== "admin" &&claim.student.user.id !== user.user_id )? (
         <div className="flex items-center justify-center h-full">
           <p className="text-muted-foreground">
             You do not have permission to view this page.
