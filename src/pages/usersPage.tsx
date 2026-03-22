@@ -889,6 +889,7 @@ export function UsersPage() {
                   <SelectContent>
                     <SelectItem value="instructor">Instructor</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="student">Student</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
