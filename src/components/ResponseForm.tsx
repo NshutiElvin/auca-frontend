@@ -102,7 +102,7 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
           rows={1}
           disabled={isLoading || isDisabled}
           onKeyDown={handleKeyDown}
-          className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 border-none p-0 leading-relaxed max-h-40 overflow-y-auto"
+          className="w-full resize-none bg-transparent text-sm text-foreground placeholder: focus:outline-none focus:ring-0 border-none p-0 leading-relaxed max-h-40 overflow-y-auto"
           style={{ height: 'auto' }}
         />
         {errors.message && (
@@ -121,20 +121,20 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
               'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors',
               isInternal
                 ? 'bg-primary/10 border-primary/30 text-primary'
-                : 'bg-muted border-border text-muted-foreground hover:text-foreground hover:border-input'
+                : 'bg-muted border-border  hover:text-foreground hover:border-input'
             )}
           >
             <Shield className="h-3 w-3" />
             {isInternal ? 'Internal' : 'Mark internal'}
           </button>
         ) : (
-          <span className="text-[11px] text-muted-foreground pl-1">
+          <span className="text-[11px]  pl-1">
             Press{' '}
-            <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground">
+            <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono  ">
               Enter
             </kbd>{' '}
             to send ·{' '}
-            <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground">
+            <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono ">
               Shift+Enter
             </kbd>{' '}
             for new line
@@ -143,10 +143,10 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
 
         <div className="flex items-center gap-2">
           {isAdmin && (
-            <span className="text-[11px] text-muted-foreground hidden sm:inline">
-              <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground">Enter</kbd>{' '}
+            <span className="text-[11px]  hidden sm:inline">
+              <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono ">Enter</kbd>{' '}
               send ·{' '}
-              <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono text-muted-foreground">⇧ Enter</kbd>{' '}
+              <kbd className="rounded bg-muted px-1 py-0.5 text-[10px] font-mono ">⇧ Enter</kbd>{' '}
               newline
             </span>
           )}
@@ -159,7 +159,7 @@ export const ResponseForm: React.FC<ResponseFormProps> = ({
               'flex h-8 w-8 items-center justify-center rounded-full transition-all',
               messageValue?.trim() && !isLoading
                 ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
-                : 'bg-muted text-muted-foreground cursor-not-allowed'
+                : 'bg-muted  cursor-not-allowed'
             )}
           >
             {isLoading ? (

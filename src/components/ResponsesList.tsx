@@ -161,9 +161,9 @@ export const ResponsesList: React.FC<ResponsesListProps> = ({
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground w-full">
         <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
-          <MessageSquare className="h-7 w-7 text-muted-foreground/50" />
+          <MessageSquare className="h-7 w-7" />
         </div>
-        <p className="font-medium text-foreground/60">No responses yet</p>
+        <p className="font-medium text-foreground">No responses yet</p>
         <p className="text-sm text-muted-foreground">Be the first to respond to this claim!</p>
       </div>
     );

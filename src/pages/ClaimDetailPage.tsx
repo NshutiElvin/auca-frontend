@@ -135,8 +135,9 @@ export const ClaimDetailPage: React.FC = () => {
 
   return (
     <>
-      {(!hasPermission(Permissions.VIEW_STUDENTCLAIM) &&
-      user.role !== "admin" &&claim.student.user.id !== user.user_id )? (
+      {!hasPermission(Permissions.VIEW_STUDENTCLAIM) &&
+      user.role !== "admin" &&
+      claim.student.user.id !== user.user_id ? (
         <div className="flex items-center justify-center h-full">
           <p className="text-muted-foreground">
             You do not have permission to view this page.
@@ -192,28 +193,29 @@ export const ClaimDetailPage: React.FC = () => {
               </div>
 
               {/* Admin actions — desktop inline */}
-              {isAdmin || hasPermission(Permissions.CHANGE_CLAIMRESPONSE) && (
-                <div className="hidden lg:flex items-center gap-1 flex-shrink-0 ml-1">
-                  <button
-                    onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
-                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-muted text-foreground hover:bg-accent transition-colors"
-                  >
-                    <Clock className="h-3 w-3" /> In Review
-                  </button>
-                  <button
-                    onClick={() => handleUpdateStatus(ClaimStatus.RESOLVED)}
-                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-muted text-foreground hover:bg-accent transition-colors"
-                  >
-                    <CheckCircle className="h-3 w-3" /> Resolve
-                  </button>
-                  <button
-                    onClick={() => handleUpdateStatus(ClaimStatus.REJECTED)}
-                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-                  >
-                    <XCircle className="h-3 w-3" /> Reject
-                  </button>
-                </div>
-              )}
+              {isAdmin ||
+                (hasPermission(Permissions.CHANGE_CLAIMRESPONSE) && (
+                  <div className="hidden lg:flex items-center gap-1 flex-shrink-0 ml-1">
+                    <button
+                      onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-muted text-foreground hover:bg-accent transition-colors"
+                    >
+                      <Clock className="h-3 w-3" /> In Review
+                    </button>
+                    <button
+                      onClick={() => handleUpdateStatus(ClaimStatus.RESOLVED)}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-muted text-foreground hover:bg-accent transition-colors"
+                    >
+                      <CheckCircle className="h-3 w-3" /> Resolve
+                    </button>
+                    <button
+                      onClick={() => handleUpdateStatus(ClaimStatus.REJECTED)}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                    >
+                      <XCircle className="h-3 w-3" /> Reject
+                    </button>
+                  </div>
+                ))}
 
               {/* Expand toggle */}
               <button
@@ -292,21 +294,26 @@ export const ClaimDetailPage: React.FC = () => {
                 </span>
                 <button
                   onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs bg-muted text-foreground whitespace-nowrap flex-shrink-0"
                 >
-                  <Clock className="h-3 w-3" /> In Review
+                  <Badge>
+                    <Clock className="h-3 w-3" /> In Review
+                  </Badge>
                 </button>
                 <button
                   onClick={() => handleUpdateStatus(ClaimStatus.RESOLVED)}
                   className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs bg-muted text-foreground whitespace-nowrap flex-shrink-0"
                 >
-                  <CheckCircle className="h-3 w-3" /> Resolve
+                  <Badge>
+                    <CheckCircle className="h-3 w-3" /> Resolve
+                  </Badge>
                 </button>
                 <button
                   onClick={() => handleUpdateStatus(ClaimStatus.REJECTED)}
                   className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs bg-destructive/10 text-destructive whitespace-nowrap flex-shrink-0"
                 >
-                  <XCircle className="h-3 w-3" /> Reject
+                  <Badge variant={"destructive"}>
+                    <XCircle className="h-3 w-3" /> Reject
+                  </Badge>
                 </button>
               </div>
             </div>
@@ -323,7 +330,12 @@ export const ClaimDetailPage: React.FC = () => {
                   {responses.length}
                 </span>
               </div>
-              <ResponsesList responses={responses} isAdmin={isAdmin || hasPermission(Permissions.ADD_CLAIMRESPONSE)}  />
+              <ResponsesList
+                responses={responses}
+                isAdmin={
+                  isAdmin || hasPermission(Permissions.ADD_CLAIMRESPONSE)
+                }
+              />
             </div>
           </div>
 
@@ -333,7 +345,9 @@ export const ClaimDetailPage: React.FC = () => {
               <ResponseForm
                 onSubmit={handleAddResponse}
                 isLoading={addResponse.isPending}
-                isAdmin={isAdmin || hasPermission(Permissions.ADD_CLAIMRESPONSE)}
+                isAdmin={
+                  isAdmin || hasPermission(Permissions.ADD_CLAIMRESPONSE)
+                }
                 isDisabled={isClosed}
               />
               {isClosed && (
