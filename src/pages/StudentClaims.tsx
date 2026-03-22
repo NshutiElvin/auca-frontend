@@ -169,7 +169,7 @@ export const StudentClaims: React.FC = () => {
                 <div className="flex flex-col px-1">
                   {hasPermission(Permissions.VIEW_STUDENTCLAIM) && (
                     <Badge variant="default" className="relative top-2 right-2">
-                      {claim.student.user.id === user.user_id
+                      {claim.student.user.id == user.user_id
                         ? "Mine"
                         : claim.student.user.first_name +
                           " " +
