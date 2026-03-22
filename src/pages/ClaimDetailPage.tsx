@@ -192,7 +192,7 @@ export const ClaimDetailPage: React.FC = () => {
               </div>
 
               {/* Admin actions — desktop inline */}
-              {isAdmin && (
+              {isAdmin || hasPermission(Permissions.CHANGE_CLAIMRESPONSE) && (
                 <div className="hidden lg:flex items-center gap-1 flex-shrink-0 ml-1">
                   <button
                     onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
@@ -284,7 +284,7 @@ export const ClaimDetailPage: React.FC = () => {
           </div>
 
           {/* ── Mobile admin actions bar ── */}
-          {isAdmin && (
+          {(isAdmin || hasPermission(Permissions.CHANGE_CLAIMRESPONSE)) && (
             <div className="lg:hidden flex-shrink-0 border-b bg-background px-4 py-1.5">
               <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium flex-shrink-0">
@@ -323,7 +323,7 @@ export const ClaimDetailPage: React.FC = () => {
                   {responses.length}
                 </span>
               </div>
-              <ResponsesList responses={responses} isAdmin={isAdmin} />
+              <ResponsesList responses={responses} isAdmin={isAdmin || hasPermission(Permissions.ADD_CLAIMRESPONSE)}  />
             </div>
           </div>
 
@@ -333,7 +333,7 @@ export const ClaimDetailPage: React.FC = () => {
               <ResponseForm
                 onSubmit={handleAddResponse}
                 isLoading={addResponse.isPending}
-                isAdmin={isAdmin}
+                isAdmin={isAdmin || hasPermission(Permissions.ADD_CLAIMRESPONSE)}
                 isDisabled={isClosed}
               />
               {isClosed && (
