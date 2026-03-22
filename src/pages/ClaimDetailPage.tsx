@@ -198,21 +198,22 @@ export const ClaimDetailPage: React.FC = () => {
                   <div className="hidden lg:flex items-center gap-1 flex-shrink-0 ml-1">
                     <button
                       onClick={() => handleUpdateStatus(ClaimStatus.IN_REVIEW)}
-                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-muted text-foreground hover:bg-accent transition-colors"
                     >
-                      <Clock className="h-3 w-3" /> In Review
+                      <Badge variant="default"  >
+                        <Clock className="h-3 w-3" /> In Review
+                      </Badge>
                     </button>
                     <button
                       onClick={() => handleUpdateStatus(ClaimStatus.RESOLVED)}
-                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-muted text-foreground hover:bg-accent transition-colors"
                     >
-                      <CheckCircle className="h-3 w-3" /> Resolve
+                      <Badge><CheckCircle className="h-3 w-3" /> Resolve</Badge>
                     </button>
                     <button
                       onClick={() => handleUpdateStatus(ClaimStatus.REJECTED)}
-                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                     >
-                      <XCircle className="h-3 w-3" /> Reject
+                      <Badge variant="destructive">
+                        <XCircle className="h-3 w-3" /> Reject
+                      </Badge>
                     </button>
                   </div>
                 ))}
