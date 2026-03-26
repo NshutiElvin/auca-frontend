@@ -9,7 +9,7 @@ import { NotificationData } from "../../contexts/NotificationContext";
 import { fr } from "date-fns/locale";
 
 function ServerLoader() {
-  const { serverLoadingMessage, setServerLoadingMessage } = useToast();
+  const { serverLoadingMessage } = useToast();
   const { currentExamData } = useExamsSchedule();
   const [lastNotification, setLastNotification] = useState<NotificationData | null>(null);
   const { notifications, setNotifications } = useNotifications();
@@ -29,7 +29,6 @@ function ServerLoader() {
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent 
         className="sm:max-w-md"
-        
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -39,18 +38,25 @@ function ServerLoader() {
           </div>
           
           <div className="text-center">
-            <p className="text-sm   ">
+            <p className="text-sm">
               {serverLoadingMessage?.message || "Loading..."}
             </p>
           </div>
         </div>
 
+        {/* Fix: Render ReactNode directly without trying to call it as a component */}
+        {serverLoadingMessage?.ui && (
+          <div className="mt-4">
+            {serverLoadingMessage.ui}
+          </div>
+        )}
+
         {lastNotification && (
-          <div className="mt-4 p-3   rounded-lg border border-gray-200 dark:border-gray-700">
-            <p className="text-xs    mb-1">
+          <div className="mt-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p className="text-xs mb-1">
               {lastNotification?.title}
             </p>
-            <p className="text-sm   ">
+            <p className="text-sm">
               {lastNotification.message}
             </p>
           </div>

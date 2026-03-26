@@ -51,6 +51,7 @@ import { AttendanceReport } from "./pages/AttendanceReport";
 import { InstructorExamsPage } from "./pages/instructorExams";
 import { NotificationsPage } from "./pages/Notifications";
 
+
 const App = () => {
   return (
     <BrowserRouter>

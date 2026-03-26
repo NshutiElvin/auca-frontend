@@ -8,6 +8,7 @@ export interface ToastPayload {
 export interface loadingMessage{
   message?: string;
   isServerLoading: boolean;
+  ui?: ReactNode;
 }
 
 

@@ -51,6 +51,7 @@ import {
   DialogTitle,
 } from "../../ui/dialog";
 import { Input } from "../../ui/input";
+import { ProgressUI } from "../../ui/ProgressUi";
 
 interface Department {
   id: string;
@@ -97,7 +98,43 @@ interface FormView {
   addSlot: boolean;
   addDay: boolean;
 }
-export default function CreateNewTimeTableModal({configuration}:{configuration:any}) {
+
+interface SSEProgressEvent {
+  type: "progress";
+  step: number;
+  total_steps: number;
+  percent: number;
+  message: string;
+  stats?: GenerateStats;
+}
+
+interface SSEDoneEvent {
+  type: "done";
+  message: string;
+  stats: GenerateStats;
+  warnings: string[];
+}
+
+interface SSEErrorEvent {
+  type: "error";
+  message: string;
+}
+
+interface GenerateStats {
+  [key: string]: number;
+}
+interface GeneratingState {
+  status: "idle" | "streaming" | "success" | "error";
+  message: string;
+  progress: number;
+}
+
+type SSEEvent = SSEProgressEvent | SSEDoneEvent | SSEErrorEvent;
+export default function CreateNewTimeTableModal({
+  configuration,
+}: {
+  configuration: any;
+}) {
   const { setServerLoadingMessage, setToastMessage, serverLoadingMessage } =
     useToast();
   const axios = useUserAxios();
@@ -123,6 +160,12 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
     addSlot: false,
     updateSlot: false,
   });
+
+  const [processing, setProcessing] = useState<GeneratingState>({
+    status: "idle",
+    message: "",
+    progress: 0,
+  });
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [newSlot, setNewSlot] = useState<SelectedSlot>({
     date: "",
@@ -135,8 +178,15 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
     date: "",
     slots: [],
   });
+
+  const [generateStats, setGenerateStats] = useState<GenerateStats | null>(
+    null,
+  );
+  const [generateWarnings, setGenerateWarnings] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [processingErrors, setProcessingErrors] = useState<string[]>([]);
   const [wantedSlots, setWantedSlots] = useState<number>(0);
+  const isRunning = processing.status === "streaming";
   const {
     handleSubmit,
     reset,
@@ -151,6 +201,8 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
       course_ids: [],
     },
   });
+
+  let parsedOffset = 0;
 
   const getExamsSlots: SubmitHandler<ExamSheduleFormData> = (formData) => {
     if (!date || !endDate) {
@@ -181,7 +233,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                 start: start.slice(0, 5),
                 end: end.slice(0, 5),
               })),
-            ])
+            ]),
           );
           setExamSlots(formatted);
           setWindowView({ formOnly: false, slotsOnly: true, split: false });
@@ -204,8 +256,8 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
   const fetchCourses = () => {
     startLoadingCoursesTransition(async () => {
       try {
-        const response = await axios.post("/api/courses/timetable-courses/",{
-          configurations:configuration
+        const response = await axios.post("/api/courses/timetable-courses/", {
+          configurations: configuration,
         });
         const { data } = response.data;
 
@@ -213,7 +265,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
           (course: Course) => ({
             label: `${course.code} - ${course.title} -${course.semester.name}`,
             value: course.id,
-          })
+          }),
         );
 
         setCourseOptions(formattedOptions);
@@ -265,7 +317,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
         [selectedSlot.date]: prev[selectedSlot.date].map((slot: any) =>
           slot.id === selectedSlot.id
             ? { ...slot, start: selectedSlot.start, end: selectedSlot.end }
-            : slot
+            : slot,
         ),
       }));
       setSelectedSlot(null);
@@ -287,7 +339,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
 
   const addSlotToDate = (
     date: string,
-    newSlot: { name: string; start: string; end: string }
+    newSlot: { name: string; start: string; end: string },
   ) => {
     const dayOfWeek = new Date(date).getDay();
 
@@ -343,7 +395,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
   };
   const addNewDay = (
     date: string,
-    slots: Array<{ name: string; start: string; end: string }>
+    slots: Array<{ name: string; start: string; end: string }>,
   ) => {
     if (getTime(date, newSlot.end) <= getTime(date, newSlot.start)) {
       setToastMessage({
@@ -405,20 +457,22 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
   };
 
   const deleteSlot = (date: string, slotId: string) => {
-  if (window.confirm("Are you sure you want to delete this time slot?")) {
-    setExamSlots((prev: any) => {
-      const updatedSlots = { ...prev };
-      
-      updatedSlots[date] = prev[date].filter((slot: any) => slot.id !== slotId);
-      
-      if (updatedSlots[date].length === 0) {
-        delete updatedSlots[date];
-      }
-      
-      return updatedSlots;
-    });
-  }
-};
+    if (window.confirm("Are you sure you want to delete this time slot?")) {
+      setExamSlots((prev: any) => {
+        const updatedSlots = { ...prev };
+
+        updatedSlots[date] = prev[date].filter(
+          (slot: any) => slot.id !== slotId,
+        );
+
+        if (updatedSlots[date].length === 0) {
+          delete updatedSlots[date];
+        }
+
+        return updatedSlots;
+      });
+    }
+  };
 
   const deleteDay = (date: string) => {
     const dayOfWeek = new Date(date).getDay();
@@ -437,8 +491,15 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
 
   const generateTimetable = async () => {
     setServerLoadingMessage({
-      message: `Generating timetable`,
+      message: `Starting timetable generation...`,
       isServerLoading: true,
+      ui: (
+        <ProgressUI
+          message="Starting generation..."
+          progress={0}
+          status="streaming"
+        />
+      ),
     });
     setClose();
     startGeneratingTimetableTransition(async () => {
@@ -454,46 +515,156 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
           end_date: dates[dates.length - 1].toISOString().split("T")[0],
           slots: examSlots,
           course_ids: selectedCourses.map(Number) as [number, ...number[]],
-          configurations:configuration
+          configurations: configuration,
         };
 
         const resp = await axios.post(
           "/api/exams/exams/generate-exam-schedule/",
-          payload
+          payload,
+          {
+            responseType: "text",
+            onDownloadProgress: (progressEvent) => {
+              const fullText: string =
+                (progressEvent.event?.target as XMLHttpRequest)?.responseText ??
+                "";
+
+              // Find the last complete double-newline boundary
+              const lastEventEnd = fullText.lastIndexOf("\n\n");
+
+              // Only process if we have new complete events
+              if (lastEventEnd !== -1 && lastEventEnd >= parsedOffset) {
+                // Extract only the fully formed chunks we haven't seen yet
+                const newCompleteData = fullText.slice(
+                  parsedOffset,
+                  lastEventEnd + 2,
+                );
+                parsedOffset = lastEventEnd + 2; // Advance offset to prevent reprocessing
+
+                const parts = newCompleteData.split("\n\n");
+
+                for (const part of parts) {
+                  const line = part.trim();
+                  if (!line.startsWith("data:")) continue;
+
+                  try {
+                    const event = JSON.parse(
+                      line.replace(/^data:\s*/, ""),
+                    ) as SSEEvent;
+
+                    if (event.type === "progress") {
+                      setProcessing({
+                        status: "streaming",
+                        message: event.message,
+                        progress: event.percent,
+                      });
+                      if (event.stats) setGenerateStats(event.stats);
+                      setServerLoadingMessage({
+                        message: event.message,
+                        isServerLoading: true,
+                        ui: (
+                          <ProgressUI
+                            message={event.message}
+                            progress={event.percent}
+                            stats={event.stats}
+                            status="streaming"
+                          />
+                        ),
+                      });
+                    }
+
+                    if (event.type === "done") {
+                      setProcessing({
+                        status: "success",
+                        message: event.message,
+                        progress: 100,
+                      });
+                      setGenerateStats(event.stats);
+                      setGenerateWarnings(event.warnings ?? []);
+                      setServerLoadingMessage({
+                        message: event.message,
+                        isServerLoading: true,
+                        ui: (
+                          <ProgressUI
+                            message={event.message}
+                            progress={100}
+                            stats={event.stats}
+                            warnings={event.warnings}
+                            status="success"
+                          />
+                        ),
+                      });
+                      setToastMessage({
+                        message: "Import completed successfully!",
+                        variant: "success",
+                      });
+
+                      setToastMessage({
+                        message: data.message,
+                        variant: "success",
+                      });
+                      const respTyped = resp as { data: ExamsResponse };
+                      const datas: Event[] = respTyped.data.data.map(
+                        (ex: any) => {
+                          const startDate = new Date(
+                            `${ex.date}T${ex.start_time}`,
+                          );
+                          const endDate = new Date(`${ex.date}T${ex.end_time}`);
+                          let examEvent: Event = {
+                            title: ex.group?.course?.title,
+                            description: ex?.status,
+                            id: String(ex?.id),
+                            startDate: startDate,
+                            endDate: endDate,
+                          };
+                          return examEvent;
+                        },
+                      );
+
+                      setExams(datas);
+                      if (resp.data.unscheduled) {
+                        let unschedules = resp.data.unscheduled;
+
+                        setUnScheduled(unschedules);
+                      }
+                    }
+
+                    if (event.type === "error") {
+                      setProcessing({
+                        status: "error",
+                        message: event.message,
+                        progress: 0,
+                      });
+                      setProcessingErrors([
+                        event.message,
+                        "If the issue persists, contact support.",
+                      ]);
+                      setServerLoadingMessage({
+                        message: event.message,
+                        isServerLoading: true,
+                        ui: (
+                          <ProgressUI
+                            message={event.message}
+                            progress={0}
+                            status="error"
+                          />
+                        ),
+                      });
+                      setToastMessage({
+                        message:
+                          "Generatng timetable failed. Please try again.",
+                        variant: "danger",
+                      });
+                    }
+                  } catch (e) {
+                    console.warn("Skipped unparseable SSE line:", line);
+                  }
+                }
+              }
+            },
+          },
         );
-
-        const { data } = resp;
-
-        if (resp.status==200) {
-          setToastMessage({
-            message: data.message,
-            variant: "success",
-          });
-          const respTyped = resp as { data: ExamsResponse };
-          const datas: Event[] = respTyped.data.data.map((ex: any) => {
-            const startDate = new Date(`${ex.date}T${ex.start_time}`);
-            const endDate = new Date(`${ex.date}T${ex.end_time}`);
-            let examEvent: Event = {
-              title: ex.group?.course?.title,
-              description: ex?.status,
-              id: String(ex?.id),
-              startDate: startDate,
-              endDate: endDate,
-            };
-            return examEvent;
-          });
-
-          setExams(datas);
-          if (resp.data.unscheduled) {
-            let unschedules = resp.data.unscheduled;
-
-            setUnScheduled(unschedules);
-          }
-        } else {
-          setMessage("Something went wrong.");
-        }
       } catch (error) {
-        console.log(error)
+        console.log(error);
         if (isAxiosError(error)) {
           const message = error.response?.data?.message;
           setToastMessage({
@@ -512,8 +683,6 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
     });
   };
 
- 
-
   useEffect(() => {
     if (date) {
       setValue("start_date", date.toISOString());
@@ -527,7 +696,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
     if (selectedCourses.length > 0) {
       setValue(
         "course_ids",
-        selectedCourses.map(Number) as [number, ...number[]]
+        selectedCourses.map(Number) as [number, ...number[]],
       );
     }
   }, [selectedCourses]);
@@ -689,7 +858,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !date && "text-muted-foreground"
+                              !date && "text-muted-foreground",
                             )}
                             id="date"
                           >
@@ -727,7 +896,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !date && "text-muted-foreground"
+                              !date && "text-muted-foreground",
                             )}
                             id="end_date"
                           >
@@ -1028,7 +1197,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                 <option
                   disabled={
                     examSlots[selectedSlot.date].find(
-                      (s: any) => s.name == "Morning"
+                      (s: any) => s.name == "Morning",
                     ) != undefined
                   }
                   value="Morning"
@@ -1038,7 +1207,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                 <option
                   disabled={
                     examSlots[selectedSlot.date].find(
-                      (s: any) => s.name == "Afternoon"
+                      (s: any) => s.name == "Afternoon",
                     ) != undefined
                   }
                   value="Afternoon"
@@ -1048,7 +1217,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                 <option
                   disabled={
                     examSlots[selectedSlot.date].find(
-                      (s: any) => s.name == "Evening"
+                      (s: any) => s.name == "Evening",
                     ) != undefined
                   }
                   value="Evening"
@@ -1202,13 +1371,13 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                         onClick={() => {
                           if (
                             window.confirm(
-                              "Are you sure you want to delete this time slot?"
+                              "Are you sure you want to delete this time slot?",
                             )
                           ) {
                             setNewDay((prev: NewDay) => ({
                               ...prev,
                               slots: prev.slots.filter(
-                                (slot: any) => slot.id !== myslot.id
+                                (slot: any) => slot.id !== myslot.id,
                               ),
                             }));
                           }
@@ -1233,7 +1402,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                             slots: prev.slots.map((slot: any) =>
                               slot.id == myslot.id
                                 ? { ...slot, name: newName }
-                                : slot
+                                : slot,
                             ),
                           }));
                         }}
@@ -1241,7 +1410,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                         <option
                           disabled={
                             newDay.slots.find(
-                              (s: any) => s.name == "Morning"
+                              (s: any) => s.name == "Morning",
                             ) != undefined
                           }
                           value="Morning"
@@ -1251,7 +1420,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                         <option
                           disabled={
                             newDay.slots.find(
-                              (s: any) => s.name == "Afternoon"
+                              (s: any) => s.name == "Afternoon",
                             ) != undefined
                           }
                           value="Afternoon"
@@ -1261,7 +1430,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                         <option
                           disabled={
                             newDay.slots.find(
-                              (s: any) => s.name == "Evening"
+                              (s: any) => s.name == "Evening",
                             ) != undefined
                           }
                           value="Evening"
@@ -1286,7 +1455,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                             slots: prev.slots.map((slot: any) =>
                               slot.id == myslot.id
                                 ? { ...slot, start: start }
-                                : slot
+                                : slot,
                             ),
                           }));
                         }}
@@ -1308,7 +1477,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                             slots: prev.slots.map((slot: any) =>
                               slot.id == myslot.id
                                 ? { ...slot, end: end }
-                                : slot
+                                : slot,
                             ),
                           }));
                         }}
@@ -1320,7 +1489,7 @@ export default function CreateNewTimeTableModal({configuration}:{configuration:a
                         Duration:{" "}
                         {calculateDuration(
                           newDay.slots[index].start,
-                          newDay.slots[index].end
+                          newDay.slots[index].end,
                         )}
                       </div>
                     )}
