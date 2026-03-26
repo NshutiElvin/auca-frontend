@@ -113,6 +113,7 @@ interface SSEDoneEvent {
   message: string;
   stats: GenerateStats;
   warnings: string[];
+  unscheduled:any[]
 }
 
 interface SSEErrorEvent {
@@ -488,8 +489,7 @@ export default function CreateNewTimeTableModal({
     }
     return false;
   };
-
-  const generateTimetable = async () => {
+const generateTimetable = async () => {
     setServerLoadingMessage({
       message: `Starting timetable generation...`,
       isServerLoading: true,
@@ -502,56 +502,56 @@ export default function CreateNewTimeTableModal({
       ),
     });
     setClose();
-    startGeneratingTimetableTransition(async () => {
-      try {
-        const dates = Object.keys(examSlots).map((date) => {
-          const inputDateTime = new Date(date);
+    startGeneratingTimetableTransition(() => {
+      setProcessing({ status: "streaming", message: "Starting...", progress: 0 });
+    });
 
-          return inputDateTime;
-        });
-        dates.sort((a: any, b: any) => a - b);
-        const payload = {
-          start_date: dates[0].toISOString().split("T")[0],
-          end_date: dates[dates.length - 1].toISOString().split("T")[0],
-          slots: examSlots,
-          course_ids: selectedCourses.map(Number) as [number, ...number[]],
-          configurations: configuration,
-        };
+    try {
+      const dates = Object.keys(examSlots).map((date) => {
+        const inputDateTime = new Date(date);
+        return inputDateTime;
+      });
+      dates.sort((a: any, b: any) => a - b);
 
-        const resp = await axios.post(
-          "/api/exams/exams/generate-exam-schedule/",
-          payload,
-          {
-            responseType: "text",
-            onDownloadProgress: (progressEvent) => {
-              const fullText: string =
-                (progressEvent.event?.target as XMLHttpRequest)?.responseText ??
-                "";
+      const payload = {
+        start_date: dates[0].toISOString().split("T")[0],
+        end_date: dates[dates.length - 1].toISOString().split("T")[0],
+        slots: examSlots,
+        course_ids: selectedCourses.map(Number) as [number, ...number[]],
+        configurations: configuration,
+      };
 
-              // Find the last complete double-newline boundary
-              const lastEventEnd = fullText.lastIndexOf("\n\n");
+      let parsedOffset = 0;
 
-              // Only process if we have new complete events
-              if (lastEventEnd !== -1 && lastEventEnd >= parsedOffset) {
-                // Extract only the fully formed chunks we haven't seen yet
-                const newCompleteData = fullText.slice(
-                  parsedOffset,
-                  lastEventEnd + 2,
-                );
-                parsedOffset = lastEventEnd + 2; // Advance offset to prevent reprocessing
+      await axios.post(
+        "/api/exams/exams/generate-exam-schedule/",
+        payload,
+        {
+          responseType: "text",
+          onDownloadProgress: (progressEvent) => {
+            const fullText: string =
+              (progressEvent.event?.target as XMLHttpRequest)?.responseText ?? "";
 
-                const parts = newCompleteData.split("\n\n");
+            const lastEventEnd = fullText.lastIndexOf("\n\n");
 
-                for (const part of parts) {
-                  const line = part.trim();
-                  if (!line.startsWith("data:")) continue;
+            if (lastEventEnd !== -1 && lastEventEnd >= parsedOffset) {
+              const newCompleteData = fullText.slice(parsedOffset, lastEventEnd + 2);
+              parsedOffset = lastEventEnd + 2;
 
-                  try {
-                    const event = JSON.parse(
-                      line.replace(/^data:\s*/, ""),
-                    ) as SSEEvent;
+              const parts = newCompleteData.split("\n\n");
 
-                    if (event.type === "progress") {
+              for (const part of parts) {
+                const line = part.trim();
+                if (!line.startsWith("data:")) continue;
+
+                try {
+                  const event = JSON.parse(
+                    line.replace(/^data:\s*/, ""),
+                  ) as SSEEvent;
+
+                  // ── progress ──────────────────────────────────────────
+                  if (event.type === "progress") {
+                    startGeneratingTimetableTransition(() => {
                       setProcessing({
                         status: "streaming",
                         message: event.message,
@@ -570,9 +570,12 @@ export default function CreateNewTimeTableModal({
                           />
                         ),
                       });
-                    }
+                    });
+                  }
 
-                    if (event.type === "done") {
+                  // ── done ──────────────────────────────────────────────
+                  if (event.type === "done") {
+                    startGeneratingTimetableTransition(() => {
                       setProcessing({
                         status: "success",
                         message: event.message,
@@ -580,6 +583,11 @@ export default function CreateNewTimeTableModal({
                       });
                       setGenerateStats(event.stats);
                       setGenerateWarnings(event.warnings ?? []);
+
+                      if (event.unscheduled?.length) {
+                        setUnScheduled(event.unscheduled);
+                      }
+
                       setServerLoadingMessage({
                         message: event.message,
                         isServerLoading: true,
@@ -593,42 +601,48 @@ export default function CreateNewTimeTableModal({
                           />
                         ),
                       });
-                      setToastMessage({
-                        message: "Import completed successfully!",
-                        variant: "success",
-                      });
 
                       setToastMessage({
-                        message: data.message,
+                        message: event.message,
                         variant: "success",
                       });
-                      const respTyped = resp as { data: ExamsResponse };
-                      const datas: Event[] = respTyped.data.data.map(
-                        (ex: any) => {
-                          const startDate = new Date(
-                            `${ex.date}T${ex.start_time}`,
-                          );
-                          const endDate = new Date(`${ex.date}T${ex.end_time}`);
-                          let examEvent: Event = {
-                            title: ex.group?.course?.title,
-                            description: ex?.status,
-                            id: String(ex?.id),
-                            startDate: startDate,
-                            endDate: endDate,
-                          };
-                          return examEvent;
-                        },
-                      );
+                    });
 
-                      setExams(datas);
-                      if (resp.data.unscheduled) {
-                        let unschedules = resp.data.unscheduled;
-
-                        setUnScheduled(unschedules);
+                    // fetch fresh exams — this runs after the transition,
+                    // outside onDownloadProgress so we use a microtask
+                    Promise.resolve().then(async () => {
+                      try {
+                        const examsResp = await axios.get("/api/exams/exams/");
+                        const datas: Event[] = (examsResp.data?.data ?? []).map(
+                          (ex: any) => {
+                            const startDate = new Date(`${ex.date}T${ex.start_time}`);
+                            const endDate = new Date(`${ex.date}T${ex.end_time}`);
+                            return {
+                              title: ex.group?.course?.title,
+                              description: ex?.status,
+                              id: String(ex?.id),
+                              startDate,
+                              endDate,
+                            };
+                          },
+                        );
+                        startGeneratingTimetableTransition(() => {
+                          setExams(datas);
+                        });
+                      } catch (fetchErr) {
+                        console.warn("Failed to refresh exams after generation:", fetchErr);
+                        setToastMessage({
+                          message:
+                            "Timetable generated but failed to refresh exam list. Please reload.",
+                          variant: "warning",
+                        });
                       }
-                    }
+                    });
+                  }
 
-                    if (event.type === "error") {
+                  // ── error ─────────────────────────────────────────────
+                  if (event.type === "error") {
+                    startGeneratingTimetableTransition(() => {
                       setProcessing({
                         status: "error",
                         message: event.message,
@@ -650,38 +664,38 @@ export default function CreateNewTimeTableModal({
                         ),
                       });
                       setToastMessage({
-                        message:
-                          "Generatng timetable failed. Please try again.",
+                        message: "Generating timetable failed. Please try again.",
                         variant: "danger",
                       });
-                    }
-                  } catch (e) {
-                    console.warn("Skipped unparseable SSE line:", line);
+                    });
                   }
+                } catch (e) {
+                  console.warn("Skipped unparseable SSE line:", line);
                 }
               }
-            },
+            }
           },
-        );
-      } catch (error) {
-        console.log(error);
-        if (isAxiosError(error)) {
-          const message = error.response?.data?.message;
-          setToastMessage({
-            message: message,
-            variant: "danger",
-          });
-        } else {
-          setToastMessage({
-            message: "Something went wrong",
-            variant: "danger",
-          });
-        }
-      } finally {
-        setServerLoadingMessage({ isServerLoading: false });
+        },
+      );
+    } catch (error) {
+      console.error("generateTimetable error:", error);
+      startGeneratingTimetableTransition(() => {
+        setProcessing({ status: "error", message: "Request failed", progress: 0 });
+      });
+      if (isAxiosError(error)) {
+        const message =
+          error.response?.data?.message ?? "Server error. Please try again.";
+        setToastMessage({ message, variant: "danger" });
+        setProcessingErrors([message]);
+      } else {
+        setToastMessage({ message: "Something went wrong", variant: "danger" });
+        setProcessingErrors(["Unexpected error. Please try again."]);
       }
-    });
+    } finally {
+      setServerLoadingMessage({ isServerLoading: false });
+    }
   };
+  
 
   useEffect(() => {
     if (date) {
