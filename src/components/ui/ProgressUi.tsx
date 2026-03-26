@@ -28,6 +28,9 @@ export const ProgressUI: React.FC<ProgressUIProps> = ({
   const isStreaming = status === "streaming";
     useEffect(() => {
     document.title = `${Math.round(progress)}% complete | Adventist University of Central Africa - Exam Management System`;
+    return ()=>{
+        document.title = `Adventist University of Central Africa - Exam Management System`;
+    }
   }, [progress]);
 
 
