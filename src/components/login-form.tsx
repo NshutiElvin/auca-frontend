@@ -52,7 +52,6 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false)
   const [step, setStep] = useState<Step>("credentials")
   const [otp, setOtp] = useState("")
-  // Temporarily hold tokens between steps
   const [pendingAccess, setPendingAccess] = useState<string>("")
   const [pendingPermissions, setPendingPermissions] = useState<string[]>([])
 
@@ -72,22 +71,15 @@ export function LoginForm({
     else navigate("/", { replace: true })
   }
 
-  /** Step 1 – validate credentials, receive access token, then request OTP */
+  /** Step 1 — credentials. Backend validates, issues JWT, and sends OTP email. */
   const submitCredentials = async () => {
     try {
       const resp = await axios.post("api/users/token/", formData)
       const { access, permissions } = resp.data
 
-      // Store temporarily; don't commit to auth context until OTP passes
+      // Hold token until OTP is verified — don't commit to auth context yet
       setPendingAccess(access)
       setPendingPermissions(permissions)
-
-      // Request OTP — attach the freshly obtained access token
-      await axios.post(
-        "api/users/token/otp/send/",
-        {},
-        { headers: { Authorization: `Bearer ${access}` } }
-      )
 
       setToastMessage({ message: "OTP sent to your email.", variant: "success" })
       setStep("otp")
@@ -107,7 +99,7 @@ export function LoginForm({
     }
   }
 
-  /** Step 2 – verify OTP, then commit auth state and navigate */
+  /** Step 2 — verify OTP, then commit auth state and navigate. */
   const submitOtp = async () => {
     try {
       await axios.post(
@@ -116,7 +108,6 @@ export function LoginForm({
         { headers: { Authorization: `Bearer ${pendingAccess}` } }
       )
 
-      // OTP is valid — now persist auth
       setAuth(pendingAccess)
       setPermissions(pendingPermissions)
       navigateByRole(pendingAccess)
@@ -126,19 +117,6 @@ export function LoginForm({
         : "OTP verification failed"
 
       setToastMessage({ message: message?.detail || message, variant: "danger" })
-    }
-  }
-
-  const resendOtp = async () => {
-    try {
-      await axios.post(
-        "api/users/token/otp/send/",
-        {},
-        { headers: { Authorization: `Bearer ${pendingAccess}` } }
-      )
-      setToastMessage({ message: "A new OTP has been sent.", variant: "success" })
-    } catch {
-      setToastMessage({ message: "Failed to resend OTP.", variant: "danger" })
     }
   }
 
@@ -222,17 +200,18 @@ export function LoginForm({
                     <button
                       type="button"
                       className="text-muted-foreground hover:underline"
-                      onClick={() => setStep("credentials")}
+                      onClick={() => {
+                        setStep("credentials")
+                        setOtp("")
+                        setPendingAccess("")
+                        setPendingPermissions([])
+                      }}
                     >
                       ← Back
                     </button>
-                    <button
-                      type="button"
-                      className="text-primary hover:underline"
-                      onClick={resendOtp}
-                    >
-                      Resend OTP
-                    </button>
+                    <span className="text-muted-foreground">
+                      Didn't get it? Go back and login again.
+                    </span>
                   </div>
                 </div>
               </form>
